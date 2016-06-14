@@ -1,0 +1,52 @@
+package org.kryptonmlt.networkdemonstrator.learning;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.kryptonmlt.networkdemonstrator.tools.VectorUtils;
+
+public class ART implements Clustering {
+
+    private List<double[]> centroids = new ArrayList<>();
+    private final double row;
+    private final double alpha;
+
+    public ART(double row, double alpha) {
+        this.row = row;
+        this.alpha = alpha;
+
+    }
+
+    @Override
+    public List<double[]> getCentroids() {
+        return centroids;
+    }
+
+    @Override
+    public Integer update(double[] point) {
+        int nearestCentroid = VectorUtils.classify(point, centroids);
+        if (nearestCentroid == -1) {
+            centroids.add(point);
+            nearestCentroid = 0;
+        } else if (VectorUtils.distance(point, centroids.get(nearestCentroid)) < row) {
+            // Move centroid
+            this.centroids.set(nearestCentroid,
+                    VectorUtils.moveCentroid(point, centroids.get(nearestCentroid), alpha));
+
+        } else {
+            centroids.add(point);
+            nearestCentroid = centroids.size() - 1;
+        }
+        return nearestCentroid;
+    }
+
+    @Override
+    public String getDescription() {
+        return row + "_" + alpha;
+    }
+
+    @Override
+    public void setCentroids(List<double[]> centroids) {
+        this.centroids = centroids;
+
+    }
+}
