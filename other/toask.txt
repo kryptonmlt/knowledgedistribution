@@ -1,0 +1,5 @@
+- architecture topology -> 1 central node for all stations.. or stations can be central nodes?
+- choosing k for quantization of each node ? (online k means)
+- optimal stopping -> since it is online what is N ? (end point)
+- for now we use function y = w0 + w1*x1 + w2*x2 ? (eventually non linear?)
+- central node stores all functions separately sent by stations or joins functions together ?

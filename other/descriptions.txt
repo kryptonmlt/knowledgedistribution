@@ -1,0 +1,29 @@
+Excellent Kurt,
+I experimented with the first three columns of the excel file for a sensor. I plot them and after a quick regression plane I got the correlation among them. Hence, let’s get started now with the project:
+ 
+[1] The concept is that each sensor [i] locally builds incrementally its own model (regression line) from sensing the pairs (x,y). We can assume the x = [x1 x2] and y = [x3] from the corresponding 1, 2 and 3-rd columns of the datasrt file. After a period of learning, then each sensor sends its model paramerers, e.g., the regression parameter/weight w: F[i](x) = w0 + w1.x1 + w2.x2, where w = [w0, w1, w2], to a centralized concentrator (if you are excited with statisical learning we could also use Radial Basis Function model for non-linean regression ---later on this). Obviously, each local model, name it F[i](x), is different, since each sensor hat its own local view of the ‘environment’.
+ 
+[2] Once a sensor [i] has sent its local model F[i](x) to the concentrator, then the sensor [i] is capable of updating this model, since the sensor gets all the time (x,y) pairs (it senses its envoronment all the time).
+[3] Problem No 1: How we could update the concentrator once the local model F[i](x) on sensor [i] has changed? As you might have guessed the ‘original’ F[i](x) that has been sent to concetrator from sensor [i] migh have been changed, thus, there might be a discrepancy between the ‘original’ parameter w and the ‘current’ parameter w’, which is getting updated on sensor [i]. Sensor [i] upon receiving a (x,y) pair CAN predict the output y* from its current local F[i](x) with parameter w’and then measures locally the error e* = |y-y*|. Hopefully, if the model has not significantly changed on concetrator then the latter will experinece the same error. But, also, sensor [i] has stored the original model parameter w locally, thus knows exactly which is the error that concnetrator would experience. Hence, let us denote this error from the original local model as e# = |y – y#| where y# is the prediction of y when involving the original model f[i](x) with parameter w. At that time, sensor [i] has two prediction errors: e* and e#. The e# is the error that concentrator would experience if he used the same input x. We would like to achieve the minimim difference of these errors: De = |e*-e#|.
+ 
+Contribution No1.
+One solution is: if De is over than a threshold THETA then snesor [i] should send the updated model to concentrator. Nice. And energy efficient for snesor [i], individually.
+ 
+Imagine now that concnetrator might receive all the time from a high number of sensors a lot of updates…then…not so energy efficient! If the probability of De > THETA is say 0.2 (which is small) and the concnetrator has connected with 10,000 sensors (in a smart city scenario) then at each time t, the concentrator should receive 0.2*10,000 = 2,000 requests for updates. Evidnetly, this is better than each sensor sending each time the updated parameter w’ to the concnetrator, which corresponds to 1*10,000 = 10,000 requests. This is the same with the naïve approach where each snesor [i] sends ONLY the sensed pairs (x,y) to the concentrator WITHOUT dealing with any local mode, where the payload of sending [x1, x2, y] is the same for sending [w0, w1, w2].  
+ 
+Contribution No2.
+Another idea is to delay sending the updated model to concnetrator, even the De > THETA. If we could tolerate that, then at least less than 2,000 requests for updates would be achieved. BUT, how to tolerate? Let us proceeid with the concept of: when the sumation of the De is over a TOLERANCE threshold LAMBDA. We will send an update to the concnetrator when our tolerance reaches our threshold. Since e* and e# are random variables, thus, De is also, thus, we do not know when the sumation of De reaches LAMBDA! There comes the black jack game! I would like to delay sending an update, thus, leaving the sumation of De to get closer to the LAMBDA threshold, but, one the other hand I do not want to exceed my tolerance threshold. De is a Gaussian variable because e* and e# are Gaussians from regression analysis. Now there exists a time to say when to optially send an update!!!
+ 
+[4] Problem No 2:
+The concnetrator has collected all models (updated or not, does not matter) F[i](x), [i] = 1, …,36 (simulate the 36 sensors).
+Now, an application requests from the concentrator to get the prediction of y for an arbitrary value: x.
+ 
+Naïve solution: One solution is that the concnetrator proceeds with averaging the prediction results from all F[i](x). What will happen when for a model F[i](x) the input x was not observed during the training process? Since regression is ‘not a good extrpolation guy’ then there might be an error, which is added to the average…Bad!
+ 
+Contribution No3. It would be better to know for each model F[i](x) which are the representatives of its input space x, thus, knowing that if the arbitrary x is UNFAMILIAR then do not involve F[i](x) to the prediction process! This means that we need knowledge about the input space from each sensor [i].
+ 
+Yeap, let’s get back to snesor [i] while training its local model. The sensor learns the input space, i.e., estimates its representatives, say prototypes k[ij], j = 1, …, k through an on-line k-means quantization…we know this method. Hence, when sensor [i] sends the model F[i](x) to concnetrator, then it can also send the prototypes k[ij] to the concentrator as well. Then, the latter knows if an arbitrary x is familiar to model F[i](x) once say e.g., its distance to its closest prototype. Then take these predictions into account for a nice results!
+ 
+Off you go!!
+Cheers,
+Chris!
