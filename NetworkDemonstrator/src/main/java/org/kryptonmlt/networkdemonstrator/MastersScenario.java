@@ -35,14 +35,14 @@ public class MastersScenario {
         Integer k = 4;
         double row = 0.05; // only used when k is null
 
-        //initialize central node
+        // Initialize Central Node
         CentralNode centralNode = new CentralNode(serverPort, numberOfFeatures, k);
         new Thread(centralNode).start();
 
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {
-            LOGGER.error("Error in Main..", ex);
+            LOGGER.error("Error when waiting for central node to start..", ex);
         }
 
         // Initialize IOT Devices (Sensors)
@@ -60,7 +60,7 @@ public class MastersScenario {
                         LeafNode device = new LeafNode(hostname, serverPort,
                                 delayMillis, datafile, sheet, startFeature,
                                 numberOfFeatures, alpha, maxLearnPoints, type, error, k, row);
-                        device.initializeCommunication(false);
+                        device.initializeCommunication();
                     } catch (IOException ex) {
                         LOGGER.error("Error when initializing communication for Leaf Node with sheet " + temp, ex);
                     }
@@ -68,7 +68,7 @@ public class MastersScenario {
             }.start();
         }
 
-        // Perform Query
+        // Perform Queries
         for (int i = 0; i < 15; i++) {
             try {
                 Thread.sleep(10000l);

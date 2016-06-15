@@ -74,7 +74,7 @@ public class LeafNode {
      * @param initializeServer
      * @throws IOException
      */
-    public void initializeCommunication(boolean initializeServer) throws IOException {
+    public void initializeCommunication() throws IOException {
         LOGGER.info("Device starting up collecting {} feature, Registering to Central Node..", numberOfFeatures);
         byte[] toSend = MessageUtils.constructRegistrationMessage(numberOfFeatures);
         DatagramPacket connectPacket = new DatagramPacket(toSend, toSend.length,
