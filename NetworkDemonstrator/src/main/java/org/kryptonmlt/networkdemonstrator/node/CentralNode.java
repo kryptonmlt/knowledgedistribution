@@ -1,6 +1,5 @@
 package org.kryptonmlt.networkdemonstrator.node;
 
-import com.jogamp.opengl.math.VectorUtil;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -31,7 +30,7 @@ public class CentralNode implements Runnable {
 
     public CentralNode(int serverPort, int numberOfFeatures, int closestK) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
-        byte[] recieveBuffer = new byte[1 + Long.BYTES + numberOfFeatures * Double.BYTES];
+        byte[] recieveBuffer = new byte[1 + Long.BYTES + numberOfFeatures * Double.BYTES + (closestK * 2 * Double.BYTES)];
         this.dataPacket = new DatagramPacket(recieveBuffer, recieveBuffer.length);
         this.socket = new DatagramSocket(serverPort);
         this.closestK = closestK;
@@ -40,6 +39,7 @@ public class CentralNode implements Runnable {
     }
 
     public double query(double[] x) {
+        System.out.println("Received Query: " + Arrays.toString(x));
         //select closest K nodes
         Long[] nodeIds = new Long[closestK];
         double[] distance = new double[closestK];
@@ -60,6 +60,7 @@ public class CentralNode implements Runnable {
                 nodeIds[idMax] = centroid.getKey();
             }
         });
+        System.out.println("ClosestIds: " + Arrays.toString(nodeIds) + "\nDistance: " + Arrays.toString(distance));
         //closest K nodes selected now compute prediction based on them.
         double[] predictions = new double[closestK];
         for (int i = 0; i < distance.length; i++) {
@@ -68,13 +69,28 @@ public class CentralNode implements Runnable {
             }
         }
         //average predictions and return it.
-        return VectorUtils.average(predictions);
+        double result = VectorUtils.average(predictions);
+        return result;
+    }
+
+    public double queryAll(double[] x) {
+        //closest K nodes selected now compute prediction based on them.
+        double[] predictions = new double[peers.keySet().size()];
+        int i = 0;
+        for (Long l : peers.keySet()) {
+            predictions[i] = peers.get(l).predict(x[0], x[1]);
+            i++;
+        }
+        //average predictions and return it.
+        double result = VectorUtils.average(predictions);
+        return result;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
+                //Receive Request
                 socket.receive(dataPacket);
                 byte[] data = dataPacket.getData();
                 short request = ConversionUtils.btos(data[0]);
@@ -84,6 +100,7 @@ public class CentralNode implements Runnable {
 
                 byte[] peerIdBytes = new byte[Long.BYTES];
                 long peerId;
+                // Process Request
                 switch (request) {
                     case 0: //add new peer
                         int requestFeatures = ConversionUtils.btoi(actualData);
@@ -109,18 +126,27 @@ public class CentralNode implements Runnable {
                         System.out.println("Request from peer: " + peerId + " " + Arrays.toString(features));
                         break;
                     case 2: //receiving weights
-                        byte[] w = new byte[actualData.length - peerIdBytes.length];
+                        // Get peer Id
                         System.arraycopy(actualData, 0, peerIdBytes, 0, peerIdBytes.length);
                         peerId = ConversionUtils.batol(peerIdBytes);
-                        System.arraycopy(actualData, Long.BYTES, w, 0, w.length);
-                        double[] updatedWeights = ConversionUtils.toDouble(w);
+                        // Get Weights
+                        byte[] weightsBytes = new byte[numberOfFeatures * Double.BYTES];
+                        System.arraycopy(actualData, Long.BYTES, weightsBytes, 0, weightsBytes.length);
+                        double[] updatedWeights = ConversionUtils.toDouble(weightsBytes);
+                        // Get Centroids
+                        byte[] centroidsBytes = new byte[actualData.length - Long.BYTES - weightsBytes.length];
+                        System.arraycopy(actualData, Long.BYTES + weightsBytes.length, centroidsBytes, 0, centroidsBytes.length);
+                        double[] centroidsArr = ConversionUtils.toDouble(centroidsBytes);
                         DevicePeer p = peers.get(peerId);
                         if (p != null) {
-                            System.out.println("Updating peer " + peerId + " - " + Arrays.toString(updatedWeights));
+                            System.out.println("Updating peer " + peerId + " - " + Arrays.toString(updatedWeights) + " and " + (centroidsArr.length / 2) + " centroids");
                             p.setWeights(updatedWeights);
-
+                            for (int i = 0; i < centroidsArr.length; i += 2) {
+                                double[] c = {centroidsArr[i], centroidsArr[i + 1]};
+                                quantizedNodes.add(new SimpleEntry<>(peerId, c));
+                            }
                         } else {
-                            System.out.println("PEER NOT REGISTERED: " + peerId + " - " + Arrays.toString(updatedWeights));
+                            System.err.println("PEER NOT REGISTERED: " + peerId + " - " + Arrays.toString(updatedWeights));
                         }
                         break;
                     default:

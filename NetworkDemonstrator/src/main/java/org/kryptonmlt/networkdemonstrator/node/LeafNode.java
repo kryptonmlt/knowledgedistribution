@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
 import org.kryptonmlt.networkdemonstrator.learning.ART;
 import org.kryptonmlt.networkdemonstrator.learning.Clustering;
@@ -40,7 +41,7 @@ public class LeafNode {
     private final InetAddress toSendAddress;
 
     public LeafNode(String hostname, int serverPort, int delayMillis,
-            String datafile, int sheet, int startFeature, int numberOfFeatures,
+            String datafile, XSSFSheet sheet, int startFeature, int numberOfFeatures,
             double alpha, int maxLearnPoints, WorthType worth, double error, Integer k, double row) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
@@ -72,7 +73,7 @@ public class LeafNode {
      */
     public void initializeCommunication(boolean initializeServer) throws IOException {
         System.out.println("Device starting up collecting " + numberOfFeatures + " feature\nRegistering to Central Node..");
-        byte[] toSend = MessageUtils.constructMessage((short) 0, numberOfFeatures);
+        byte[] toSend = MessageUtils.constructRegistrationMessage(numberOfFeatures);
         DatagramPacket connectPacket = new DatagramPacket(toSend, toSend.length,
                 toSendAddress, serverPort);
         socket.send(connectPacket);
@@ -104,12 +105,14 @@ public class LeafNode {
                     case CHANGE_IN_WEIGHT:
                         double change = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
                         if (change > error) {
+                            System.err.println("Discrepancy in weights between device " + id + " and Central Node is " + change + " which is greater than " + error);
                             sendKnowledge();
                         }
                         break;
                     case THETA:
                         double difference = Math.abs(localModel.predict(dataGathered[0], dataGathered[1]) - centralNodeModel.predict(dataGathered[0], dataGathered[1]));
                         if (difference > error) {
+                            System.err.println("Discrepancy in error between device " + id + " and Central Node is " + difference + " which is greater than " + error);
                             sendKnowledge();
                         }
                         break;
@@ -124,14 +127,17 @@ public class LeafNode {
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
+            } else if (dataCounter == maxLearnPoints) {
+                System.err.println("Learning Stage finished sending knowledge.. ");
+                sendKnowledge();
             }
             dataCounter++;
         }
     }
 
     private void sendKnowledge() throws IOException {
-        System.out.println("Device " + id + " sending: " + Arrays.toString(localModel.getWeights()));
-        byte[] dataToSend = MessageUtils.constructMessage((short) 2, id, localModel.getWeights());
+        System.out.println("Device " + id + " sending: " + Arrays.toString(localModel.getWeights()) + " and " + clustering.getCentroids().size() + " centroids");
+        byte[] dataToSend = MessageUtils.constructKnowledgeMessage(id, localModel.getWeights(), ConversionUtils.convert2DListToArray(clustering.getCentroids()));
         DatagramPacket packet = new DatagramPacket(dataToSend, dataToSend.length,
                 toSendAddress, serverPort);
         socket.send(packet);
@@ -140,7 +146,7 @@ public class LeafNode {
     }
 
     private void sendFeatures(double[] dataGathered) throws IOException {
-        byte[] dataToSend = MessageUtils.constructMessage((short) 1, id, dataGathered);
+        byte[] dataToSend = MessageUtils.constructFeaturesMessage(id, dataGathered);
         DatagramPacket packet = new DatagramPacket(dataToSend, dataToSend.length,
                 toSendAddress, serverPort);
         socket.send(packet);

@@ -1,10 +1,16 @@
 package org.kryptonmlt.networkdemonstrator;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.SocketException;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -12,23 +18,25 @@ import org.kryptonmlt.networkdemonstrator.node.LeafNode;
  */
 public class MastersScenario {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MastersScenario.class);
+
     public static void main(String[] args) throws SocketException, IOException {
         String hostname = "127.0.0.1";
         int serverPort = 12345;
-        int delayMillis = 1000;
+        int delayMillis = 300;
         String datafile = "NormalizedData.xlsx";
+        //String datafile = "Data.xlsx";
         int startFeature = 0;
         int numberOfFeatures = 3;
         int maxLearnPoints = 1000;
-        int error = 1;
+        double error = 0.01;
         double alpha = 0.05;
-        WorthType type = WorthType.ALL;
+        WorthType type = WorthType.THETA;
         Integer k = 4;
         double row = 0.05; // only used when k is null
 
         //initialize central node
-        int closestK = 3;
-        CentralNode centralNode = new CentralNode(serverPort, numberOfFeatures, closestK);
+        CentralNode centralNode = new CentralNode(serverPort, numberOfFeatures, k);
         new Thread(centralNode).start();
 
         try {
@@ -37,9 +45,12 @@ public class MastersScenario {
             ex.printStackTrace();
         }
 
-        //initialize iot devices (sensors)
-        for (int i = 0; i < 30; i++) {
-            final int sheet = i;
+        // Initialize IOT Devices (Sensors)
+        FileInputStream file = new FileInputStream(new File(datafile));
+        XSSFWorkbook workbook = new XSSFWorkbook(file);
+
+        for (int i = 0; i < 10; i++) {
+            final XSSFSheet sheet = workbook.getSheetAt(i);
             new Thread() {
                 @Override
                 public void run() {
@@ -53,6 +64,19 @@ public class MastersScenario {
                     }
                 }
             }.start();
+        }
+
+        // Perform Query
+        for (int i = 0; i < 15; i++) {
+            try {
+                Thread.sleep(10000l);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+            double[] query = {0.0, 0.0};
+            double result = centralNode.query(query);
+            double resultAll = centralNode.queryAll(query);
+            LOGGER.info("Query {} = Quantized Result: {} , Average Result: {} ", i, result, resultAll);
         }
     }
 }

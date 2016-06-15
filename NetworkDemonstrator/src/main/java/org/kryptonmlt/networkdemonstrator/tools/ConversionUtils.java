@@ -2,6 +2,7 @@ package org.kryptonmlt.networkdemonstrator.tools;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.List;
 
 /**
  *
@@ -79,5 +80,14 @@ public class ConversionUtils {
     public static byte stob(short s) {
         return (byte) (s & 0xff);
         //return (byte)((x >> 8) & 0xff);
+    }
+
+    public static double[] convert2DListToArray(List<double[]> list) {
+        double[] arr = new double[list.size() * 2];
+        for (int i = 0; i < list.size(); i++) {
+            arr[i * 2] = list.get(i)[0];
+            arr[(i * 2) + 1] = list.get(i)[1];
+        }
+        return arr;
     }
 }
