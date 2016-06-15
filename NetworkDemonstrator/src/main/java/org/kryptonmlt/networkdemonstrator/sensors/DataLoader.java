@@ -11,12 +11,15 @@ import java.util.Iterator;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Kurt
  */
 public class DataLoader {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
 
     private final List<double[]> features = new ArrayList<>();
     private final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
@@ -35,7 +38,7 @@ public class DataLoader {
                             try {
                                 f[c] = sdf.parse(row.getCell(i).getStringCellValue()).getTime();
                             } catch (ParseException ex) {
-                                ex.printStackTrace();
+                                LOGGER.error("Error when trying to parse date", ex);
                             }
                         }
                     }
@@ -56,7 +59,7 @@ public class DataLoader {
                 reader.close();
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            LOGGER.error("Error when trying to read from datafile..", ex);
         }
     }
 

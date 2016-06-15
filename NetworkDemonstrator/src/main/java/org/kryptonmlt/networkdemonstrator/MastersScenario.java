@@ -42,7 +42,7 @@ public class MastersScenario {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            LOGGER.error("Error in Main..", ex);
         }
 
         // Initialize IOT Devices (Sensors)
@@ -51,16 +51,18 @@ public class MastersScenario {
 
         for (int i = 0; i < 10; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
+            final int temp = i;
             new Thread() {
                 @Override
                 public void run() {
+                    this.setName("Sheet "+temp);
                     try {
                         LeafNode device = new LeafNode(hostname, serverPort,
                                 delayMillis, datafile, sheet, startFeature,
                                 numberOfFeatures, alpha, maxLearnPoints, type, error, k, row);
                         device.initializeCommunication(false);
                     } catch (IOException ex) {
-                        ex.printStackTrace();
+                        LOGGER.error("Error when initializing communication for Leaf Node with sheet " + temp, ex);
                     }
                 }
             }.start();
@@ -71,7 +73,7 @@ public class MastersScenario {
             try {
                 Thread.sleep(10000l);
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                LOGGER.error("Error when trying to wait for querying..", ex);
             }
             double[] query = {0.0, 0.0};
             double result = centralNode.query(query);

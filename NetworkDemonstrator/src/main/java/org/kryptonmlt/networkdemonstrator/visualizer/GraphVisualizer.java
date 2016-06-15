@@ -27,6 +27,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
+import org.slf4j.LoggerFactory;
 
 /**
  * A demonstration application showing a time series chart where you can
@@ -34,6 +35,8 @@ import org.jfree.ui.RefineryUtilities;
  *
  */
 public class GraphVisualizer extends ApplicationFrame {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(GraphVisualizer.class);
 
     private final List<XYSeries> series = new ArrayList<>();
 
@@ -153,7 +156,7 @@ public class GraphVisualizer extends ApplicationFrame {
         try {
             Thread.sleep(10);
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            LOGGER.error("Error when waiting to add another datapoint", ex);
         }
     }
 
@@ -188,7 +191,7 @@ public class GraphVisualizer extends ApplicationFrame {
         double lastError;
         int runC = 0;
         do {
-            System.out.println(runC + ": " + currentError);
+            LOGGER.debug("Run {} with Error: {}", runC, currentError);
             for (int i = 0; i < theta.length; i++) {
                 double summation = 0;
                 for (Object item : series.get(0).getItems()) {

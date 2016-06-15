@@ -15,12 +15,15 @@ import org.kryptonmlt.networkdemonstrator.sensors.SensorManager;
 import org.kryptonmlt.networkdemonstrator.tools.ConversionUtils;
 import org.kryptonmlt.networkdemonstrator.tools.MessageUtils;
 import org.kryptonmlt.networkdemonstrator.tools.VectorUtils;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Kurt
  */
 public class LeafNode {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LeafNode.class);
 
     private long id;
     private final int delayMillis;
@@ -72,7 +75,7 @@ public class LeafNode {
      * @throws IOException
      */
     public void initializeCommunication(boolean initializeServer) throws IOException {
-        System.out.println("Device starting up collecting " + numberOfFeatures + " feature\nRegistering to Central Node..");
+        LOGGER.info("Device starting up collecting {} feature, Registering to Central Node..", numberOfFeatures);
         byte[] toSend = MessageUtils.constructRegistrationMessage(numberOfFeatures);
         DatagramPacket connectPacket = new DatagramPacket(toSend, toSend.length,
                 toSendAddress, serverPort);
@@ -81,7 +84,7 @@ public class LeafNode {
         DatagramPacket receivePacket = new DatagramPacket(idBuf, idBuf.length);
         socket.receive(receivePacket);
         id = ConversionUtils.batol(idBuf);
-        System.out.println("Device contacted central node and is now id " + id);
+        LOGGER.info("Device contacted central node and is now id {}", id);
 
         //starts sending data
         sendData();
@@ -105,19 +108,19 @@ public class LeafNode {
                     case CHANGE_IN_WEIGHT:
                         double change = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
                         if (change > error) {
-                            System.err.println("Discrepancy in weights between device " + id + " and Central Node is " + change + " which is greater than " + error);
+                            LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, change, error);
                             sendKnowledge();
                         }
                         break;
                     case THETA:
                         double difference = Math.abs(localModel.predict(dataGathered[0], dataGathered[1]) - centralNodeModel.predict(dataGathered[0], dataGathered[1]));
                         if (difference > error) {
-                            System.err.println("Discrepancy in error between device " + id + " and Central Node is " + difference + " which is greater than " + error);
+                            LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, difference, error);
                             sendKnowledge();
                         }
                         break;
                     case STOPPING_RULE:
-                        System.err.println("Still to be implemented !");
+                        LOGGER.error("Still to be implemented !");
                         break;
                     default:
                         throw new AssertionError(worth.name());
@@ -125,10 +128,10 @@ public class LeafNode {
                 try {
                     Thread.sleep(delayMillis);
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+                    LOGGER.error("Error when waiting to read from sensor", ex);
                 }
             } else if (dataCounter == maxLearnPoints) {
-                System.err.println("Learning Stage finished sending knowledge.. ");
+                LOGGER.info("Device {} finished learning stage now sending knowledge.. ", id);
                 sendKnowledge();
             }
             dataCounter++;
@@ -136,13 +139,13 @@ public class LeafNode {
     }
 
     private void sendKnowledge() throws IOException {
-        System.out.println("Device " + id + " sending: " + Arrays.toString(localModel.getWeights()) + " and " + clustering.getCentroids().size() + " centroids");
+        LOGGER.debug("Device {} sending: {} and {} centroids", id, Arrays.toString(localModel.getWeights()), clustering.getCentroids().size());
         byte[] dataToSend = MessageUtils.constructKnowledgeMessage(id, localModel.getWeights(), ConversionUtils.convert2DListToArray(clustering.getCentroids()));
         DatagramPacket packet = new DatagramPacket(dataToSend, dataToSend.length,
                 toSendAddress, serverPort);
         socket.send(packet);
         centralNodeModel.setWeights(localModel.getWeights());
-        System.out.println("Device " + id + " data sent");
+        LOGGER.debug("Device {} sent data successfully", id);
     }
 
     private void sendFeatures(double[] dataGathered) throws IOException {

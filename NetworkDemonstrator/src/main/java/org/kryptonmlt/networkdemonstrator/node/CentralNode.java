@@ -13,12 +13,15 @@ import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.tools.ConversionUtils;
 import org.kryptonmlt.networkdemonstrator.tools.IdGenerator;
 import org.kryptonmlt.networkdemonstrator.tools.VectorUtils;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Kurt
  */
 public class CentralNode implements Runnable {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CentralNode.class);
 
     private final long id;
     private final int numberOfFeatures;
@@ -35,11 +38,10 @@ public class CentralNode implements Runnable {
         this.socket = new DatagramSocket(serverPort);
         this.closestK = closestK;
         id = IdGenerator.getInstance().getNextId();
-        System.out.println("Central Node starting up with id " + id + ", listening on port " + serverPort + "..");
+        LOGGER.info("Central Node starting up with id {}, listening on port {}..", id, serverPort);
     }
 
     public double query(double[] x) {
-        System.out.println("Received Query: " + Arrays.toString(x));
         //select closest K nodes
         Long[] nodeIds = new Long[closestK];
         double[] distance = new double[closestK];
@@ -60,7 +62,7 @@ public class CentralNode implements Runnable {
                 nodeIds[idMax] = centroid.getKey();
             }
         });
-        System.out.println("ClosestIds: " + Arrays.toString(nodeIds) + "\nDistance: " + Arrays.toString(distance));
+        LOGGER.debug("Received Query: {}, ClosestIds: {}, Distance: {}", Arrays.toString(x), Arrays.toString(nodeIds), Arrays.toString(distance));
         //closest K nodes selected now compute prediction based on them.
         double[] predictions = new double[closestK];
         for (int i = 0; i < distance.length; i++) {
@@ -88,15 +90,16 @@ public class CentralNode implements Runnable {
 
     @Override
     public void run() {
-        try {
-            while (true) {
+        Thread.currentThread().setName("CentralNode");
+        while (true) {
+            try {
                 //Receive Request
                 socket.receive(dataPacket);
                 byte[] data = dataPacket.getData();
                 short request = ConversionUtils.btos(data[0]);
                 byte[] actualData = new byte[data.length - 1];
                 System.arraycopy(data, 1, actualData, 0, actualData.length);
-                System.out.println("Received request: " + request);
+                LOGGER.debug("Received request: {}", request);
 
                 byte[] peerIdBytes = new byte[Long.BYTES];
                 long peerId;
@@ -105,7 +108,7 @@ public class CentralNode implements Runnable {
                     case 0: //add new peer
                         int requestFeatures = ConversionUtils.btoi(actualData);
                         if (requestFeatures == numberOfFeatures) {//match
-                            System.out.println("Features to learn -  MATCH");
+                            LOGGER.debug("Features to learn -  MATCH");
                             //send id back
                             peerId = IdGenerator.getInstance().getNextId();
                             peers.put(peerId, new DevicePeer(peerId, dataPacket.getAddress(), dataPacket.getPort()));
@@ -114,7 +117,7 @@ public class CentralNode implements Runnable {
 
                         } else {
                             // features dont match... ignore
-                            System.out.println("Features to learn - DO NOT match: " + numberOfFeatures + " " + request);
+                            LOGGER.debug("Features to learn - DO NOT match: {} != {}", numberOfFeatures, request);
                         }
                         break;
                     case 1: //receiving features
@@ -123,7 +126,7 @@ public class CentralNode implements Runnable {
                         peerId = ConversionUtils.batol(peerIdBytes);
                         System.arraycopy(actualData, Long.BYTES, f, 0, f.length);
                         double[] features = ConversionUtils.toDouble(f);
-                        System.out.println("Request from peer: " + peerId + " " + Arrays.toString(features));
+                        LOGGER.debug("Receiving features from peer: {}, {} ", peerId, Arrays.toString(features));
                         break;
                     case 2: //receiving weights
                         // Get peer Id
@@ -139,22 +142,22 @@ public class CentralNode implements Runnable {
                         double[] centroidsArr = ConversionUtils.toDouble(centroidsBytes);
                         DevicePeer p = peers.get(peerId);
                         if (p != null) {
-                            System.out.println("Updating peer " + peerId + " - " + Arrays.toString(updatedWeights) + " and " + (centroidsArr.length / 2) + " centroids");
+                            LOGGER.debug("Updating peer {} - {} and {} centroids", peerId, Arrays.toString(updatedWeights), (centroidsArr.length / 2));
                             p.setWeights(updatedWeights);
                             for (int i = 0; i < centroidsArr.length; i += 2) {
                                 double[] c = {centroidsArr[i], centroidsArr[i + 1]};
                                 quantizedNodes.add(new SimpleEntry<>(peerId, c));
                             }
                         } else {
-                            System.err.println("PEER NOT REGISTERED: " + peerId + " - " + Arrays.toString(updatedWeights));
+                            LOGGER.error("PEER {} NOT REGISTERED sent: {}", peerId, Arrays.toString(updatedWeights));
                         }
                         break;
                     default:
-                        System.err.println("Incorrect request: " + request);
+                        LOGGER.error("Incorrect request: {}", request);
                 }
+            } catch (Exception ex) {
+                LOGGER.error("Error in CentralNode run method", ex);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 }
