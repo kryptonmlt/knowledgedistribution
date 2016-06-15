@@ -55,7 +55,7 @@ public class MastersScenario {
             new Thread() {
                 @Override
                 public void run() {
-                    this.setName("Sheet "+temp);
+                    this.setName("Sheet"+temp);
                     try {
                         LeafNode device = new LeafNode(hostname, serverPort,
                                 delayMillis, datafile, sheet, startFeature,
