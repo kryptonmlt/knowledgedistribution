@@ -5,13 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
-import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -27,9 +23,11 @@ public class DisplayExcelFile3D {
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
         int sheets = 1;
         Color[] choice = {Color.BLUE, Color.RED, Color.GREEN, Color.MAGENTA, Color.CYAN, Color.MAGENTA, Color.GRAY, Color.YELLOW};
-        OnlineStochasticGradientDescent sgd = new OnlineStochasticGradientDescent(0.01);
+        OnlineStochasticGradientDescent sgd = new OnlineStochasticGradientDescent(0.1);
         //FileInputStream file = new FileInputStream(new File("NormalizedData.xlsx"));
-        FileInputStream file = new FileInputStream(new File("temp_pm25.xlsx"));
+        //FileInputStream file = new FileInputStream(new File("temp_pm10.xlsx"));
+        FileInputStream file = new FileInputStream(new File("pm25_pm10.xlsx"));
+        //FileInputStream file = new FileInputStream(new File("TestData.xlsx"));
         String[] names = {"Time", "PM25_AQI", "PM10_AQI"};
         ScatterPlot3D plot = new ScatterPlot3D(names);
         plot.show();
@@ -40,7 +38,8 @@ public class DisplayExcelFile3D {
         for (int i = 0; i < sheets; i++) {
             XSSFSheet sheet = workbook.getSheetAt(i);
             Iterator<Row> rowIterator = sheet.iterator();
-            System.out.println("Starting the plot for sheet" + sheet + ".. ");
+            System.out.println("Starting the plot for sheet" + i + ".. ");
+            //Thread.sleep(1000);
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
                 Coord3d point;
