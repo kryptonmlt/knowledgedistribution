@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
+import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -23,45 +26,64 @@ public class DisplayExcelFile3D {
 
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
         int sheets = 1;
-        ArrayList<Coord3d> coords = new ArrayList<>();
-        ArrayList<Color> c = new ArrayList<>();
         Color[] choice = {Color.BLUE, Color.RED, Color.GREEN, Color.MAGENTA, Color.CYAN, Color.MAGENTA, Color.GRAY, Color.YELLOW};
         OnlineStochasticGradientDescent sgd = new OnlineStochasticGradientDescent(0.01);
-        FileInputStream file = new FileInputStream(new File("NormalizedData.xlsx"));
-        //FileInputStream file = new FileInputStream(new File("Data.xlsx"));
+        //FileInputStream file = new FileInputStream(new File("NormalizedData.xlsx"));
+        FileInputStream file = new FileInputStream(new File("temp_pm25.xlsx"));
+        String[] names = {"Time", "PM25_AQI", "PM10_AQI"};
+        ScatterPlot3D plot = new ScatterPlot3D(names);
+        plot.show();
+        List<Coord3d> points = new ArrayList<>();
+
+        System.out.println("Opening file ..");
         XSSFWorkbook workbook = new XSSFWorkbook(file);
         for (int i = 0; i < sheets; i++) {
             XSSFSheet sheet = workbook.getSheetAt(i);
             Iterator<Row> rowIterator = sheet.iterator();
-
+            System.out.println("Starting the plot for sheet" + sheet + ".. ");
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
+                Coord3d point;
                 try {
-                    double x = Double.parseDouble(row.getCell(0).getStringCellValue());
-                    double y = Double.parseDouble(row.getCell(1).getStringCellValue());
-                    double z = Double.parseDouble(row.getCell(2).getStringCellValue());
-                    coords.add(new Coord3d(x, y, z));
-                    sgd.onlineSGD(x, y, z);
+                    double x = readCell(row, 0);
+                    double y = readCell(row, 1);
+                    double z = readCell(row, 2);
+                    point = new Coord3d(x, y, z);
                 } catch (Exception e) {
-                    coords.add(new Coord3d(sdf.parse(row.getCell(0).getStringCellValue()).getTime(),
-                            Double.parseDouble(row.getCell(1).getStringCellValue()), Double.parseDouble(row.getCell(2).getStringCellValue())));
+                    point = new Coord3d(sdf.parse(row.getCell(0).getStringCellValue()).getTime(),
+                            Double.parseDouble(row.getCell(1).getStringCellValue()), Double.parseDouble(row.getCell(2).getStringCellValue()));
+
                 }
-                c.add(choice[i % choice.length]);
+                //recomputeLine(points, plot, sgd);
+                points.add(point);
+                Color color = choice[i % choice.length];
+                plot.addPoint(point, color);
+                sgd.onlineSGD(point.x, point.y, point.z);
             }
         }
         file.close();
-        Coord3d[] points = new Coord3d[coords.size()];
-        points = coords.toArray(points);
-        Arrays.sort(points, coord3dComparator);
-        Coord3d[] lineStrip = new Coord3d[coords.size()];
-        for (int i = 0; i < lineStrip.length; i++) {
-            float z = (float) sgd.predict(points[i].x, points[i].y);
-            lineStrip[i] = new Coord3d(points[i].x, points[i].y, z);
+        recomputeLine(points, plot, sgd);
+        System.out.println("Finished ..");
+    }
+
+    public static void recomputeLine(List<Coord3d> points, ScatterPlot3D plot, OnlineStochasticGradientDescent sgd) {
+        Coord3d[] lineStrip = new Coord3d[points.size()];
+        for (int i = 0; i < points.size(); i++) {
+            float z = (float) sgd.predict(points.get(i).x, points.get(i).y);
+            lineStrip[i] = new Coord3d(points.get(i).x, points.get(i).y, z);
         }
-        Color[] colors = new Color[c.size()];
-        String[] names = {"Time", "PM25_AQI", "PM10_AQI"};
-        ScatterPlot3D plot = new ScatterPlot3D(points, c.toArray(colors), names, lineStrip);
-        plot.show();
+        plot.updateLine(lineStrip);
+    }
+
+    public static double readCell(Row row, int i) {
+        try {
+            return Double.parseDouble(row.getCell(i).getStringCellValue());
+        } catch (Exception e) {
+            if (e.getLocalizedMessage().contains("Cannot get a text value from a numeric cell")) {
+                return row.getCell(i).getNumericCellValue();
+            }
+            throw e;
+        }
     }
 
     public static Comparator<Coord3d> coord3dComparator = (Coord3d c1, Coord3d c2) -> {
