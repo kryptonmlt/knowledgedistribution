@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
+import org.kryptonmlt.networkdemonstrator.learning.BatchGradientDescent;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
 
 public class DisplayExcelFile3D {
@@ -26,8 +28,9 @@ public class DisplayExcelFile3D {
         OnlineStochasticGradientDescent sgd = new OnlineStochasticGradientDescent(0.1);
         //FileInputStream file = new FileInputStream(new File("NormalizedData.xlsx"));
         //FileInputStream file = new FileInputStream(new File("temp_pm10.xlsx"));
-        FileInputStream file = new FileInputStream(new File("pm25_pm10.xlsx"));
+        //FileInputStream file = new FileInputStream(new File("pm25_pm10.xlsx"));
         //FileInputStream file = new FileInputStream(new File("TestData.xlsx"));
+        FileInputStream file = new FileInputStream(new File("SimpleNormalization.xlsx"));
         String[] names = {"Time", "PM25_AQI", "PM10_AQI"};
         ScatterPlot3D plot = new ScatterPlot3D(names);
         plot.show();
@@ -61,7 +64,11 @@ public class DisplayExcelFile3D {
             }
         }
         file.close();
+        Collections.sort(points, coord3dComparator);
         recomputeLine(points, plot, sgd);
+        /*BatchGradientDescent bgd = new BatchGradientDescent(0.07);
+        bgd.learn(points);
+        recomputeLine(points, plot, bgd);*/
         System.out.println("Finished ..");
     }
 
@@ -69,6 +76,15 @@ public class DisplayExcelFile3D {
         Coord3d[] lineStrip = new Coord3d[points.size()];
         for (int i = 0; i < points.size(); i++) {
             float z = (float) sgd.predict(points.get(i).x, points.get(i).y);
+            lineStrip[i] = new Coord3d(points.get(i).x, points.get(i).y, z);
+        }
+        plot.updateLine(lineStrip);
+    }
+
+    public static void recomputeLine(List<Coord3d> points, ScatterPlot3D plot, BatchGradientDescent bgd) {
+        Coord3d[] lineStrip = new Coord3d[points.size()];
+        for (int i = 0; i < points.size(); i++) {
+            float z = (float) bgd.predict(points.get(i).x, points.get(i).y);
             lineStrip[i] = new Coord3d(points.get(i).x, points.get(i).y, z);
         }
         plot.updateLine(lineStrip);

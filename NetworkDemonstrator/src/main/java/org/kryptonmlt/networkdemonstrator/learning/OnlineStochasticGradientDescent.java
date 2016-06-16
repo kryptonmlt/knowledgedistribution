@@ -22,12 +22,9 @@ public class OnlineStochasticGradientDescent {
     public void onlineSGD(double x1, double x2, double y) {
         double[] thetaTemp = new double[weights.length];
         double[] x = {1, x1, x2};
+        int[] p = {0, 1, 1};
         for (int i = 0; i < weights.length; i++) {
-            int p = 1;
-            if (i == 0) {
-                p = 0;
-            }
-            double value = (predict(x1, x2) - y) * Math.pow(x[i], p);
+            double value = (predict(x1, x2) - y) * Math.pow(x[i], p[i]);
             thetaTemp[i] = weights[i] - (alpha * value);
         }
         weights = thetaTemp;
