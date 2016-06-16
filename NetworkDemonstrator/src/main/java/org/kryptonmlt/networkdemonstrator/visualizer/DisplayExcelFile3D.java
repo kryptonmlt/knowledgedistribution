@@ -25,7 +25,7 @@ public class DisplayExcelFile3D {
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
         int sheets = 1;
         Color[] choice = {Color.BLUE, Color.RED, Color.GREEN, Color.MAGENTA, Color.CYAN, Color.MAGENTA, Color.GRAY, Color.YELLOW};
-        OnlineStochasticGradientDescent sgd = new OnlineStochasticGradientDescent(0.1);
+        OnlineStochasticGradientDescent sgd = new OnlineStochasticGradientDescent(0.07);
         //FileInputStream file = new FileInputStream(new File("NormalizedData.xlsx"));
         //FileInputStream file = new FileInputStream(new File("temp_pm10.xlsx"));
         //FileInputStream file = new FileInputStream(new File("pm25_pm10.xlsx"));
@@ -56,7 +56,7 @@ public class DisplayExcelFile3D {
                             Double.parseDouble(row.getCell(1).getStringCellValue()), Double.parseDouble(row.getCell(2).getStringCellValue()));
 
                 }
-                //recomputeLine(points, plot, sgd);
+                recomputeLine(points, plot, sgd);
                 points.add(point);
                 Color color = choice[i % choice.length];
                 plot.addPoint(point, color);
