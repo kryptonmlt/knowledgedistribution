@@ -25,7 +25,6 @@ public class ScatterPlot3D extends AbstractAnalysis {
     private final String[] xyz;
     private Scatter scatter;
     final List<AbstractDrawable> memory = new Vector<>();
-    int currentLine = 0;
 
     @Override
     public void init() {
@@ -68,27 +67,28 @@ public class ScatterPlot3D extends AbstractAnalysis {
             colors = tempc;
         }
         if (points.length == 2) {
-            //scatter = new Scatter(points, colors, 10f);
-            scatter = new Scatter(points, Color.BLUE, 5f);
+            scatter = new Scatter(points, colors, 3f);
             chart.getScene().add(scatter);
         } else if (points.length > 2) {
+            scatter.setColors(colors);
             scatter.setData(points);
-            //scatter.setColors(colors);            
         }
     }
 
-    public void updateLine(Coord3d[] linePoints) {
+    public void updateLine(Coord3d[] linePoints, Color color, int currentLine) {
         if (scatter != null) {
-            chart.getScene().getGraph().remove(memory.get(currentLine));
-            memory.remove(currentLine);
+            if (memory.size() > currentLine) {
+                chart.getScene().getGraph().remove(memory.get(currentLine));
+                memory.remove(currentLine);
+            }
             LineStrip line = new LineStrip();
-            line.setWireframeColor(Color.RED);
+            line.setWireframeColor(color);
             line.setWidth(2f);
             for (Coord3d c : linePoints) {
                 line.add(new Point(c));
             }
             chart.getScene().getGraph().add(line);
-            memory.add(line);
+            memory.add(currentLine, line);
         }
     }
 }

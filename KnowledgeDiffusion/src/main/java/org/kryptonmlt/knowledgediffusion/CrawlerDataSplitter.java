@@ -25,7 +25,6 @@ public class CrawlerDataSplitter {
         BufferedReader stationReader = new BufferedReader(new FileReader("Air Quality Data/Beijing/Station.txt"));
         stationReader.readLine();
         HashMap<String, StationWriter> stations = new HashMap<>();//stores station info
-        String normal_type = "simple";
 
         while ((tempLine = stationReader.readLine()) != null) {
             String[] station = tempLine.split(",");
@@ -51,18 +50,17 @@ public class CrawlerDataSplitter {
             columnProperties[i][1] = "9000000000000";
         }
 
-        System.out.println("Reading sensors..");
+        System.out.println("Going through sensors to calculate mean, min, max, and convert to Data.xlsx");
         int numberOfRows = 0;
-        double[] mean = new double[cols];
-        double[] variance = new double[cols];
         while ((tempLine = dataReader.readLine()) != null) {
             int loc = tempLine.indexOf(',');
             String data = tempLine.substring(loc + 1);
             String[] values = Tools.properSplit(data, ",");
-            allData.add(values);
+            boolean valid = true;
             for (int i = 0; i < values.length; i++) {
                 if ("".equals(values[i])) {
                     values[i] = "0";
+                    valid = false;
                 } else {
                     try {
                         double d = Double.parseDouble(values[i]);
@@ -88,16 +86,19 @@ public class CrawlerDataSplitter {
                 }
             }
             //add data to correct station using its id.
-            stations.get(tempLine.substring(0, loc).trim()).addRow(values);
-            numberOfRows++;
+            if (valid) {
+                stations.get(tempLine.substring(0, loc).trim()).addRow(values);
+                allData.add(values);
+                numberOfRows++;
+            }
         }
         dataReader.close();
-        System.out.println("Finished Reading sensors..writing to file");
 
         FileOutputStream fos = new FileOutputStream(new File("Data.xlsx"));
         workbook.write(fos);
         fos.flush();
         fos.close();
+        System.out.println("Finished Writing Data.xlsx");
 
         //reset station sheets
         workbook = new XSSFWorkbook();
@@ -105,8 +106,8 @@ public class CrawlerDataSplitter {
             stations.get(name).resetSheet(workbook.createSheet(name));
         }
 
-        System.out.println("Finished!\nCalculating Mean..");
         //calculate mean
+        double[] mean = new double[cols];
         for (int i = 0; i < total.length; i++) {
             if (total[i].contains(".")) {
                 mean[i] = Double.parseDouble(total[i]) / (float) numberOfRows;
@@ -115,6 +116,7 @@ public class CrawlerDataSplitter {
             }
         }
         System.out.println("Mean Calculated..");
+        System.out.println("Calculating Standard Deviation");
         Tools.setAllStringArray(total, "0");
         //calculate variance
         for (String[] row : allData) {
@@ -132,11 +134,12 @@ public class CrawlerDataSplitter {
             }
         }
         allData = null;
+        double[] sd = new double[cols];
         for (int i = 0; i < total.length; i++) {
-            variance[i] = Double.parseDouble(total[i]) / (float) numberOfRows;
+            sd[i] = Math.sqrt(Double.parseDouble(total[i]) / (float) numberOfRows);
         }
-        System.out.println("Variance Calculated..");
-        System.out.println("Re reading File ..");
+        System.out.println("Standard Deviation Calculated..");
+        System.out.println("Re reading File to calculate Normalization Excel File ..");
 
         dataReader = new BufferedReader(new FileReader("Air Quality Data/Beijing/CrawledData.txt"));
         dataReader.readLine();
@@ -144,9 +147,11 @@ public class CrawlerDataSplitter {
             int loc = tempLine.indexOf(',');
             String data = tempLine.substring(loc + 1);
             String[] values = Tools.properSplit(data, ",");
+            boolean valid = true;
             for (int i = 0; i < values.length; i++) {
                 if ("".equals(values[i])) {
                     values[i] = "0";
+                    valid = false;
                 } else {
                     double d;
                     try {
@@ -156,11 +161,13 @@ public class CrawlerDataSplitter {
                         long time = sdf.parse(values[i]).getTime();
                         d = time - mean[i];
                     }
-                    values[i] = "" + (d / variance[i]);
+                    values[i] = "" + (d / sd[i]);
                 }
             }
             //add data to correct station using its id.
-            stations.get(tempLine.substring(0, loc).trim()).addRow(values);
+            if (valid) {
+                stations.get(tempLine.substring(0, loc).trim()).addRow(values);
+            }
         }
         dataReader.close();
 
@@ -185,27 +192,31 @@ public class CrawlerDataSplitter {
             int loc = tempLine.indexOf(',');
             String data = tempLine.substring(loc + 1);
             String[] values = Tools.properSplit(data, ",");
+            boolean valid = true;
             for (int i = 0; i < values.length; i++) {
                 if ("".equals(values[i])) {
                     values[i] = "0";
+                    valid = false;
                 } else {
                     double v;
                     try {
                         v = Double.parseDouble(values[i]);
-                        double n = (v - Double.parseDouble(columnProperties[i][0]))
-                                / (Double.parseDouble(columnProperties[i][1]) - Double.parseDouble(columnProperties[i][0]));
+                        double n = (v - Double.parseDouble(columnProperties[i][1]))
+                                / (Double.parseDouble(columnProperties[i][0]) - Double.parseDouble(columnProperties[i][1]));
                         v = n - 0.5;
                     } catch (Exception e) {
                         long time = sdf.parse(values[i]).getTime();
-                        double n = (time - Long.parseLong(columnProperties[i][0]))
-                                / (double) (Long.parseLong(columnProperties[i][1]) - Long.parseLong(columnProperties[i][0]));
+                        double n = (time - Long.parseLong(columnProperties[i][1]))
+                                / (double) (Long.parseLong(columnProperties[i][0]) - Long.parseLong(columnProperties[i][1]));
                         v = n - 0.5;
                     }
                     values[i] = "" + v;
                 }
             }
             //add data to correct station using its id.
-            stations.get(tempLine.substring(0, loc).trim()).addRow(values);
+            if (valid) {
+                stations.get(tempLine.substring(0, loc).trim()).addRow(values);
+            }
         }
         dataReader.close();
         System.out.println("Writing to Simple Normalization Excel File..");

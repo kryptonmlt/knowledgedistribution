@@ -8,7 +8,7 @@ import org.kryptonmlt.networkdemonstrator.tools.LearningUtils;
  *
  * @author Kurt
  */
-public class BatchGradientDescent {
+public class BatchGradientDescent implements Learning {
 
     private double[] weights = new double[3];
     private double alpha = 0.05;
@@ -17,6 +17,7 @@ public class BatchGradientDescent {
         this.alpha = alpha;
     }
 
+    @Override
     public double predict(double x1, double x2) {
         return LearningUtils.hypothesis(weights, x1, x2);
     }
@@ -52,18 +53,22 @@ public class BatchGradientDescent {
         return error;
     }
 
+    @Override
     public double[] getWeights() {
         return weights;
     }
 
+    @Override
     public void setWeights(double[] weights) {
         this.weights = weights;
     }
 
+    @Override
     public double getAlpha() {
         return alpha;
     }
 
+    @Override
     public void setAlpha(double alpha) {
         this.alpha = alpha;
     }
