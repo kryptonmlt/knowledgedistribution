@@ -5,6 +5,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
 import org.kryptonmlt.networkdemonstrator.learning.ART;
@@ -21,7 +23,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Kurt
  */
-public class LeafNode {
+public class LeafNode implements Runnable {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LeafNode.class);
 
@@ -29,6 +31,7 @@ public class LeafNode {
     private final int delayMillis;
     private final WorthType worth;
     private final double error;
+    private boolean connected = false;
 
     //Sensor Learning
     private final int numberOfFeatures;
@@ -67,27 +70,33 @@ public class LeafNode {
         }
     }
 
-    /**
-     * Creates local Datagram Server and connects with Server to tell him its
-     * alive.
-     *
-     * @param initializeServer
-     * @throws IOException
-     */
-    public void initializeCommunication() throws IOException {
-        LOGGER.info("Device starting up collecting {} feature, Registering to Central Node..", numberOfFeatures);
-        byte[] toSend = MessageUtils.constructRegistrationMessage(numberOfFeatures);
-        DatagramPacket connectPacket = new DatagramPacket(toSend, toSend.length,
-                toSendAddress, serverPort);
-        socket.send(connectPacket);
-        byte[] idBuf = new byte[Long.BYTES];
-        DatagramPacket receivePacket = new DatagramPacket(idBuf, idBuf.length);
-        socket.receive(receivePacket);
-        id = ConversionUtils.batol(idBuf);
-        LOGGER.info("Device contacted central node and is now id {}", id);
+    public boolean isConnected() {
+        return connected;
+    }
 
-        //starts sending data
-        sendData();
+    public long getId() {
+        return id;
+    }
+
+    @Override
+    public void run() {
+        try {
+            LOGGER.info("Device starting up collecting {} feature, Registering to Central Node..", numberOfFeatures);
+            byte[] toSend = MessageUtils.constructRegistrationMessage(numberOfFeatures);
+            DatagramPacket connectPacket = new DatagramPacket(toSend, toSend.length,
+                    toSendAddress, serverPort);
+            socket.send(connectPacket);
+            byte[] idBuf = new byte[Long.BYTES];
+            DatagramPacket receivePacket = new DatagramPacket(idBuf, idBuf.length);
+            socket.receive(receivePacket);
+            id = ConversionUtils.batol(idBuf);
+            LOGGER.info("Device contacted central node and is now id {}", id);
+            connected = true;
+            //starts sending data
+            sendData();
+        } catch (IOException ex) {
+            LOGGER.error("Error when communicating with CentralNode", ex);
+        }
     }
 
     /**
@@ -156,8 +165,16 @@ public class LeafNode {
     }
 
     private void learnFromData(double[] dataGathered) {
-        localModel.onlineSGD(dataGathered[0], dataGathered[1], dataGathered[2]);
+        localModel.learn(dataGathered[0], dataGathered[1], dataGathered[2]);
         double[] inputSpace = {dataGathered[0], dataGathered[1]};
         clustering.update(inputSpace);
+    }
+
+    public int getTotalMessagesToBeSentSoFar() {
+        int amount = dataCounter - maxLearnPoints;
+        if (amount < 0) {
+            return 0;
+        }
+        return amount;
     }
 }

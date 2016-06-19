@@ -9,10 +9,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jzy3d.colors.Color;
+import org.jzy3d.maths.Coord3d;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.tools.ConversionUtils;
 import org.kryptonmlt.networkdemonstrator.tools.IdGenerator;
 import org.kryptonmlt.networkdemonstrator.tools.VectorUtils;
+import org.kryptonmlt.networkdemonstrator.tools.VisualizationUtils;
+import org.kryptonmlt.networkdemonstrator.visualizer.ScatterPlot3D;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -21,23 +26,29 @@ import org.slf4j.LoggerFactory;
  */
 public class CentralNode implements Runnable {
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CentralNode.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CentralNode.class);
 
     private final long id;
     private final int numberOfFeatures;
     private final DatagramSocket socket;
     private final DatagramPacket dataPacket;
     private final Map<Long, DevicePeer> peers = new HashMap<>();
-    private final List<SimpleEntry<Long, double[]>> quantizedNodes = new ArrayList<>();
     private final int closestK;
+    private ScatterPlot3D plot;
 
-    public CentralNode(int serverPort, int numberOfFeatures, int closestK) throws IOException {
+    public CentralNode(int serverPort, int numberOfFeatures, int closestK, String[] columnNames) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
         byte[] recieveBuffer = new byte[1 + Long.BYTES + numberOfFeatures * Double.BYTES + (closestK * 2 * Double.BYTES)];
         this.dataPacket = new DatagramPacket(recieveBuffer, recieveBuffer.length);
         this.socket = new DatagramSocket(serverPort);
         this.closestK = closestK;
         id = IdGenerator.getInstance().getNextId();
+        try {
+            plot = new ScatterPlot3D(columnNames);
+            plot.show();
+        } catch (Exception ex) {
+            LOGGER.error("Error when trying to show Central Node Visualization", ex);
+        }
         LOGGER.info("Central Node starting up with id {}, listening on port {}..", id, serverPort);
     }
 
@@ -49,19 +60,22 @@ public class CentralNode implements Runnable {
             distance[i] = Double.MAX_VALUE;
             nodeIds[i] = -1l;
         }
-        quantizedNodes.stream().forEach((centroid) -> {
-            double d = VectorUtils.distance(centroid.getValue(), x);
-            int idMax = 0;
-            for (int i = 1; i < distance.length; i++) {
-                if (distance[i] > distance[idMax]) {
-                    idMax = i;
+        for (Long peerId : peers.keySet()) {
+            for (double[] centroid : peers.get(peerId).getQuantizedNodes()) {
+                double d = VectorUtils.distance(centroid, x);
+                int idMax = 0;
+                for (int i = 1; i < distance.length; i++) {
+                    if (distance[i] > distance[idMax]) {
+                        idMax = i;
+                    }
                 }
+                if (d < distance[idMax]) {
+                    distance[idMax] = d;
+                    nodeIds[idMax] = peerId;
+                }
+
             }
-            if (d < distance[idMax]) {
-                distance[idMax] = d;
-                nodeIds[idMax] = centroid.getKey();
-            }
-        });
+        }
         LOGGER.debug("Received Query: {}, ClosestIds: {}, Distance: {}", Arrays.toString(x), Arrays.toString(nodeIds), Arrays.toString(distance));
         //closest K nodes selected now compute prediction based on them.
         double[] predictions = new double[closestK];
@@ -86,6 +100,10 @@ public class CentralNode implements Runnable {
         //average predictions and return it.
         double result = VectorUtils.average(predictions);
         return result;
+    }
+
+    public Map<Long, DevicePeer> getPeers() {
+        return peers;
     }
 
     @Override
@@ -128,7 +146,7 @@ public class CentralNode implements Runnable {
                         double[] features = ConversionUtils.toDouble(f);
                         LOGGER.debug("Receiving features from peer: {}, {} ", peerId, Arrays.toString(features));
                         break;
-                    case 2: //receiving weights
+                    case 2: //receiving weights and quantization
                         // Get peer Id
                         System.arraycopy(actualData, 0, peerIdBytes, 0, peerIdBytes.length);
                         peerId = ConversionUtils.batol(peerIdBytes);
@@ -144,10 +162,13 @@ public class CentralNode implements Runnable {
                         if (p != null) {
                             LOGGER.debug("Updating peer {} - {} and {} centroids", peerId, Arrays.toString(updatedWeights), (centroidsArr.length / 2));
                             p.setWeights(updatedWeights);
+                            p.setQuantizedNodes(new ArrayList<>());
                             for (int i = 0; i < centroidsArr.length; i += 2) {
                                 double[] c = {centroidsArr[i], centroidsArr[i + 1]};
-                                quantizedNodes.add(new SimpleEntry<>(peerId, c));
+                                p.getQuantizedNodes().add(c);
                             }
+                            SimpleEntry<Coord3d[], Color[]> plotInfo = VisualizationUtils.getPointsAndColors(peers);
+                            plot.setPoints(plotInfo.getKey(), plotInfo.getValue());
                         } else {
                             LOGGER.error("PEER {} NOT REGISTERED sent: {}", peerId, Arrays.toString(updatedWeights));
                         }
