@@ -26,6 +26,7 @@ public class ScatterPlot3D extends AbstractAnalysis {
     private Scatter scatter;
     final List<AbstractDrawable> memory = new Vector<>();
     private boolean first = true;
+    private float factor = 3f;
 
     @Override
     public void init() {
@@ -43,7 +44,10 @@ public class ScatterPlot3D extends AbstractAnalysis {
     }
 
     //initial points
-    public ScatterPlot3D(String[] xyz) {
+    public ScatterPlot3D(String[] xyz, boolean largePoints) {
+        if (largePoints) {
+            this.factor = 5f;
+        }
         this.xyz = xyz;
     }
 
@@ -68,7 +72,7 @@ public class ScatterPlot3D extends AbstractAnalysis {
             colors = tempc;
         }
         if (points.length == 2) {
-            scatter = new Scatter(points, colors, 3f);
+            scatter = new Scatter(points, colors, factor);
             chart.getScene().add(scatter);
         } else if (points.length > 2) {
             scatter.setColors(colors);
@@ -81,7 +85,7 @@ public class ScatterPlot3D extends AbstractAnalysis {
         colors = c;
         if (chart.getView().getCanvas() != null) {
             if (points.length >= 2 && first) {
-                scatter = new Scatter(points, colors, 3f);
+                scatter = new Scatter(points, colors, factor);
                 chart.getScene().add(scatter);
                 first = false;
             } else if (points.length > 2) {

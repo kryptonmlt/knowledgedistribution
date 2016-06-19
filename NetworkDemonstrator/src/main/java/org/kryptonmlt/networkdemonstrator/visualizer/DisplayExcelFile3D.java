@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -16,14 +14,12 @@ import java.util.Map;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
-import org.kryptonmlt.networkdemonstrator.learning.Learning;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
-import org.kryptonmlt.networkdemonstrator.tools.ColorUtils;
-import org.kryptonmlt.networkdemonstrator.tools.IOUtils;
-import org.kryptonmlt.networkdemonstrator.tools.LearningUtils;
-import org.kryptonmlt.networkdemonstrator.tools.VisualizationUtils;
+import org.kryptonmlt.networkdemonstrator.utils.ColorUtils;
+import org.kryptonmlt.networkdemonstrator.utils.IOUtils;
+import org.kryptonmlt.networkdemonstrator.utils.LearningUtils;
+import org.kryptonmlt.networkdemonstrator.utils.VisualizationUtils;
 
 public class DisplayExcelFile3D {
 
@@ -39,7 +35,7 @@ public class DisplayExcelFile3D {
         //FileInputStream file = new FileInputStream(new File("pm25_pm10.xlsx"));
         //FileInputStream file = new FileInputStream(new File("TestData.xlsx"));
         //FileInputStream file = new FileInputStream(new File("SimpleNormalization.xlsx"));
-        ScatterPlot3D plot = new ScatterPlot3D(names);
+        ScatterPlot3D plot = new ScatterPlot3D(names, false);
         plot.show();
         Map<Integer, List<Coord3d>> points = new HashMap<>();
         Map<Integer, OnlineStochasticGradientDescent> sgds = new HashMap<>();

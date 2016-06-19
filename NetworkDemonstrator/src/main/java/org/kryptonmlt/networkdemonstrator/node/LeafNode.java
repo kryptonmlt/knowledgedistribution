@@ -1,180 +1,19 @@
 package org.kryptonmlt.networkdemonstrator.node;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.kryptonmlt.networkdemonstrator.enums.WorthType;
-import org.kryptonmlt.networkdemonstrator.learning.ART;
-import org.kryptonmlt.networkdemonstrator.learning.Clustering;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineKmeans;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
-import org.kryptonmlt.networkdemonstrator.sensors.SensorManager;
-import org.kryptonmlt.networkdemonstrator.tools.ConversionUtils;
-import org.kryptonmlt.networkdemonstrator.tools.MessageUtils;
-import org.kryptonmlt.networkdemonstrator.tools.VectorUtils;
-import org.slf4j.LoggerFactory;
-
 /**
  *
  * @author Kurt
  */
-public class LeafNode implements Runnable {
+public interface LeafNode{
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LeafNode.class);
+    public Long getId();
 
-    private long id;
-    private final int delayMillis;
-    private final WorthType worth;
-    private final double error;
-    private boolean connected = false;
+    public boolean isConnected();
 
-    //Sensor Learning
-    private final int numberOfFeatures;
-    private final SensorManager sensorManager;
-    private final OnlineStochasticGradientDescent localModel;
-    private final OnlineStochasticGradientDescent centralNodeModel;
-    private final Clustering clustering;
-    private final int maxLearnPoints;
-    private int dataCounter = 0;
-
-    private final int serverPort;
-    private final DatagramSocket socket;
-    private final InetAddress toSendAddress;
-
-    public LeafNode(String hostname, int serverPort, int delayMillis,
-            String datafile, XSSFSheet sheet, int startFeature, int numberOfFeatures,
-            double alpha, int maxLearnPoints, WorthType worth, double error, Integer k, double row) throws IOException {
-        this.maxLearnPoints = maxLearnPoints;
-        this.numberOfFeatures = numberOfFeatures;
-        this.serverPort = serverPort;
-        this.worth = worth;
-        this.error = error;
-
-        localModel = new OnlineStochasticGradientDescent(alpha);
-        centralNodeModel = new OnlineStochasticGradientDescent(alpha);
-
-        this.socket = new DatagramSocket();
-        this.delayMillis = delayMillis;
-        this.toSendAddress = InetAddress.getByName(hostname);
-        sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile);
-
-        if (k != null) {
-            clustering = new OnlineKmeans(k, alpha);
-        } else {
-            clustering = new ART(row, alpha);
-        }
-    }
-
-    public boolean isConnected() {
-        return connected;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    @Override
-    public void run() {
-        try {
-            LOGGER.info("Device starting up collecting {} feature, Registering to Central Node..", numberOfFeatures);
-            byte[] toSend = MessageUtils.constructRegistrationMessage(numberOfFeatures);
-            DatagramPacket connectPacket = new DatagramPacket(toSend, toSend.length,
-                    toSendAddress, serverPort);
-            socket.send(connectPacket);
-            byte[] idBuf = new byte[Long.BYTES];
-            DatagramPacket receivePacket = new DatagramPacket(idBuf, idBuf.length);
-            socket.receive(receivePacket);
-            id = ConversionUtils.batol(idBuf);
-            LOGGER.info("Device contacted central node and is now id {}", id);
-            connected = true;
-            //starts sending data
-            sendData();
-        } catch (IOException ex) {
-            LOGGER.error("Error when communicating with CentralNode", ex);
-        }
-    }
-
-    /**
-     * Sends sensor data to server using the delay assigned
-     *
-     * @throws java.io.IOException
-     */
-    public void sendData() throws IOException {
-        while (sensorManager.isReadyForRead()) {
-            double[] dataGathered = sensorManager.requestData();
-            learnFromData(dataGathered);
-            if (dataCounter > maxLearnPoints) {
-                // IS IT WORTH IT TO SEND IT ?
-                switch (worth) {
-                    case ALL:
-                        sendKnowledge();
-                        break;
-                    case CHANGE_IN_WEIGHT:
-                        double change = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
-                        if (change > error) {
-                            LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, change, error);
-                            sendKnowledge();
-                        }
-                        break;
-                    case THETA:
-                        double difference = Math.abs(localModel.predict(dataGathered[0], dataGathered[1]) - centralNodeModel.predict(dataGathered[0], dataGathered[1]));
-                        if (difference > error) {
-                            LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, difference, error);
-                            sendKnowledge();
-                        }
-                        break;
-                    case STOPPING_RULE:
-                        LOGGER.error("Still to be implemented !");
-                        break;
-                    default:
-                        throw new AssertionError(worth.name());
-                }
-                try {
-                    Thread.sleep(delayMillis);
-                } catch (InterruptedException ex) {
-                    LOGGER.error("Error when waiting to read from sensor", ex);
-                }
-            } else if (dataCounter == maxLearnPoints) {
-                LOGGER.info("Device {} finished learning stage now sending knowledge.. ", id);
-                sendKnowledge();
-            }
-            dataCounter++;
-        }
-    }
-
-    private void sendKnowledge() throws IOException {
-        LOGGER.debug("Device {} sending: {} and {} centroids", id, Arrays.toString(localModel.getWeights()), clustering.getCentroids().size());
-        byte[] dataToSend = MessageUtils.constructKnowledgeMessage(id, localModel.getWeights(), ConversionUtils.convert2DListToArray(clustering.getCentroids()));
-        DatagramPacket packet = new DatagramPacket(dataToSend, dataToSend.length,
-                toSendAddress, serverPort);
-        socket.send(packet);
-        centralNodeModel.setWeights(localModel.getWeights());
-        LOGGER.debug("Device {} sent data successfully", id);
-    }
-
-    private void sendFeatures(double[] dataGathered) throws IOException {
-        byte[] dataToSend = MessageUtils.constructFeaturesMessage(id, dataGathered);
-        DatagramPacket packet = new DatagramPacket(dataToSend, dataToSend.length,
-                toSendAddress, serverPort);
-        socket.send(packet);
-    }
-
-    private void learnFromData(double[] dataGathered) {
-        localModel.learn(dataGathered[0], dataGathered[1], dataGathered[2]);
-        double[] inputSpace = {dataGathered[0], dataGathered[1]};
-        clustering.update(inputSpace);
-    }
-
-    public int getTotalMessagesToBeSentSoFar() {
-        int amount = dataCounter - maxLearnPoints;
-        if (amount < 0) {
-            return 0;
-        }
-        return amount;
-    }
+    public int getTotalMessagesToBeSentSoFar();
+    
+    public double getAverageLocalError();
+    
+    public double getAverageCentralNodeError();
+    
 }

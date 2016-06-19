@@ -8,10 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.kryptonmlt.network.stats.QueryPerformer;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
-import org.kryptonmlt.networkdemonstrator.evaluation.QueryPerformer;
-import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
+import org.kryptonmlt.networkdemonstrator.node.actual.CentralNodeActual;
+import org.kryptonmlt.networkdemonstrator.node.actual.LeafNodeActual;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ public class MastersScenario {
     public static void main(String[] args) throws SocketException, IOException {
         String hostname = "127.0.0.1";
         int serverPort = 12345;
-        int delayMillis = 300;
+        int delayMillis = 0;
         String datafile = "NormalizedData.xlsx";
         int startFeature = 1;
         int numberOfFeatures = 3;
@@ -40,7 +41,7 @@ public class MastersScenario {
         int max_stations = 1;
 
         // Initialize Central Node
-        CentralNode centralNode = new CentralNode(serverPort, numberOfFeatures, k, MastersScenario.COLUMN_NAMES);
+        CentralNodeActual centralNode = new CentralNodeActual(serverPort, numberOfFeatures, k, MastersScenario.COLUMN_NAMES);
         new Thread(centralNode).start();
 
         try {
@@ -55,7 +56,7 @@ public class MastersScenario {
         final List<LeafNode> leafNodes = new ArrayList<>();
         for (int i = 0; i < max_stations; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
-            leafNodes.add(new LeafNode(hostname, serverPort,
+            leafNodes.add(new LeafNodeActual(hostname, serverPort,
                     delayMillis, datafile, sheet, startFeature,
                     numberOfFeatures, alpha, maxLearnPoints, type, error, k, row));
         }
@@ -63,7 +64,7 @@ public class MastersScenario {
 
         // Start communication with central node      
         for (int i = 0; i < leafNodes.size(); i++) {
-            new Thread(leafNodes.get(i)).start();
+            Thread t = new Thread((Runnable) leafNodes.get(i));
         }
 
         // Perform Queries

@@ -3,7 +3,7 @@ package org.kryptonmlt.networkdemonstrator.learning;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.kryptonmlt.networkdemonstrator.tools.VectorUtils;
+import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 
 public class OnlineKmeans implements Clustering {
 
