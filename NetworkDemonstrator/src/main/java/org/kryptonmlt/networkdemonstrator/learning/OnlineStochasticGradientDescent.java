@@ -9,7 +9,7 @@ import org.kryptonmlt.networkdemonstrator.utils.LearningUtils;
 public class OnlineStochasticGradientDescent implements Learning {
 
     private double[] weights = new double[3];
-    private double alpha = 0.05;
+    private double alpha;
 
     public OnlineStochasticGradientDescent(double alpha) {
         this.alpha = alpha;

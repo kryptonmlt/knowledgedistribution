@@ -32,15 +32,18 @@ public class MastersScenarioMock {
         int startFeature = 1;
         int numberOfFeatures = 3;
         int maxLearnPoints = 1000;
-        double error = 0.05;
+        double error = 0.01;
         double alpha = 0.05;
         WorthType type = WorthType.THETA;
-        Integer k = 4;
-        double row = 0.05; // only used when k is null
+        Integer k = 4; // Online K-Means
+        double row = 0.05; // ART - only used when k is null
         int max_stations = 10;
+        float DEGRADING_ALPHA = 0.01f;
+        float MINIMUM_ALPHA = 0;
+        int generations = 1;
 
         // Initialize Central Node
-        CentralNode centralNode = new CentralNodeMock(numberOfFeatures, k, MastersScenarioMock.COLUMN_NAMES);
+        CentralNode centralNode = new CentralNodeMock(numberOfFeatures, 5, MastersScenarioMock.COLUMN_NAMES, false);
 
         // Initialize IOT Devices (Sensors)
         FileInputStream file = new FileInputStream(new File(datafile));
@@ -49,7 +52,7 @@ public class MastersScenarioMock {
         for (int i = 0; i < max_stations; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
             leafNodes.add(new LeafNodeMock((CentralNodeMock) centralNode, delayMillis, datafile, i, sheet, startFeature,
-                    numberOfFeatures, alpha, maxLearnPoints, type, error, k, row));
+                    numberOfFeatures, alpha, maxLearnPoints, type, error, k, row, generations, DEGRADING_ALPHA, MINIMUM_ALPHA));
         }
         file.close();
 
@@ -61,7 +64,7 @@ public class MastersScenarioMock {
         }
 
         // Perform Queries
-        Thread t = new Thread(new QueryPerformer(centralNode, leafNodes));
+        Thread t = new Thread(new QueryPerformer(centralNode, leafNodes, error, type));
         t.setName("QueyPerformer Thread");
         t.start();
     }

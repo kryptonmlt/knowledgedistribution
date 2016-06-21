@@ -31,14 +31,16 @@ public class CentralNodeMock implements CentralNode {
     private final int closestK;
     private ScatterPlot3D plot;
 
-    public CentralNodeMock(int numberOfFeatures, int closestK, String[] columnNames) throws IOException {
+    public CentralNodeMock(int numberOfFeatures, int closestK, String[] columnNames, boolean showVisualization) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
         this.closestK = closestK;
-        try {
-            plot = new ScatterPlot3D(columnNames, true);
-            plot.show();
-        } catch (Exception ex) {
-            LOGGER.error("Error when trying to show Central Node Visualization", ex);
+        if (showVisualization) {
+            try {
+                plot = new ScatterPlot3D(columnNames, true);
+                plot.show();
+            } catch (Exception ex) {
+                LOGGER.error("Error when trying to show Central Node Visualization", ex);
+            }
         }
         LOGGER.info("Central Node started up.. listening for deivces with {} features", this.numberOfFeatures);
     }
@@ -111,7 +113,9 @@ public class CentralNodeMock implements CentralNode {
             });
             peer.setQuantizedNodes(centroidsCopy);
             SimpleEntry<Coord3d[], Color[]> plotInfo = VisualizationUtils.getPointsAndColors(peers);
-            plot.setPoints(plotInfo.getKey(), plotInfo.getValue());
+            if (plot != null) {
+                plot.setPoints(plotInfo.getKey(), plotInfo.getValue());
+            }
         }
     }
 
@@ -127,5 +131,10 @@ public class CentralNodeMock implements CentralNode {
             peers.put(id, new DevicePeerMock(id));
         }
         return peers.get(id);
+    }
+
+    @Override
+    public ScatterPlot3D getPlot() {
+        return plot;
     }
 }

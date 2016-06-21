@@ -68,6 +68,8 @@ public class MastersScenario {
         }
 
         // Perform Queries
-        new Thread(new QueryPerformer(centralNode, leafNodes)).start();
+        Thread t = new Thread(new QueryPerformer(centralNode, leafNodes, error, type));
+        t.setName("QueyPerformer Thread");
+        t.start();
     }
 }

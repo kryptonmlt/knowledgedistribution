@@ -42,6 +42,7 @@ public class LeafNodeActual implements LeafNode, Runnable {
     private final Clustering clustering;
     private final int maxLearnPoints;
     private int dataCounter = 0;
+    private boolean finished;
 
     private final int serverPort;
     private final DatagramSocket socket;
@@ -79,6 +80,11 @@ public class LeafNodeActual implements LeafNode, Runnable {
     @Override
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public boolean isFinished() {
+        return finished;
     }
 
     @Override
@@ -169,6 +175,7 @@ public class LeafNodeActual implements LeafNode, Runnable {
             }
             dataCounter++;
         }
+        finished = true;
     }
 
     private void sendKnowledge() throws IOException {
@@ -211,5 +218,15 @@ public class LeafNodeActual implements LeafNode, Runnable {
     @Override
     public double getAverageCentralNodeError() {
         return total_central_node_error / (float) getTotalMessagesToBeSentSoFar();
+    }
+
+    @Override
+    public int getTimesErrorExceeded() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int getTimesErrorAcceptable() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

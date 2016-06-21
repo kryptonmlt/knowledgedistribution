@@ -1,0 +1,7 @@
+System 10 devices (Using THETA at 0.01 error):
+24272 of 27577 = 88.0154% messages sent.
+Difference Error: 0.0005, Local Average Error: 0.1653, Server Average Error: 0.1658
+Times Error Exceeded: 24272
+Times Error Acceptable: 3305
+88.0154% Exceeded
+Took 880.65 seconds

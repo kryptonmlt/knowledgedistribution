@@ -86,7 +86,7 @@ public class ColorUtils {
             c.add(new Color(0, 255, b * 255 / 100));
         }
         c.add(new Color(0, 255, 0));
-        Collections.shuffle(c);
+        //Collections.shuffle(c);
         return c;
     }
 

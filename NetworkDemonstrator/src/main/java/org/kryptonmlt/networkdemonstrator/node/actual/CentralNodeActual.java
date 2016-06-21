@@ -185,4 +185,9 @@ public class CentralNodeActual implements CentralNode, Runnable {
             }
         }
     }
+
+    @Override
+    public ScatterPlot3D getPlot() {
+        return plot;
+    }
 }

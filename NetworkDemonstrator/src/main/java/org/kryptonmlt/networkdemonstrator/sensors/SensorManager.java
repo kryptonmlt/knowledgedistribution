@@ -24,4 +24,8 @@ public class SensorManager {
     public boolean isReadyForRead() {
         return counter < dataLoader.getNumberOfSamplesLoaded();
     }
+
+    public void reset() {
+        counter = 0;
+    }
 }
