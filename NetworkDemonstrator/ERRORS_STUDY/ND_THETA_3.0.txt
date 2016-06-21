@@ -1,0 +1,7 @@
+System 36 devices (Using THETA at 3.0 error):
+164 of 111101 = 0.1476% messages sent.
+Difference Error: 0.542, Local Average Error: 0.1664, Server Average Error: 0.7084
+Times Error Exceeded: 164
+Times Error Acceptable: 110937
+0.1476% Exceeded
+Took 20.893 seconds

@@ -91,7 +91,7 @@ public class LeafNodeMock implements LeafNode, Runnable {
             LOGGER.info("Device {} starting up collecting {} feature, Registering to Central Node..", id, numberOfFeatures);
             //starts sending data
             sendData();
-            LOGGER.info("Device {} finished sending data ..");
+            LOGGER.info("Device {} finished sending data ..", id);
         } catch (IOException ex) {
             LOGGER.error("Error when communicating with CentralNode", ex);
         }

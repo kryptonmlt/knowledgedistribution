@@ -92,6 +92,7 @@ public class QueryPerformer implements Runnable {
         float timeTakenSeconds = (System.currentTimeMillis() - timeStarted) / 1000.0f;
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter automatedBW = new BufferedWriter(new FileWriter(new File("AUTOMATED_ERRORS_STUDY/AND_" + worthType.name() + "_" + theta + ".txt")));
             int totalUpdates = 0;
             int totalDataToBeSent = 0;
             int peersCount = 0;
@@ -123,6 +124,13 @@ public class QueryPerformer implements Runnable {
             bw.write("Took " + timeTakenSeconds + " seconds");
             bw.flush();
             bw.close();
+            automatedBW.write(peersCount + "\n");
+            automatedBW.write(theta + "\n");
+            automatedBW.write(worthType.name() + "\n");
+            automatedBW.write(df.format(totalDifferenceError / (float) peersCount) + "\n");
+            automatedBW.write(df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "\n");
+            automatedBW.flush();
+            automatedBW.close();
         } catch (IOException ex) {
             LOGGER.error("Error when trying to write stats to results file...", ex);
         }

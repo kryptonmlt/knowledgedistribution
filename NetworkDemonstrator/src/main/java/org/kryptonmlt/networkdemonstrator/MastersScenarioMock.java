@@ -32,12 +32,12 @@ public class MastersScenarioMock {
         int startFeature = 1;
         int numberOfFeatures = 3;
         int maxLearnPoints = 1000;
-        double error = 0.02;
+        double error = Double.parseDouble(args[0]);
         double alpha = 0.05;
         WorthType type = WorthType.THETA;
         Integer k = 4; // Online K-Means
         double row = 0.05; // ART - only used when k is null
-        int max_stations = 10;
+        int max_stations = 36;
         float DEGRADING_ALPHA = 0.01f;
         float MINIMUM_ALPHA = 0;
         int generations = 1;

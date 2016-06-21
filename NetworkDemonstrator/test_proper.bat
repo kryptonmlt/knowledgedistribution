@@ -1,0 +1,16 @@
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.01
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.02
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.03
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.04
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.05
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.06
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.07
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.08
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.09
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.1
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.2
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.3
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 0.5
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 1.0
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 2.0
+call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 3.0
