@@ -64,8 +64,8 @@ public class QueryPerformer implements Runnable {
             for (Long id : peers.keySet()) {
                 int updates = peers.get(id).getTimesWeightsUpdated();
                 int totalDataToBeSent = leafNodes.get(id).getTotalMessagesToBeSentSoFar();
-                LOGGER.info("Peer {} sent {} of {} = {}% messages sent. Local Average Error: {}, Server Average Error: {}",
-                        id, updates, totalDataToBeSent, df.format((updates / (float) totalDataToBeSent) * 100),
+                LOGGER.info("Peer {} Finished:{} sent {} of {} = {}% messages sent. Local Average Error: {}, Server Average Error: {}",
+                        id, leafNodes.get(id).isFinished(), updates, totalDataToBeSent, df.format((updates / (float) totalDataToBeSent) * 100),
                         df.format(leafNodes.get(id).getAverageLocalError()), df.format(leafNodes.get(id).getAverageCentralNodeError()));
             }
             // run query at origin

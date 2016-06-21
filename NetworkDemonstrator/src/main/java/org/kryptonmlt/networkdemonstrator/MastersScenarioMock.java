@@ -32,7 +32,7 @@ public class MastersScenarioMock {
         int startFeature = 1;
         int numberOfFeatures = 3;
         int maxLearnPoints = 1000;
-        double error = 0.01;
+        double error = 0.02;
         double alpha = 0.05;
         WorthType type = WorthType.THETA;
         Integer k = 4; // Online K-Means
