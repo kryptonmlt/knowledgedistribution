@@ -3,3 +3,4 @@
 KnowledgeDiffusion/target/
 NetworkDemonstrator/target/
 *.log
+/AutomatedVisualizer/target/

@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kryptonmlt.data.pojos.StationWriter;
 import org.kryptonmlt.data.utils.DataUtils;
+import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
 
 public class CrawlerDataSplitter {
 
@@ -49,6 +51,11 @@ public class CrawlerDataSplitter {
             columnProperties[i][1] = "9000000000000";
         }
 
+        OnlineVarianceMean[] meanVariance = new OnlineVarianceMean[cols];
+        for (int i = 0; i < meanVariance.length; i++) {
+            meanVariance[i] = new OnlineVarianceMean();
+        }
+
         System.out.println("Going through sensors to calculate mean, min, max, and convert to Data.xlsx");
         int numberOfRows = 0;
         while ((tempLine = dataReader.readLine()) != null) {
@@ -71,6 +78,7 @@ public class CrawlerDataSplitter {
                         if (d < Double.parseDouble(columnProperties[i][1])) {
                             columnProperties[i][1] = "" + d;
                         }
+                        meanVariance[i].update(d);
                     } catch (Exception e) {
                         long l = sdf.parse(values[i]).getTime();
                         total[i] = "" + (Long.parseLong(total[i]) + l);
@@ -107,13 +115,18 @@ public class CrawlerDataSplitter {
 
         //calculate mean
         double[] mean = new double[cols];
+        double[] onlineMean = new double[cols];
         for (int i = 0; i < total.length; i++) {
             if (total[i].contains(".")) {
                 mean[i] = Double.parseDouble(total[i]) / (float) numberOfRows;
+                onlineMean[i] = meanVariance[i].getMean();
             } else {
                 mean[i] = Long.parseLong(total[i]) / (float) numberOfRows;
             }
         }
+        System.out.println("Mean:" + Arrays.toString(mean));
+        System.out.println("OnlineMean:" + Arrays.toString(onlineMean));
+
         System.out.println("Mean Calculated..");
         System.out.println("Calculating Standard Deviation");
         DataUtils.setAllStringArray(total, "0");
@@ -134,9 +147,15 @@ public class CrawlerDataSplitter {
         }
         allData = null;
         double[] sd = new double[cols];
+        double[] variance = new double[cols];
+        double[] onlineVariance = new double[cols];
         for (int i = 0; i < total.length; i++) {
             sd[i] = Math.sqrt(Double.parseDouble(total[i]) / (float) numberOfRows);
+            variance[i] = Double.parseDouble(total[i]) / (float) numberOfRows;
+            onlineVariance[i] = meanVariance[i].getVariance();
         }
+        System.out.println("Variance:" + Arrays.toString(variance));
+        System.out.println("OnlineVariance:" + Arrays.toString(onlineVariance));
         System.out.println("Standard Deviation Calculated..");
         System.out.println("Re reading File to calculate Normalization Excel File ..");
 

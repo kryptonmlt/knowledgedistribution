@@ -1,0 +1,10 @@
+System 36 devices (Using THETA at 0.005 error):
+59528 of 111101 = 53.5801% messages sent.
+Difference Error: 0.004, Local Average Error: 0.0959, Server Average Error: 0.1
+Times Error Exceeded: 59528
+Times Error Acceptable: 51573
+53.5801% Exceeded
+Times Error with update less than without: 106721 of 111101 = 96.0576%
+Average Mean: 0
+Average Variance: 7.9167
+Took 20.998 seconds

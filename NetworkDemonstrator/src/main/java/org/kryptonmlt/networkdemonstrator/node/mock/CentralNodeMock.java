@@ -67,7 +67,6 @@ public class CentralNodeMock implements CentralNode {
                     distance[idMax] = d;
                     nodeIds[idMax] = peerId;
                 }
-
             }
         }
         LOGGER.debug("Received Query: {}, ClosestIds: {}, Distance: {}", Arrays.toString(x), Arrays.toString(nodeIds), Arrays.toString(distance));

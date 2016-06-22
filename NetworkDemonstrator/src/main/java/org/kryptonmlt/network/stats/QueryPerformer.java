@@ -101,6 +101,9 @@ public class QueryPerformer implements Runnable {
             double totalCentralError = 0;
             int totalTimesErrorExceeded = 0;
             int totalTimesErrorAcceptable = 0;
+            int totalMean = 0;
+            int totalVariance = 0;
+            int totalP = 0;
             Map<Long, Peer> peers = centralNode.getPeers();
             for (Long id : peers.keySet()) {
                 totalUpdates += peers.get(id).getTimesWeightsUpdated();
@@ -112,6 +115,9 @@ public class QueryPerformer implements Runnable {
                 totalCentralError += centralError;
                 totalTimesErrorExceeded += leafNodes.get(id).getTimesErrorExceeded();
                 totalTimesErrorAcceptable += leafNodes.get(id).getTimesErrorAcceptable();
+                totalP += leafNodes.get(id).getP();
+                totalMean += leafNodes.get(id).getMeanVariance().getMean();
+                totalVariance += leafNodes.get(id).getMeanVariance().getVariance();
                 peersCount++;
             }
             bw.write("System " + peersCount + " devices (Using " + worthType.name() + " at " + theta + " error):\n");
@@ -121,6 +127,9 @@ public class QueryPerformer implements Runnable {
             bw.write("Times Error Exceeded: " + totalTimesErrorExceeded + "\n");
             bw.write("Times Error Acceptable: " + totalTimesErrorAcceptable + "\n");
             bw.write(df.format((totalTimesErrorExceeded / (float) (totalTimesErrorExceeded + totalTimesErrorAcceptable)) * 100) + "% Exceeded\n");
+            bw.write("Times Error with update less than without: " + totalP + " of " + totalDataToBeSent + " = " + df.format((totalP / (float) totalDataToBeSent) * 100) + "%\n");
+            bw.write("Average Mean: " + df.format(totalMean / (float) peersCount) + "\n");
+            bw.write("Average Variance: " + df.format(totalVariance / (float) peersCount) + "\n");
             bw.write("Took " + timeTakenSeconds + " seconds");
             bw.flush();
             bw.close();
@@ -129,6 +138,9 @@ public class QueryPerformer implements Runnable {
             automatedBW.write(worthType.name() + "\n");
             automatedBW.write(df.format(totalDifferenceError / (float) peersCount) + "\n");
             automatedBW.write(df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "\n");
+            automatedBW.write(df.format(totalMean / (float) peersCount) + "\n");
+            automatedBW.write(df.format(totalVariance / (float) peersCount) + "\n");
+            automatedBW.write(df.format(totalP / (float) totalDataToBeSent) + "\n");
             automatedBW.flush();
             automatedBW.close();
         } catch (IOException ex) {

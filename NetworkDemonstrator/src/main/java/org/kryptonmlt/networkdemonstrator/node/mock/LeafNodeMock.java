@@ -8,6 +8,7 @@ import org.kryptonmlt.networkdemonstrator.learning.ART;
 import org.kryptonmlt.networkdemonstrator.learning.Clustering;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineKmeans;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
+import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
 import org.kryptonmlt.networkdemonstrator.sensors.SensorManager;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
@@ -31,12 +32,14 @@ public class LeafNodeMock implements LeafNode, Runnable {
     private double total_central_node_error;
     private int timesErrorExceeded = 0;
     private int timesErrorAcceptable = 0;
+    private int p = 0;
 
     //Sensor Learning
     private final int numberOfFeatures;
     private final SensorManager sensorManager;
     private final OnlineStochasticGradientDescent localModel;
     private final OnlineStochasticGradientDescent centralNodeModel;
+    private final OnlineVarianceMean meanVariance;
     private final Clustering clustering;
     private final int maxLearnPoints;
     private int dataCounter = 0;
@@ -61,6 +64,7 @@ public class LeafNodeMock implements LeafNode, Runnable {
 
         localModel = new OnlineStochasticGradientDescent(alpha);
         centralNodeModel = new OnlineStochasticGradientDescent(alpha);
+        meanVariance = new OnlineVarianceMean();
 
         this.delayMillis = delayMillis;
         sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile);
@@ -105,6 +109,10 @@ public class LeafNodeMock implements LeafNode, Runnable {
     public void sendData() throws IOException {
         double tempLocalPredict;
         double tempCentralNodePredict;
+        double localError;
+        double centralNodeError;
+        double localErrorSquared;
+        double centralNodeErrorSquared;
         for (int i = 0; i < maximumGenerations; i++) {
             currentGeneration++;
             while (sensorManager.isReadyForRead()) {
@@ -120,33 +128,47 @@ public class LeafNodeMock implements LeafNode, Runnable {
                             total_central_node_error += Math.abs(tempLocalPredict - dataGathered[2]);
                             break;
                         case CHANGE_IN_WEIGHT:
-                            double change = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
+                            //Manhattan distance
+                            double manhattanDistance = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
                             tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
-                            if (change > allowed_error) {
-                                LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, change, allowed_error);
+                            tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
+                            localError = tempLocalPredict - dataGathered[2];
+                            centralNodeError = tempCentralNodePredict - dataGathered[2];
+                            localErrorSquared = localError * localError;
+                            centralNodeErrorSquared = centralNodeError * centralNodeError;
+                            if (manhattanDistance > allowed_error) {
+                                LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, allowed_error);
                                 sendKnowledge();
-                                total_central_node_error += Math.abs(tempLocalPredict - dataGathered[2]);
+                                total_central_node_error += localErrorSquared;
                             } else {
                                 //local model not sent
-                                total_central_node_error += Math.abs(centralNodeModel.predict(dataGathered[0], dataGathered[1]) - dataGathered[2]);
+                                total_central_node_error += centralNodeErrorSquared;
                                 timesErrorAcceptable++;
                             }
-                            total_local_error += Math.abs(tempLocalPredict - dataGathered[2]);
+                            total_local_error += localErrorSquared;
                             break;
                         case THETA:
                             tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
                             tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
-                            double difference = Math.abs(tempLocalPredict - tempCentralNodePredict);
-                            if (difference > allowed_error) {
-                                LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, difference, allowed_error);
+                            localError = tempLocalPredict - dataGathered[2];
+                            centralNodeError = tempCentralNodePredict - dataGathered[2];
+                            localErrorSquared = localError * localError;
+                            centralNodeErrorSquared = centralNodeError * centralNodeError;
+                            double differenceInError = localError - centralNodeError;
+                            double differenceInErrorSquared = differenceInError * differenceInError;
+
+                            calculateP(localErrorSquared, centralNodeErrorSquared);
+                            meanVariance.update(differenceInErrorSquared);
+                            if (differenceInErrorSquared > allowed_error) {
+                                LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, differenceInErrorSquared, allowed_error);
                                 sendKnowledge();
-                                total_central_node_error += Math.abs(tempLocalPredict - dataGathered[2]);
+                                total_central_node_error += localErrorSquared;
                             } else {
                                 //local model not sent
-                                total_central_node_error += Math.abs(tempCentralNodePredict - dataGathered[2]);
+                                total_central_node_error += centralNodeErrorSquared;
                                 timesErrorAcceptable++;
                             }
-                            total_local_error += Math.abs(tempLocalPredict - dataGathered[2]);
+                            total_local_error += localErrorSquared;
                             break;
                         case STOPPING_RULE:
                             LOGGER.error("Still to be implemented !");
@@ -178,6 +200,12 @@ public class LeafNodeMock implements LeafNode, Runnable {
             }
         }
         finished = true;
+    }
+
+    private void calculateP(double localPredict, double centralNodePredict) {
+        if (localPredict < centralNodePredict) {
+            p++;
+        }
     }
 
     private void sendKnowledge() throws IOException {
@@ -225,6 +253,16 @@ public class LeafNodeMock implements LeafNode, Runnable {
     @Override
     public int getTimesErrorAcceptable() {
         return timesErrorAcceptable;
+    }
+
+    @Override
+    public int getP() {
+        return p;
+    }
+
+    @Override
+    public OnlineVarianceMean getMeanVariance() {
+        return meanVariance;
     }
 
     @Override
