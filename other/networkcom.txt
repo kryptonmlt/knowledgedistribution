@@ -1,4 +1,0 @@
-Client -> Server
-request numberOfDoubles - (0 int) - server sends id back = long
-(not used)request id features+target - (1 long doubleArray) - server stores them/learn
-request id weights k centroids - (2 long doubleArray byte doublePairs) - server stores these for each client

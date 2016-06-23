@@ -104,6 +104,18 @@ public class QueryPerformer implements Runnable {
             int totalMean = 0;
             int totalVariance = 0;
             int totalP = 0;
+
+            //statistics
+            List<Double> Y = new ArrayList<>(); // difference
+            List<Double> E_DASH = new ArrayList<>(); // local model
+            List<Double> E = new ArrayList<>();  // central/obsolete model
+            double E_DASH_Mean = 0;
+            double E_DASH_Variance = 0;
+            double E_Mean = 0;
+            double E_Variance = 0;
+            double Y_Mean = 0;
+            double Y_Variance = 0;
+
             Map<Long, Peer> peers = centralNode.getPeers();
             for (Long id : peers.keySet()) {
                 totalUpdates += peers.get(id).getTimesWeightsUpdated();
@@ -118,6 +130,25 @@ public class QueryPerformer implements Runnable {
                 totalP += leafNodes.get(id).getP();
                 totalMean += leafNodes.get(id).getMeanVariance().getMean();
                 totalVariance += leafNodes.get(id).getMeanVariance().getVariance();
+
+                //statistics
+                if (leafNodes.get(id).isStatistics()) {
+                    double[] y_temp = leafNodes.get(id).getY();
+                    double[] e_dash_temp = leafNodes.get(id).getE_DASH();
+                    double[] e_temp = leafNodes.get(id).getE();
+                    for (int i = 0; i < y_temp.length; i++) {
+                        Y.add(y_temp[i]);
+                        E_DASH.add(e_dash_temp[i]);
+                        E.add(e_temp[i]);
+                    }
+                    E_DASH_Mean += leafNodes.get(id).getE_DASH_MeanVariance().getMean();
+                    E_DASH_Variance += leafNodes.get(id).getE_DASH_MeanVariance().getVariance();
+                    E_Mean += leafNodes.get(id).getE_MeanVariance().getMean();
+                    E_Variance += leafNodes.get(id).getE_MeanVariance().getVariance();
+                    Y_Mean += leafNodes.get(id).getY_MeanVariance().getMean();
+                    Y_Variance += leafNodes.get(id).getY_MeanVariance().getVariance();
+                }
+
                 peersCount++;
             }
             bw.write("System " + peersCount + " devices (Using " + worthType.name() + " at " + theta + " error):\n");
@@ -130,6 +161,14 @@ public class QueryPerformer implements Runnable {
             bw.write("Times Error with update less than without: " + totalP + " of " + totalDataToBeSent + " = " + df.format((totalP / (float) totalDataToBeSent) * 100) + "%\n");
             bw.write("Average Mean: " + df.format(totalMean / (float) peersCount) + "\n");
             bw.write("Average Variance: " + df.format(totalVariance / (float) peersCount) + "\n");
+
+            bw.write("Average E' Mean: " + df.format(E_DASH_Mean / (float) peersCount) + "\n");
+            bw.write("Average E' Variance: " + df.format(E_DASH_Variance / (float) peersCount) + "\n");
+            bw.write("Average E Mean: " + df.format(E_Mean / (float) peersCount) + "\n");
+            bw.write("Average E Variance: " + df.format(E_Variance / (float) peersCount) + "\n");
+            bw.write("Average Y Mean: " + df.format(Y_Mean / (float) peersCount) + "\n");
+            bw.write("Average Y' Variance: " + df.format(Y_Variance / (float) peersCount) + "\n");
+
             bw.write("Took " + timeTakenSeconds + " seconds");
             bw.flush();
             bw.close();
@@ -141,6 +180,9 @@ public class QueryPerformer implements Runnable {
             automatedBW.write(df.format(totalMean / (float) peersCount) + "\n");
             automatedBW.write(df.format(totalVariance / (float) peersCount) + "\n");
             automatedBW.write(df.format(totalP / (float) totalDataToBeSent) + "\n");
+            for (int i = 0; i < Y.size(); i++) {
+                automatedBW.write(E_DASH.get(i) + "," + E.get(i) + "," + Y.get(i) + "\n");
+            }
             automatedBW.flush();
             automatedBW.close();
         } catch (IOException ex) {

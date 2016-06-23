@@ -28,4 +28,18 @@ public interface LeafNode {
 
     public OnlineVarianceMean getMeanVariance();
 
+    public double[] getY();
+
+    public double[] getE_DASH();
+
+    public double[] getE();
+
+    public OnlineVarianceMean getE_DASH_MeanVariance();
+
+    public OnlineVarianceMean getE_MeanVariance();
+
+    public OnlineVarianceMean getY_MeanVariance();
+
+    public boolean isStatistics();
+
 }

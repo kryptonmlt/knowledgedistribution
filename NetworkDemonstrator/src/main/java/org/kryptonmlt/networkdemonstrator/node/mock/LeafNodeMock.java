@@ -28,18 +28,26 @@ public class LeafNodeMock implements LeafNode, Runnable {
     private final WorthType worth;
     private final double allowed_error;
 
+    // Statistics
+    private final boolean statistics;
     private double total_local_error;
     private double total_central_node_error;
     private int timesErrorExceeded = 0;
     private int timesErrorAcceptable = 0;
     private int p = 0;
+    private double[] Y; // difference
+    private double[] E_DASH;// local model
+    private double[] E; // central/obsolete model
+    private final OnlineVarianceMean E_DASH_MeanVariance;
+    private final OnlineVarianceMean E_MeanVariance;
+    private final OnlineVarianceMean Y_MeanVariance;
 
     //Sensor Learning
     private final int numberOfFeatures;
     private final SensorManager sensorManager;
     private final OnlineStochasticGradientDescent localModel;
     private final OnlineStochasticGradientDescent centralNodeModel;
-    private final OnlineVarianceMean meanVariance;
+    private final OnlineVarianceMean THETA_ERROR_meanVariance;
     private final Clustering clustering;
     private final int maxLearnPoints;
     private int dataCounter = 0;
@@ -54,25 +62,35 @@ public class LeafNodeMock implements LeafNode, Runnable {
     public LeafNodeMock(CentralNodeMock centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, int startFeature, int numberOfFeatures,
             double alpha, int maxLearnPoints, WorthType worth, double error, Integer k, double row, int generations,
-            double degrade_alpha, double minimum_alpha) throws IOException {
+            double degrade_alpha, double minimum_alpha, boolean statistics, int max_use_Points) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
         this.centralNode = centralNode;
         this.worth = worth;
         this.allowed_error = error;
         this.id = sheetNum;
+        this.statistics = statistics;
+        if (this.statistics) {
+            this.Y = new double[max_use_Points];
+            this.E_DASH = new double[max_use_Points];
+            this.E = new double[max_use_Points];
+        }
 
-        localModel = new OnlineStochasticGradientDescent(alpha);
-        centralNodeModel = new OnlineStochasticGradientDescent(alpha);
-        meanVariance = new OnlineVarianceMean();
+        this.E_DASH_MeanVariance = new OnlineVarianceMean();
+        this.E_MeanVariance = new OnlineVarianceMean();
+        this.Y_MeanVariance = new OnlineVarianceMean();
+
+        this.localModel = new OnlineStochasticGradientDescent(alpha);
+        this.centralNodeModel = new OnlineStochasticGradientDescent(alpha);
+        this.THETA_ERROR_meanVariance = new OnlineVarianceMean();
 
         this.delayMillis = delayMillis;
-        sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile);
+        this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile);
 
         if (k != null) {
-            clustering = new OnlineKmeans(k, alpha);
+            this.clustering = new OnlineKmeans(k, alpha);
         } else {
-            clustering = new ART(row, alpha);
+            this.clustering = new ART(row, alpha);
         }
         this.maximumGenerations = generations;
         this.degrade_alpha = degrade_alpha;
@@ -111,67 +129,69 @@ public class LeafNodeMock implements LeafNode, Runnable {
         double tempCentralNodePredict;
         double localError;
         double centralNodeError;
-        double localErrorSquared;
-        double centralNodeErrorSquared;
         for (int i = 0; i < maximumGenerations; i++) {
             currentGeneration++;
-            while (sensorManager.isReadyForRead()) {
+            while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
                 double[] dataGathered = sensorManager.requestData();
                 learnFromData(dataGathered);
                 if (dataCounter > maxLearnPoints) {
+
+                    tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
+                    tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
+                    localError = tempLocalPredict - dataGathered[2];
+                    centralNodeError = tempCentralNodePredict - dataGathered[2];
+                    double e_dash = localError * localError;
+                    double e = centralNodeError * centralNodeError;
+                    if (statistics) {
+                        E_DASH[dataCounter - maxLearnPoints - 1] = e_dash;
+                        E[dataCounter - maxLearnPoints - 1] = e;
+                        if (e > e_dash) { //Local model better than central model (probability approx 90%)
+                            Y[dataCounter - maxLearnPoints - 1] = e - e_dash;
+                        } else {
+                            Y[dataCounter - maxLearnPoints - 1] = 0;
+                        }
+                        Y_MeanVariance.update(Y[dataCounter - maxLearnPoints - 1]);
+                    }
+                    E_DASH_MeanVariance.update(e_dash);
+                    E_MeanVariance.update(e);
+                    double differenceInErrorSquared = (localError - centralNodeError) * (localError - centralNodeError);
                     // IS IT WORTH IT TO SEND IT ?
                     switch (worth) {
                         case ALL:
                             sendKnowledge();
-                            tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
-                            total_local_error += Math.abs(tempLocalPredict - dataGathered[2]);
-                            total_central_node_error += Math.abs(tempLocalPredict - dataGathered[2]);
+                            total_central_node_error += e_dash;
+                            total_local_error += e_dash;
                             break;
                         case CHANGE_IN_WEIGHT:
                             //Manhattan distance
                             double manhattanDistance = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
-                            tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
-                            tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
-                            localError = tempLocalPredict - dataGathered[2];
-                            centralNodeError = tempCentralNodePredict - dataGathered[2];
-                            localErrorSquared = localError * localError;
-                            centralNodeErrorSquared = centralNodeError * centralNodeError;
                             if (manhattanDistance > allowed_error) {
                                 LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, allowed_error);
                                 sendKnowledge();
-                                total_central_node_error += localErrorSquared;
+                                total_central_node_error += e_dash;
                             } else {
                                 //local model not sent
-                                total_central_node_error += centralNodeErrorSquared;
+                                total_central_node_error += e;
                                 timesErrorAcceptable++;
                             }
-                            total_local_error += localErrorSquared;
+                            total_local_error += e_dash;
                             break;
                         case THETA:
-                            tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
-                            tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
-                            localError = tempLocalPredict - dataGathered[2];
-                            centralNodeError = tempCentralNodePredict - dataGathered[2];
-                            localErrorSquared = localError * localError;
-                            centralNodeErrorSquared = centralNodeError * centralNodeError;
-                            double differenceInError = localError - centralNodeError;
-                            double differenceInErrorSquared = differenceInError * differenceInError;
-
-                            calculateP(localErrorSquared, centralNodeErrorSquared);
-                            meanVariance.update(differenceInErrorSquared);
+                            calculateP(e_dash, e);
+                            THETA_ERROR_meanVariance.update(differenceInErrorSquared);
                             if (differenceInErrorSquared > allowed_error) {
                                 LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, differenceInErrorSquared, allowed_error);
                                 sendKnowledge();
-                                total_central_node_error += localErrorSquared;
+                                total_central_node_error += e_dash;
                             } else {
                                 //local model not sent
-                                total_central_node_error += centralNodeErrorSquared;
+                                total_central_node_error += e;
                                 timesErrorAcceptable++;
                             }
-                            total_local_error += localErrorSquared;
+                            total_local_error += e_dash;
                             break;
                         case STOPPING_RULE:
-                            LOGGER.error("Still to be implemented !");
+                            calculateP(e_dash, e);
                             break;
                         default:
                             throw new AssertionError(worth.name());
@@ -262,11 +282,47 @@ public class LeafNodeMock implements LeafNode, Runnable {
 
     @Override
     public OnlineVarianceMean getMeanVariance() {
-        return meanVariance;
+        return THETA_ERROR_meanVariance;
     }
 
     @Override
     public boolean isConnected() {
         return true;
     }
+
+    @Override
+    public double[] getY() {
+        return Y;
+    }
+
+    @Override
+    public double[] getE_DASH() {
+        return E_DASH;
+    }
+
+    @Override
+    public double[] getE() {
+        return E;
+    }
+
+    @Override
+    public OnlineVarianceMean getE_DASH_MeanVariance() {
+        return E_DASH_MeanVariance;
+    }
+
+    @Override
+    public OnlineVarianceMean getE_MeanVariance() {
+        return E_MeanVariance;
+    }
+
+    @Override
+    public OnlineVarianceMean getY_MeanVariance() {
+        return Y_MeanVariance;
+    }
+
+    @Override
+    public boolean isStatistics() {
+        return statistics;
+    }
+
 }

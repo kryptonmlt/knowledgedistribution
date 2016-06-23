@@ -1,0 +1,16 @@
+System 1 devices (Using STOPPING_RULE at 0.01 error):
+1 of 1001 = 0.0999% messages sent.
+Difference Error: 0, Local Average Error: 0, Server Average Error: 0
+Times Error Exceeded: 1
+Times Error Acceptable: 0
+100% Exceeded
+Times Error with update less than without: 876 of 1001 = 87.5125%
+Average Mean: 0
+Average Variance: 0
+Average E' Mean: 0.1794
+Average E' Variance: 0.2199
+Average E Mean: 2.0243
+Average E Variance: 4.1247
+Average Y Mean: 1.8816
+Average Y' Variance: 3.7859
+Took 20.433 seconds

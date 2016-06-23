@@ -32,16 +32,18 @@ public class MastersScenarioMock {
         int startFeature = 1;
         int numberOfFeatures = 3;
         int maxLearnPoints = 1000;
-        double error = Double.parseDouble(args[0]);
-        //double error = 0.01;
+        //double error = Double.parseDouble(args[0]);
+        double error = 0.01;
         double alpha = 0.05;
-        WorthType type = WorthType.THETA;
+        int max_stations = 1;
+        WorthType type = WorthType.STOPPING_RULE;
         Integer k = 4; // Online K-Means
         double row = 0.05; // ART - only used when k is null
-        int max_stations = 36;
         float DEGRADING_ALPHA = 0.01f;
         float MINIMUM_ALPHA = 0;
         int generations = 1;
+        boolean useStats = true;
+        int use_max_points = 1000;
 
         // Initialize Central Node
         CentralNode centralNode = new CentralNodeMock(numberOfFeatures, 5, MastersScenarioMock.COLUMN_NAMES, false);
@@ -53,7 +55,7 @@ public class MastersScenarioMock {
         for (int i = 0; i < max_stations; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
             leafNodes.add(new LeafNodeMock((CentralNodeMock) centralNode, delayMillis, datafile, i, sheet, startFeature,
-                    numberOfFeatures, alpha, maxLearnPoints, type, error, k, row, generations, DEGRADING_ALPHA, MINIMUM_ALPHA));
+                    numberOfFeatures, alpha, maxLearnPoints, type, error, k, row, generations, DEGRADING_ALPHA, MINIMUM_ALPHA, useStats, use_max_points));
         }
         file.close();
 
