@@ -23,7 +23,7 @@ public class HistogramDisplay extends ApplicationFrame {
         dataset.addSeries(name, data, 20); // Number of bins is 50
         String plotTitle = name + " Histogram";
         String xAxis = "Error";
-        String yAxis = "Count";
+        String yAxis = "Probability";
         PlotOrientation orientation = PlotOrientation.VERTICAL;
 
         boolean show = false;

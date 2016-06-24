@@ -109,28 +109,27 @@ public class DisplayErrorStudy {
         drawHistogram("E'", E_DASH);
         drawHistogram("E", E);
         drawHistogram("Y", Y);
-        
-        PDF E_DASH_PDF = new PDF(0.1794, 0.2199);
-        drawHistogram("E' GENERATED", E_DASH_PDF.getNextThousand());
-        PDF E_PDF = new PDF(2.0243, 4.1247);
-        drawHistogram("E GENERATED", E_PDF.getNextThousand());
-        PDF Y_PDF = new PDF(1.8816, 3.7859);
-        drawHistogram("Y GENERATED", Y_PDF.getNextThousand());
+
+        PDF E_DASH_PDF = new PDF(0.1794, 0.2199, -10, 10);
+        PDF E_PDF = new PDF(2.0243, 4.1247, -10, 10);;
+        PDF Y_PDF = new PDF(1.8816, 3.7859, -10, 10);
+        PDF gaussian = new PDF(0, 1, -10, 10);
+
+        Plot2D pdfPlot = new Plot2D("Probablity Distribution Function", "E, E' Y PDF", "Error", "P");
+        pdfPlot.addSeries(gaussian.getNextThousand3D(), "Gaussian", java.awt.Color.GRAY);
+        pdfPlot.addSeries(E_DASH_PDF.getNextThousand3D(), "E'", java.awt.Color.RED);
+        pdfPlot.addSeries(E_PDF.getNextThousand3D(), "E", java.awt.Color.GREEN);
+        pdfPlot.addSeries(Y_PDF.getNextThousand3D(), "Y", java.awt.Color.BLUE);
+        pdfPlot.display();
     }
 
     public static void drawHistogram(String name, List<Double> data) {
-
-        Histogram h = new Histogram(name, 10, Collections.min(data), Collections.max(data));
-        for (int i = 0; i < data.size(); i++) {
-            h.fill(data.get(i));
-        }
         double[] temp = new double[data.size()];
         for (int i = 0; i < data.size(); i++) {
             temp[i] = data.get(i);
         }
         HistogramDisplay hd = new HistogramDisplay(name, temp);
         hd.display();
-
     }
 
     public static void showGraph(List<Coord3d> points, String[] names) throws Exception {

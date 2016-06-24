@@ -13,6 +13,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
+import org.jzy3d.maths.Coord3d;
 
 /**
  *
@@ -49,6 +50,18 @@ public class Plot2D extends ApplicationFrame {
         final XYSeries series = new XYSeries(name);
         for (int i = 0; i < data.size(); i++) {
             series.add(i, data.get(i));
+        }
+        renderer.setSeriesPaint(counter, c);
+        renderer.setSeriesStroke(counter, new BasicStroke(this.STROKE_SIZE));
+        renderer.setSeriesShapesVisible(counter, false);
+        dataset.addSeries(series);
+        counter++;
+    }
+
+    public void addSeries(List<Coord3d> xy, String name, Color c) {
+        final XYSeries series = new XYSeries(name);
+        for (int i = 0; i < xy.size(); i++) {
+            series.add(xy.get(i).x, xy.get(i).y);
         }
         renderer.setSeriesPaint(counter, c);
         renderer.setSeriesStroke(counter, new BasicStroke(this.STROKE_SIZE));
