@@ -38,6 +38,9 @@ public class LeafNodeMock implements LeafNode, Runnable {
     private double[] Y; // difference
     private double[] E_DASH;// local model
     private double[] E; // central/obsolete model
+    private double[] localPredicted;
+    private double[] centralPredicted;
+    private double[] actual;
     private final OnlineVarianceMean E_DASH_MeanVariance;
     private final OnlineVarianceMean E_MeanVariance;
     private final OnlineVarianceMean Y_MeanVariance;
@@ -74,6 +77,9 @@ public class LeafNodeMock implements LeafNode, Runnable {
             this.Y = new double[max_use_Points];
             this.E_DASH = new double[max_use_Points];
             this.E = new double[max_use_Points];
+            this.localPredicted = new double[max_use_Points];
+            this.centralPredicted = new double[max_use_Points];
+            this.actual = new double[max_use_Points];
         }
 
         this.E_DASH_MeanVariance = new OnlineVarianceMean();
@@ -151,6 +157,9 @@ public class LeafNodeMock implements LeafNode, Runnable {
                             Y[dataCounter - maxLearnPoints - 1] = 0;
                         }
                         Y_MeanVariance.update(Y[dataCounter - maxLearnPoints - 1]);
+                        actual[dataCounter - maxLearnPoints - 1] = dataGathered[2];
+                        localPredicted[dataCounter - maxLearnPoints - 1] = tempLocalPredict;
+                        centralPredicted[dataCounter - maxLearnPoints - 1] = tempCentralNodePredict;
                     }
                     E_DASH_MeanVariance.update(e_dash);
                     E_MeanVariance.update(e);
@@ -304,6 +313,22 @@ public class LeafNodeMock implements LeafNode, Runnable {
     public double[] getE() {
         return E;
     }
+
+    @Override
+    public double[] getLocalPredicted() {
+        return localPredicted;
+    }
+
+    @Override
+    public double[] getCentralPredicted() {
+        return centralPredicted;
+    }
+
+    @Override
+    public double[] getActual() {
+        return actual;
+    }
+    
 
     @Override
     public OnlineVarianceMean getE_DASH_MeanVariance() {

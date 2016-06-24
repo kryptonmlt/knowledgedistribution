@@ -42,4 +42,10 @@ public interface LeafNode {
 
     public boolean isStatistics();
 
+    public double[] getLocalPredicted();
+
+    public double[] getCentralPredicted();
+
+    public double[] getActual();
+
 }

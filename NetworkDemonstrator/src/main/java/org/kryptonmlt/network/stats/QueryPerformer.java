@@ -93,6 +93,7 @@ public class QueryPerformer implements Runnable {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + ".txt")));
             BufferedWriter automatedBW = new BufferedWriter(new FileWriter(new File("AUTOMATED_ERRORS_STUDY/AND_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter detailValuesBW = new BufferedWriter(new FileWriter(new File("sensor_study_" + worthType.name() + "_" + theta + ".txt")));
             int totalUpdates = 0;
             int totalDataToBeSent = 0;
             int peersCount = 0;
@@ -106,9 +107,12 @@ public class QueryPerformer implements Runnable {
             int totalP = 0;
 
             //statistics
-            List<Double> Y = new ArrayList<>(); // difference
             List<Double> E_DASH = new ArrayList<>(); // local model
             List<Double> E = new ArrayList<>();  // central/obsolete model
+            List<Double> Y = new ArrayList<>(); // difference
+            List<Double> actual = new ArrayList<>(); // local model
+            List<Double> localPredicted = new ArrayList<>();  // central/obsolete model
+            List<Double> centralPredicted = new ArrayList<>(); // difference
             double E_DASH_Mean = 0;
             double E_DASH_Variance = 0;
             double E_Mean = 0;
@@ -133,13 +137,19 @@ public class QueryPerformer implements Runnable {
 
                 //statistics
                 if (leafNodes.get(id).isStatistics()) {
-                    double[] y_temp = leafNodes.get(id).getY();
                     double[] e_dash_temp = leafNodes.get(id).getE_DASH();
                     double[] e_temp = leafNodes.get(id).getE();
+                    double[] y_temp = leafNodes.get(id).getY();
+                    double[] actual_temp = leafNodes.get(id).getActual();
+                    double[] localPredicted_temp = leafNodes.get(id).getLocalPredicted();
+                    double[] centralPredicted_temp = leafNodes.get(id).getCentralPredicted();
                     for (int i = 0; i < y_temp.length; i++) {
-                        Y.add(y_temp[i]);
                         E_DASH.add(e_dash_temp[i]);
                         E.add(e_temp[i]);
+                        Y.add(y_temp[i]);
+                        actual.add(actual_temp[i]);
+                        localPredicted.add(localPredicted_temp[i]);
+                        centralPredicted.add(centralPredicted_temp[i]);
                     }
                     E_DASH_Mean += leafNodes.get(id).getE_DASH_MeanVariance().getMean();
                     E_DASH_Variance += leafNodes.get(id).getE_DASH_MeanVariance().getVariance();
@@ -167,7 +177,7 @@ public class QueryPerformer implements Runnable {
             bw.write("Average E Mean: " + df.format(E_Mean / (float) peersCount) + "\n");
             bw.write("Average E Variance: " + df.format(E_Variance / (float) peersCount) + "\n");
             bw.write("Average Y Mean: " + df.format(Y_Mean / (float) peersCount) + "\n");
-            bw.write("Average Y' Variance: " + df.format(Y_Variance / (float) peersCount) + "\n");
+            bw.write("Average Y Variance: " + df.format(Y_Variance / (float) peersCount) + "\n");
 
             bw.write("Took " + timeTakenSeconds + " seconds");
             bw.flush();
@@ -182,9 +192,12 @@ public class QueryPerformer implements Runnable {
             automatedBW.write(df.format(totalP / (float) totalDataToBeSent) + "\n");
             for (int i = 0; i < Y.size(); i++) {
                 automatedBW.write(E_DASH.get(i) + "," + E.get(i) + "," + Y.get(i) + "\n");
+                detailValuesBW.write(actual.get(i) + "," + localPredicted.get(i) + "," + centralPredicted.get(i) + "\n");
             }
             automatedBW.flush();
             automatedBW.close();
+            detailValuesBW.flush();
+            detailValuesBW.close();
         } catch (IOException ex) {
             LOGGER.error("Error when trying to write stats to results file...", ex);
         }

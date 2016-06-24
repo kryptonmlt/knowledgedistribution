@@ -12,5 +12,5 @@ Average E' Variance: 0.2199
 Average E Mean: 2.0243
 Average E Variance: 4.1247
 Average Y Mean: 1.8816
-Average Y' Variance: 3.7859
-Took 20.433 seconds
+Average Y Variance: 3.7859
+Took 20.284 seconds
