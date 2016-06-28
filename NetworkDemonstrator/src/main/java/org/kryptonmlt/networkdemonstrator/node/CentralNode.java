@@ -14,7 +14,7 @@ public interface CentralNode {
 
     public double queryAll(double[] query);
 
-    public double query(double[] query);
+    public double[] query(double[] query);
 
     public ScatterPlot3D getPlot();
     

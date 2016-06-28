@@ -66,7 +66,9 @@ public class CrawlerDataSplitter {
             for (int i = 0; i < values.length; i++) {
                 if ("".equals(values[i])) {
                     values[i] = "0";
-                    valid = false;
+                    if (i < 4) {
+                        valid = false;
+                    }
                 } else {
                     try {
                         double d = Double.parseDouble(values[i]);

@@ -1,0 +1,20 @@
+System 1 devices (Using THETA at 0.01 error):
+2858 of 8895 = 32.1304% messages sent.
+Difference Error: 0.0212, Local Average Error: 0.4024, Server Average Error: 0.4236
+Times Error Exceeded: 2858
+Times Error Acceptable: 6037
+32.1304% Exceeded
+Times Error with update less than without: 7991 of 8895 = 89.837%
+Average Mean: 0
+Average Variance: 160
+Average E' Mean: 0.4025
+Average E' Variance: 67.7652
+Average E Mean: 0.4102
+Average E Variance: 1.5683
+Average Y Mean: 0.1214
+Average Y Variance: 0.3079
+K: 5.0
+Closest K Used: [1, 10, 30]
+Quantized Error: [0.9769640480475488, 1.3723829689352864, 1.6585470643369715]
+General Error: 0.977
+Took 10.16 seconds

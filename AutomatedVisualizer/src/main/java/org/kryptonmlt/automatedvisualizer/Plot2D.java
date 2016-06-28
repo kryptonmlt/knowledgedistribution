@@ -3,6 +3,7 @@ package org.kryptonmlt.automatedvisualizer;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.util.List;
+import javax.swing.JScrollPane;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -31,7 +32,7 @@ public class Plot2D extends ApplicationFrame {
         JFreeChart xylineChart = ChartFactory.createXYLineChart(
                 chartTitle, xName, yName, dataset,
                 PlotOrientation.VERTICAL,
-                true, false, false);
+                true, true, false);
 
         ChartPanel chartPanel = new ChartPanel(xylineChart);
         chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));
@@ -58,13 +59,17 @@ public class Plot2D extends ApplicationFrame {
         counter++;
     }
 
-    public void addSeries(List<Coord3d> xy, String name, Color c) {
+    public void addSeries(List<Coord3d> xy, String name, Color c, boolean increaseSize) {
         final XYSeries series = new XYSeries(name);
         for (int i = 0; i < xy.size(); i++) {
             series.add(xy.get(i).x, xy.get(i).y);
         }
         renderer.setSeriesPaint(counter, c);
-        renderer.setSeriesStroke(counter, new BasicStroke(this.STROKE_SIZE));
+        if (increaseSize) {
+            renderer.setSeriesStroke(counter, new BasicStroke(this.STROKE_SIZE + 2f));
+        } else {
+            renderer.setSeriesStroke(counter, new BasicStroke(this.STROKE_SIZE));
+        }
         renderer.setSeriesShapesVisible(counter, false);
         dataset.addSeries(series);
         counter++;

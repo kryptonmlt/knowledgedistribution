@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +27,26 @@ public class QueryPerformer implements Runnable {
     private final CentralNode centralNode;
     private final Map<Long, LeafNode> leafNodes;
     private final DecimalFormat df = new DecimalFormat("0.####");
-    private final List<double[]> validationData = new ArrayList<>();
     private final double theta;
     private final WorthType worthType;
     private long timeStarted = 0;
+    private final float clusterParameter;
+    private boolean isKmeans;
+    private final int[] closestK;
 
-    public QueryPerformer(CentralNode centralNode, List<LeafNode> leafNodes, double theta, WorthType worthType) {
+    public QueryPerformer(CentralNode centralNode, List<LeafNode> leafNodes, double theta, WorthType worthType, Integer k, float row, int[] closestKCount) {
         timeStarted = System.currentTimeMillis();
         this.centralNode = centralNode;
         this.worthType = worthType;
         this.theta = theta;
+        this.closestK = closestKCount;
+        if (k == null) {
+            this.clusterParameter = row;
+            isKmeans = false;
+        } else {
+            this.clusterParameter = k;
+            isKmeans = true;
+        }
         this.leafNodes = new HashMap<>();
         for (LeafNode lf : leafNodes) {
             while (!lf.isConnected()) {
@@ -51,10 +62,9 @@ public class QueryPerformer implements Runnable {
 
     @Override
     public void run() {
-        double[] query = {0.0, 0.0};
         boolean allfinished = false;
         try {
-            Thread.sleep(15000l);
+            Thread.sleep(10000l);
             System.gc();
         } catch (InterruptedException ex) {
             LOGGER.error("Error when trying before starting query loop..", ex);
@@ -68,17 +78,7 @@ public class QueryPerformer implements Runnable {
                         id, leafNodes.get(id).isFinished(), updates, totalDataToBeSent, df.format((updates / (float) totalDataToBeSent) * 100),
                         df.format(leafNodes.get(id).getAverageLocalError()), df.format(leafNodes.get(id).getAverageCentralNodeError()));
             }
-            // run query at origin
-            double result = centralNode.query(query);
-            double resultAll = centralNode.queryAll(query);
-            LOGGER.info("Query - Quantized Result: {} , Average Result: {}"
-                    + "\n-------------------------------------------------------------------------------------------------------------", result, resultAll);
-            try {
-                Thread.sleep(5000l);
-            } catch (InterruptedException ex) {
-                LOGGER.error("Error when trying to wait to get peers..", ex);
-            }
-
+            LOGGER.info("----------------------------------------------------------------------------");
             // Check if all leaf nodes finished sending !
             allfinished = true;
             for (LeafNode leaf : leafNodes.values()) {
@@ -87,13 +87,21 @@ public class QueryPerformer implements Runnable {
                     break;
                 }
             }
+            if (!allfinished) {
+                try {
+                    Thread.sleep(5000l);
+                } catch (InterruptedException ex) {
+                    LOGGER.error("Error when trying to wait to get peers..", ex);
+                }
+            }
         }
+
         LOGGER.info("Run finished");
         float timeTakenSeconds = (System.currentTimeMillis() - timeStarted) / 1000.0f;
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + ".txt")));
-            BufferedWriter automatedBW = new BufferedWriter(new FileWriter(new File("AUTOMATED_ERRORS_STUDY/AND_" + worthType.name() + "_" + theta + ".txt")));
-            BufferedWriter detailValuesBW = new BufferedWriter(new FileWriter(new File("sensor_study_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + "_" + clusterParameter + ".txt")));
+            BufferedWriter automatedBW = new BufferedWriter(new FileWriter(new File("AUTOMATED_ERRORS_STUDY/AND_" + worthType.name() + "_" + theta + "_" + clusterParameter + ".txt")));
+            BufferedWriter detailValuesBW = new BufferedWriter(new FileWriter(new File("SENSOR_STUDY/sensor_study_" + worthType.name() + "_" + theta + "_" + clusterParameter + ".txt")));
             int totalUpdates = 0;
             int totalDataToBeSent = 0;
             int peersCount = 0;
@@ -105,6 +113,9 @@ public class QueryPerformer implements Runnable {
             int totalMean = 0;
             int totalVariance = 0;
             int totalP = 0;
+            double[] quantizedError = new double[closestK.length];
+            double generalError = 0;
+            int queries = 0;
 
             //statistics
             List<Double> E_DASH = new ArrayList<>(); // local model
@@ -151,16 +162,31 @@ public class QueryPerformer implements Runnable {
                         localPredicted.add(localPredicted_temp[i]);
                         centralPredicted.add(centralPredicted_temp[i]);
                     }
-                    E_DASH_Mean += leafNodes.get(id).getE_DASH_MeanVariance().getMean();
-                    E_DASH_Variance += leafNodes.get(id).getE_DASH_MeanVariance().getVariance();
-                    E_Mean += leafNodes.get(id).getE_MeanVariance().getMean();
-                    E_Variance += leafNodes.get(id).getE_MeanVariance().getVariance();
-                    Y_Mean += leafNodes.get(id).getY_MeanVariance().getMean();
-                    Y_Variance += leafNodes.get(id).getY_MeanVariance().getVariance();
                 }
+
+                E_DASH_Mean += leafNodes.get(id).getE_DASH_MeanVariance().getMean();
+                E_DASH_Variance += leafNodes.get(id).getE_DASH_MeanVariance().getVariance();
+                E_Mean += leafNodes.get(id).getE_MeanVariance().getMean();
+                E_Variance += leafNodes.get(id).getE_MeanVariance().getVariance();
+                Y_Mean += leafNodes.get(id).getY_MeanVariance().getMean();
+                Y_Variance += leafNodes.get(id).getY_MeanVariance().getVariance();
+
+                double[] tempQError = leafNodes.get(id).getQuantizedError();
+                for (int i = 0; i < closestK.length; i++) {
+                    quantizedError[i] += tempQError[i];
+                }
+                generalError += leafNodes.get(id).getGeneralError();
+                queries += leafNodes.get(id).getQueries();
 
                 peersCount++;
             }
+            if (queries > 0) {
+                for (int i = 0; i < closestK.length; i++) {
+                    quantizedError[i] = quantizedError[i] / (float) queries;
+                }
+                generalError = generalError / (float) queries;
+            }
+
             bw.write("System " + peersCount + " devices (Using " + worthType.name() + " at " + theta + " error):\n");
             bw.write(totalUpdates + " of " + totalDataToBeSent + " = " + df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "% messages sent.\n");
             bw.write("Difference Error: " + df.format(totalDifferenceError / (float) peersCount) + ", Local Average Error: "
@@ -178,20 +204,36 @@ public class QueryPerformer implements Runnable {
             bw.write("Average E Variance: " + df.format(E_Variance / (float) peersCount) + "\n");
             bw.write("Average Y Mean: " + df.format(Y_Mean / (float) peersCount) + "\n");
             bw.write("Average Y Variance: " + df.format(Y_Variance / (float) peersCount) + "\n");
+            if (isKmeans) {
+                bw.write("K: " + clusterParameter + "\n");
+            } else {
+                bw.write("Row: " + clusterParameter + "\n");
+            }
+            bw.write("Closest K Used: " + Arrays.toString(closestK) + "\n");
+            bw.write("Quantized Error: " + Arrays.toString(quantizedError) + "\n");
+            bw.write("General Error: " + df.format(generalError) + "\n");
 
             bw.write("Took " + timeTakenSeconds + " seconds");
             bw.flush();
             bw.close();
-            automatedBW.write(peersCount + "\n");
-            automatedBW.write(theta + "\n");
-            automatedBW.write(worthType.name() + "\n");
-            automatedBW.write(df.format(totalDifferenceError / (float) peersCount) + "\n");
-            automatedBW.write(df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "\n");
-            automatedBW.write(df.format(totalMean / (float) peersCount) + "\n");
-            automatedBW.write(df.format(totalVariance / (float) peersCount) + "\n");
-            automatedBW.write(df.format(totalP / (float) totalDataToBeSent) + "\n");
+            automatedBW.write(peersCount + "\n"); //devices
+            automatedBW.write(theta + "\n"); //theta
+            automatedBW.write(worthType.name() + "\n"); //worth type
+            automatedBW.write(df.format(totalDifferenceError / (float) peersCount) + "\n"); //average error
+            automatedBW.write(df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "\n"); // messages sent %
+            automatedBW.write(df.format(totalMean / (float) peersCount) + "\n"); // average mean
+            automatedBW.write(df.format(totalVariance / (float) peersCount) + "\n"); // average variance
+            automatedBW.write(df.format(totalP / (float) totalDataToBeSent) + "\n"); // average P            
+            automatedBW.write(df.format(E_DASH_Mean / (float) peersCount) + ","
+                    + df.format(E_DASH_Variance / (float) peersCount) + ","
+                    + df.format(E_Mean / (float) peersCount) + "," + df.format(E_Variance / (float) peersCount) + ","
+                    + df.format(Y_Mean / (float) peersCount) + "," + (df.format(Y_Variance / (float) peersCount) + "\n"));
+            automatedBW.write(clusterParameter + "\n");
+            automatedBW.write(Arrays.toString(closestK).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+            automatedBW.write(Arrays.toString(quantizedError).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+            automatedBW.write(df.format(generalError) + "\n");
             for (int i = 0; i < Y.size(); i++) {
-                automatedBW.write(E_DASH.get(i) + "," + E.get(i) + "," + Y.get(i) + "\n");
+                //automatedBW.write(E_DASH.get(i) + "," + E.get(i) + "," + Y.get(i) + "\n");
                 detailValuesBW.write(actual.get(i) + "," + localPredicted.get(i) + "," + centralPredicted.get(i) + "\n");
             }
             automatedBW.flush();
@@ -201,6 +243,7 @@ public class QueryPerformer implements Runnable {
         } catch (IOException ex) {
             LOGGER.error("Error when trying to write stats to results file...", ex);
         }
+
         if (this.centralNode.getPlot() != null) {
             this.centralNode.getPlot().getChart().dispose();
         }

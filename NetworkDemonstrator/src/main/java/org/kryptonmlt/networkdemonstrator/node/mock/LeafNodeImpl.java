@@ -1,6 +1,8 @@
 package org.kryptonmlt.networkdemonstrator.node.mock;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
@@ -19,9 +21,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author Kurt
  */
-public class LeafNodeMock implements LeafNode, Runnable {
+public class LeafNodeImpl implements LeafNode, Runnable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LeafNodeMock.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LeafNodeImpl.class);
 
     private final long id;
     private final int delayMillis;
@@ -44,6 +46,9 @@ public class LeafNodeMock implements LeafNode, Runnable {
     private final OnlineVarianceMean E_DASH_MeanVariance;
     private final OnlineVarianceMean E_MeanVariance;
     private final OnlineVarianceMean Y_MeanVariance;
+    private double[] quantizedError;
+    private double generalError = 0;
+    private int queries = 0;
 
     //Sensor Learning
     private final int numberOfFeatures;
@@ -54,18 +59,16 @@ public class LeafNodeMock implements LeafNode, Runnable {
     private final Clustering clustering;
     private final int maxLearnPoints;
     private int dataCounter = 0;
-    private int currentGeneration = 0;
 
-    private final CentralNodeMock centralNode;
+    private final CentralNodeImpl centralNode;
     private boolean finished;
-    private final int maximumGenerations;
     private final double degrade_alpha;
     private final double minimum_alpha;
 
-    public LeafNodeMock(CentralNodeMock centralNode, int delayMillis,
+    public LeafNodeImpl(CentralNodeImpl centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, int startFeature, int numberOfFeatures,
-            double alpha, int maxLearnPoints, WorthType worth, double error, Integer k, double row, int generations,
-            double degrade_alpha, double minimum_alpha, boolean statistics, int max_use_Points) throws IOException {
+            float alpha, int maxLearnPoints, WorthType worth, double error, Integer k, double row,
+            double degrade_alpha, double minimum_alpha, boolean statistics, int max_use_Points, int kfold, int closestK) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
         this.centralNode = centralNode;
@@ -91,16 +94,17 @@ public class LeafNodeMock implements LeafNode, Runnable {
         this.THETA_ERROR_meanVariance = new OnlineVarianceMean();
 
         this.delayMillis = delayMillis;
-        this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile);
+        this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile, kfold);
 
         if (k != null) {
             this.clustering = new OnlineKmeans(k, alpha);
         } else {
             this.clustering = new ART(row, alpha);
         }
-        this.maximumGenerations = generations;
         this.degrade_alpha = degrade_alpha;
         this.minimum_alpha = minimum_alpha;
+
+        this.quantizedError = new double[closestK];
     }
 
     @Override
@@ -135,100 +139,122 @@ public class LeafNodeMock implements LeafNode, Runnable {
         double tempCentralNodePredict;
         double localError;
         double centralNodeError;
-        for (int i = 0; i < maximumGenerations; i++) {
-            currentGeneration++;
-            while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
-                double[] dataGathered = sensorManager.requestData();
-                learnFromData(dataGathered);
-                if (dataCounter > maxLearnPoints) {
-
-                    tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
-                    tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
-                    localError = tempLocalPredict - dataGathered[2];
-                    centralNodeError = tempCentralNodePredict - dataGathered[2];
-                    double e_dash = localError * localError;
-                    double e = centralNodeError * centralNodeError;
-                    if (statistics) {
-                        E_DASH[dataCounter - maxLearnPoints - 1] = e_dash;
-                        E[dataCounter - maxLearnPoints - 1] = e;
+        try {
+            while (sensorManager.isAvailable()) {
+                while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
+                    double[] dataGathered = sensorManager.requestData();
+                    learnFromData(dataGathered);
+                    if (dataCounter > maxLearnPoints) {
+                        tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
+                        tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
+                        localError = tempLocalPredict - dataGathered[2];
+                        centralNodeError = tempCentralNodePredict - dataGathered[2];
+                        double e_dash = localError * localError;
+                        double e = centralNodeError * centralNodeError;
+                        if (statistics) {
+                            E_DASH[dataCounter - maxLearnPoints - 1] = e_dash;
+                            E[dataCounter - maxLearnPoints - 1] = e;
+                            if (e > e_dash) { //Local model better than central model (probability approx 90%)
+                                Y[dataCounter - maxLearnPoints - 1] = e - e_dash;
+                            } else {
+                                Y[dataCounter - maxLearnPoints - 1] = 0;
+                            }
+                            actual[dataCounter - maxLearnPoints - 1] = dataGathered[2];
+                            localPredicted[dataCounter - maxLearnPoints - 1] = tempLocalPredict;
+                            centralPredicted[dataCounter - maxLearnPoints - 1] = tempCentralNodePredict;
+                        }
+                        E_DASH_MeanVariance.update(e_dash);
+                        E_MeanVariance.update(e);
                         if (e > e_dash) { //Local model better than central model (probability approx 90%)
-                            Y[dataCounter - maxLearnPoints - 1] = e - e_dash;
+                            Y_MeanVariance.update(e - e_dash);
                         } else {
-                            Y[dataCounter - maxLearnPoints - 1] = 0;
+                            Y_MeanVariance.update(0);
                         }
-                        Y_MeanVariance.update(Y[dataCounter - maxLearnPoints - 1]);
-                        actual[dataCounter - maxLearnPoints - 1] = dataGathered[2];
-                        localPredicted[dataCounter - maxLearnPoints - 1] = tempLocalPredict;
-                        centralPredicted[dataCounter - maxLearnPoints - 1] = tempCentralNodePredict;
-                    }
-                    E_DASH_MeanVariance.update(e_dash);
-                    E_MeanVariance.update(e);
-                    double differenceInErrorSquared = (localError - centralNodeError) * (localError - centralNodeError);
-                    // IS IT WORTH IT TO SEND IT ?
-                    switch (worth) {
-                        case ALL:
-                            sendKnowledge();
-                            total_central_node_error += e_dash;
-                            total_local_error += e_dash;
-                            break;
-                        case CHANGE_IN_WEIGHT:
-                            //Manhattan distance
-                            double manhattanDistance = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
-                            if (manhattanDistance > allowed_error) {
-                                LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, allowed_error);
+                        calculateP(e_dash, e);
+                        double differenceInErrorSquared = (localError - centralNodeError) * (localError - centralNodeError);
+                        // IS IT WORTH IT TO SEND IT ?
+                        switch (worth) {
+                            case ALL:
                                 sendKnowledge();
                                 total_central_node_error += e_dash;
-                            } else {
-                                //local model not sent
-                                total_central_node_error += e;
-                                timesErrorAcceptable++;
-                            }
-                            total_local_error += e_dash;
-                            break;
-                        case THETA:
-                            calculateP(e_dash, e);
-                            THETA_ERROR_meanVariance.update(differenceInErrorSquared);
-                            if (differenceInErrorSquared > allowed_error) {
-                                LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, differenceInErrorSquared, allowed_error);
-                                sendKnowledge();
-                                total_central_node_error += e_dash;
-                            } else {
-                                //local model not sent
-                                total_central_node_error += e;
-                                timesErrorAcceptable++;
-                            }
-                            total_local_error += e_dash;
-                            break;
-                        case STOPPING_RULE:
-                            calculateP(e_dash, e);
-                            break;
-                        default:
-                            throw new AssertionError(worth.name());
-                    }
+                                total_local_error += e_dash;
+                                break;
+                            case CHANGE_IN_WEIGHT:
+                                //Manhattan distance
+                                double manhattanDistance = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
+                                if (manhattanDistance > allowed_error) {
+                                    LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, allowed_error);
+                                    sendKnowledge();
+                                    total_central_node_error += e_dash;
+                                } else {
+                                    //local model not sent
+                                    total_central_node_error += e;
+                                    timesErrorAcceptable++;
+                                }
+                                total_local_error += e_dash;
+                                break;
+                            case THETA:
+                                THETA_ERROR_meanVariance.update(differenceInErrorSquared);
+                                if (differenceInErrorSquared > allowed_error) {
+                                    LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, differenceInErrorSquared, allowed_error);
+                                    sendKnowledge();
+                                    total_central_node_error += e_dash;
+                                } else {
+                                    //local model not sent
+                                    total_central_node_error += e;
+                                    timesErrorAcceptable++;
+                                }
+                                total_local_error += e_dash;
+                                break;
+                            case STOPPING_RULE:
+                                break;
+                            default:
+                                throw new AssertionError(worth.name());
+                        }
 
-                    if (delayMillis != 0) {
-                        try {
-                            Thread.sleep(delayMillis);
-                        } catch (InterruptedException ex) {
-                            LOGGER.error("Error when waiting to read from sensor", ex);
+                        if (delayMillis != 0) {
+                            try {
+                                Thread.sleep(delayMillis);
+                            } catch (InterruptedException ex) {
+                                LOGGER.error("Error when waiting to read from sensor", ex);
+                            }
                         }
+                    } else if (dataCounter == maxLearnPoints) {
+                        LOGGER.info("Device {} finished learning stage now sending knowledge.. ", id);
+                        sendKnowledge();
                     }
-                } else if (dataCounter == maxLearnPoints) {
-                    LOGGER.info("Device {} finished learning stage now sending knowledge.. ", id);
-                    sendKnowledge();
+                    dataCounter++;
                 }
-                dataCounter++;
-            }
-            // START SENSOR FROM START
-            sensorManager.reset();
 
-            // DEGRADE LEARNING RATE
-            double alphaUpdate = localModel.getAlpha() - degrade_alpha;
-            if (minimum_alpha >= alphaUpdate) {
-                this.localModel.setAlpha(alphaUpdate);
+                // DEGRADE LEARNING RATE
+                double alphaUpdate = localModel.getAlpha() - degrade_alpha;
+                if (alphaUpdate >= minimum_alpha) {
+                    this.localModel.setAlpha(alphaUpdate);
+                }
+
+                if (dataCounter > maxLearnPoints) {
+                    //Run query tests            
+                    for (double[] data : sensorManager.requestValidationData()) {
+                        double[] query = {data[0], data[1]};
+                        double[] quantizedResult = centralNode.query(query);
+                        double generalResult = centralNode.queryAll(query);
+                        for (int i = 0; i < quantizedResult.length; i++) {
+                            quantizedError[i] += Math.abs(data[2] - quantizedResult[i]);
+                        }
+                        generalError += Math.abs(data[2] - generalResult);
+                        queries++;
+                    }
+                }
+                LOGGER.info("Device {} is at generation {} of {}, Local Error {}, Central Error: {}", id, sensorManager.getCurrentGeneration(), sensorManager.getMaximumGeneration(),
+                        this.getAverageLocalError(), this.getAverageCentralNodeError());
+                // START SENSOR FROM START increasing generation
+                sensorManager.reset();
             }
+            finished = true;
+        } catch (Exception e) {
+            LOGGER.error("CRITICAL ERROR in sendData.. ", e);
+            System.exit(1);
         }
-        finished = true;
     }
 
     private void calculateP(double localPredict, double centralNodePredict) {
@@ -328,7 +354,6 @@ public class LeafNodeMock implements LeafNode, Runnable {
     public double[] getActual() {
         return actual;
     }
-    
 
     @Override
     public OnlineVarianceMean getE_DASH_MeanVariance() {
@@ -348,6 +373,21 @@ public class LeafNodeMock implements LeafNode, Runnable {
     @Override
     public boolean isStatistics() {
         return statistics;
+    }
+
+    @Override
+    public double[] getQuantizedError() {
+        return quantizedError;
+    }
+
+    @Override
+    public double getGeneralError() {
+        return generalError;
+    }
+
+    @Override
+    public int getQueries() {
+        return queries;
     }
 
 }

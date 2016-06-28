@@ -1,5 +1,6 @@
 package org.kryptonmlt.networkdemonstrator.node;
 
+import java.util.List;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
 
 /**
@@ -48,4 +49,9 @@ public interface LeafNode {
 
     public double[] getActual();
 
+    public double[] getQuantizedError();
+
+    public double getGeneralError();
+
+    public int getQueries();
 }

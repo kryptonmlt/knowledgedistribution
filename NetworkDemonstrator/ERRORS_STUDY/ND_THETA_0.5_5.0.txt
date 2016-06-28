@@ -1,0 +1,20 @@
+System 36 devices (Using THETA at 0.5 error):
+15749 of 552670 = 2.8496% messages sent.
+Difference Error: 0.1583, Local Average Error: 0.7754, Server Average Error: 0.9337
+Times Error Exceeded: 15749
+Times Error Acceptable: 536921
+2.8496% Exceeded
+Times Error with update less than without: 437134 of 552670 = 79.0949%
+Average Mean: 0.8056
+Average Variance: 236162.1094
+Average E' Mean: 0.7754
+Average E' Variance: 106729.9932
+Average E Mean: 0.463
+Average E Variance: 671.8144
+Average Y Mean: 0.2565
+Average Y Variance: 232.1297
+K: 5.0
+Closest K Used: [1, 3, 5, 10, 15, 20, 30]
+Quantized Error: [0.6989890044543199, 0.6198072599577887, 0.6057149964032753, 0.5957027747658091, 0.5937808957104342, 0.5929803899136823, 0.5922789290008095]
+General Error: 0.5909
+Took 20.608 seconds

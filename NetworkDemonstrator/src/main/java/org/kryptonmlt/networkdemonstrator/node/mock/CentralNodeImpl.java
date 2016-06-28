@@ -22,16 +22,16 @@ import org.slf4j.LoggerFactory;
  *
  * @author Kurt
  */
-public class CentralNodeMock implements CentralNode {
+public class CentralNodeImpl implements CentralNode {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CentralNodeMock.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CentralNodeImpl.class);
 
     private final int numberOfFeatures;
     private final Map<Long, Peer> peers = new HashMap<>();
-    private final int closestK;
+    private final int[] closestK;
     private ScatterPlot3D plot;
 
-    public CentralNodeMock(int numberOfFeatures, int closestK, String[] columnNames, boolean showVisualization) throws IOException {
+    public CentralNodeImpl(int numberOfFeatures, int[] closestK, String[] columnNames, boolean showVisualization) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
         this.closestK = closestK;
         if (showVisualization) {
@@ -46,32 +46,42 @@ public class CentralNodeMock implements CentralNode {
     }
 
     @Override
-    public double query(double[] x) {
+    public double[] query(double[] x) {
+        double[] result = new double[this.closestK.length];
+        for (int i = 0; i < this.closestK.length; i++) {
+            result[i] = queryK(x, this.closestK[i]);
+        }
+        return result;
+    }
+
+    public double queryK(double[] x, int k) {
         //select closest K nodes
-        Long[] nodeIds = new Long[this.closestK];
-        double[] distance = new double[this.closestK];
+        Long[] nodeIds = new Long[k];
+        double[] distance = new double[k];
         for (int i = 0; i < distance.length; i++) {
             distance[i] = Double.MAX_VALUE;
             nodeIds[i] = -1l;
         }
-        for (Long peerId : peers.keySet()) {
-            for (double[] centroid : peers.get(peerId).getQuantizedNodes()) {
-                double d = VectorUtils.distance(centroid, x);
-                int idMax = 0;
-                for (int i = 1; i < distance.length; i++) {
-                    if (distance[i] > distance[idMax]) {
-                        idMax = i;
+        synchronized (peers) {
+            for (Long peerId : peers.keySet()) {
+                for (double[] centroid : peers.get(peerId).getQuantizedNodes()) {
+                    double d = VectorUtils.distance(centroid, x);
+                    int idMax = 0;
+                    for (int i = 1; i < distance.length; i++) {
+                        if (distance[i] > distance[idMax]) {
+                            idMax = i;
+                        }
                     }
-                }
-                if (d < distance[idMax]) {
-                    distance[idMax] = d;
-                    nodeIds[idMax] = peerId;
+                    if (d < distance[idMax]) {
+                        distance[idMax] = d;
+                        nodeIds[idMax] = peerId;
+                    }
                 }
             }
         }
         LOGGER.debug("Received Query: {}, ClosestIds: {}, Distance: {}", Arrays.toString(x), Arrays.toString(nodeIds), Arrays.toString(distance));
         //closest K nodes selected now compute prediction based on them.
-        double[] predictions = new double[this.closestK];
+        double[] predictions = new double[k];
         for (int i = 0; i < distance.length; i++) {
             if (nodeIds[i] != -1l) {
                 predictions[i] = peers.get(nodeIds[i]).predict(x[0], x[1]);
@@ -85,11 +95,14 @@ public class CentralNodeMock implements CentralNode {
     @Override
     public double queryAll(double[] x) {
         //closest K nodes selected now compute prediction based on them.
-        double[] predictions = new double[peers.keySet().size()];
-        int i = 0;
-        for (Long l : peers.keySet()) {
-            predictions[i] = peers.get(l).predict(x[0], x[1]);
-            i++;
+        double[] predictions;
+        synchronized (peers) {
+            predictions = new double[peers.keySet().size()];
+            int i = 0;
+            for (Long l : peers.keySet()) {
+                predictions[i] = peers.get(l).predict(x[0], x[1]);
+                i++;
+            }
         }
         //average predictions and return it.
         double result = VectorUtils.average(predictions);

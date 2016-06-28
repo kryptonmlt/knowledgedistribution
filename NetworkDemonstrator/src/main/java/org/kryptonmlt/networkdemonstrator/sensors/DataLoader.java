@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public class DataLoader {
 
     public DataLoader(XSSFSheet sheet, int startCol, int numberOfFeatures, String filename) {
         try {
+            Random r = new Random();
             if (filename.endsWith(".xlsx")) {
                 Iterator<Row> rowIterator = sheet.iterator();
                 while (rowIterator.hasNext()) {
@@ -61,13 +63,10 @@ public class DataLoader {
         } catch (IOException ex) {
             LOGGER.error("Error when trying to read from datafile..", ex);
         }
+        System.out.println("Features: "+features.size());
     }
 
-    public double[] getFeaturesInstance(int i) {
-        return features.get(i);
-    }
-
-    public float getNumberOfSamplesLoaded() {
-        return features.size();
+    public List<double[]> getFeatures() {
+        return features;
     }
 }

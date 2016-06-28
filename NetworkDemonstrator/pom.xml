@@ -70,7 +70,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.kryptonmlt.networkdemonstrator.MastersScenarioMock</mainClass>
+                            <mainClass>org.kryptonmlt.networkdemonstrator.MastersScenario</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
