@@ -1,20 +1,20 @@
-System 1 devices (Using THETA at 0.1 error):
-925 of 8895 = 10.3991% messages sent.
-Difference Error: 0.0852, Local Average Error: 0.4024, Server Average Error: 0.4877
-Times Error Exceeded: 925
-Times Error Acceptable: 7970
-10.3991% Exceeded
-Times Error with update less than without: 7291 of 8895 = 81.9674%
-Average Mean: 0
-Average Variance: 160
-Average E' Mean: 0.4025
-Average E' Variance: 67.7652
-Average E Mean: 0.4603
-Average E Variance: 1.6175
-Average Y Mean: 0.1773
-Average Y Variance: 0.3092
+System 36 devices (Using THETA at 0.1 error):
+54247 of 552670 = 9.8154% messages sent.
+Difference Error: 0.0674, Local Average Error: 0.7754, Server Average Error: 0.8428
+Times Error Exceeded: 54247
+Times Error Acceptable: 498423
+9.8154% Exceeded
+Times Error with update less than without: 456692 of 552670 = 82.6338%
+Average Mean: 0.7778
+Average Variance: 236162.3906
+Average E' Mean: 0.7754
+Average E' Variance: 106729.9932
+Average E Mean: 0.3889
+Average E Variance: 671.7348
+Average Y Mean: 0.1725
+Average Y Variance: 232.0675
 K: 1.0
 Closest K Used: [1, 10, 30]
-Quantized Error: [0.8978673285804067, 1.7061853884196732, 1.7719295443671763]
-General Error: 0.8979
-Took 10.088 seconds
+Quantized Error: [0.7516728787057149, 0.6211838007681862, 0.6473645037422646]
+General Error: 0.6071
+Took 10.28 seconds

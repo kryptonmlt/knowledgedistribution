@@ -15,6 +15,6 @@ Average Y Mean: 0.1136
 Average Y Variance: 232.0508
 K: 1.0
 Closest K Used: [1, 10, 30]
-Quantized Error: [0.7762054218934037, 0.630579721631551, 0.6718095958601249]
-General Error: 0.6062
-Took 10.741 seconds
+Quantized Error: [0.765167090046813, 0.5974798946058646, 0.5932585166184634]
+General Error: 0.5931
+Took 10.21 seconds

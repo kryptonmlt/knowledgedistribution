@@ -16,6 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jzy3d.maths.Coord3d;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
+import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
 import org.kryptonmlt.networkdemonstrator.utils.ColorUtils;
 import org.kryptonmlt.networkdemonstrator.utils.IOUtils;
 import org.kryptonmlt.networkdemonstrator.utils.LearningUtils;
@@ -39,13 +40,16 @@ public class DisplayExcelFile3D {
         plot.show();
         Map<Integer, List<Coord3d>> points = new HashMap<>();
         Map<Integer, OnlineStochasticGradientDescent> sgds = new HashMap<>();
+        Map<Integer, OnlineVarianceMean> ovms = new HashMap<>();
         for (int i = startSheet; i < sheets; i++) {
             points.put(i, new ArrayList<>());
             sgds.put(i, new OnlineStochasticGradientDescent(0.07));
+            ovms.put(i, new OnlineVarianceMean());
         }
         System.out.println("Opening file ..");
         XSSFWorkbook workbook = new XSSFWorkbook(file);
         for (int i = startSheet; i < sheets; i++) {
+            int counter = 0;
             XSSFSheet sheet = workbook.getSheetAt(i);
             Iterator<Row> rowIterator = sheet.iterator();
             System.out.println("Starting the plot for sheet" + i + ".. ");
@@ -66,6 +70,12 @@ public class DisplayExcelFile3D {
                 points.get(i).add(point);
                 plot.addPoint(point, ColorUtils.getInstance().getLightColor(i));
                 sgds.get(i).learn(point.x, point.y, point.z);
+                if (counter > 1000) {
+                    double error = sgds.get(i).predict(point.x, point.y) - point.z;
+                    ovms.get(i).update(error * error);
+                    System.out.println("Mean: " + ovms.get(i).getMean() + ", Variance: " + ovms.get(i).getVariance());
+                }
+                counter++;
             }
         }
         file.close();
@@ -74,7 +84,9 @@ public class DisplayExcelFile3D {
             /*BatchGradientDescent bgd = new BatchGradientDescent(0.07);
             bgd.learn(points);*/
             VisualizationUtils.drawLine(LearningUtils.computeLine(points.get(i), sgds.get(i)), plot, i - startSheet, ColorUtils.getInstance().getDarkColor(i));
-            System.out.println("Weights for sheet " + i + ": " + Arrays.toString(sgds.get(i).getWeights()));
+            System.out.println("Sheet " + i + ": ");
+            System.out.println("Weights: " + Arrays.toString(sgds.get(i).getWeights()));
+            System.out.println("Mean: " + ovms.get(i).getMean() + ", Variance: " + ovms.get(i).getVariance());
         }
         System.out.println("Finished ..");
     }

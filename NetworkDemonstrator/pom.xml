@@ -70,7 +70,8 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.kryptonmlt.networkdemonstrator.MastersScenario</mainClass>
+                            <!--<mainClass>org.kryptonmlt.networkdemonstrator.MastersScenario</mainClass>-->
+                            <mainClass>org.kryptonmlt.networkdemonstrator.visualizer.Display2D</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
