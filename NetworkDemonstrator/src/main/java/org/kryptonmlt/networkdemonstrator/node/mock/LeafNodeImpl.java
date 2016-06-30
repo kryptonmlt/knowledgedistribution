@@ -1,8 +1,6 @@
 package org.kryptonmlt.networkdemonstrator.node.mock;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Arrays;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
@@ -11,6 +9,7 @@ import org.kryptonmlt.networkdemonstrator.learning.Clustering;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineKmeans;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
+import org.kryptonmlt.networkdemonstrator.learning.PDF;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
 import org.kryptonmlt.networkdemonstrator.sensors.SensorManager;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
@@ -28,12 +27,14 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final long id;
     private final int delayMillis;
     private final WorthType worth;
-    private final double allowed_error;
+    private final double theta_error;
+    private int errorMultiplier;
 
     // Statistics
     private final boolean statistics;
     private double total_local_error;
     private double total_central_node_error;
+    private double currentAccumulatedError;
     private int timesErrorExceeded = 0;
     private int timesErrorAcceptable = 0;
     private int p = 0;
@@ -46,7 +47,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final OnlineVarianceMean E_DASH_MeanVariance;
     private final OnlineVarianceMean E_MeanVariance;
     private final OnlineVarianceMean Y_MeanVariance;
-    private double[] quantizedError;
+    private final double[] quantizedError;
     private double generalError = 0;
     private int queries = 0;
 
@@ -67,13 +68,13 @@ public class LeafNodeImpl implements LeafNode, Runnable {
 
     public LeafNodeImpl(CentralNodeImpl centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, int startFeature, int numberOfFeatures,
-            float alpha, int maxLearnPoints, WorthType worth, double error, Integer k, double row,
-            double degrade_alpha, double minimum_alpha, boolean statistics, int max_use_Points, int kfold, int closestK) throws IOException {
+            float learningRate, int maxLearnPoints, WorthType worth, double theta_error, Integer k, double row,
+            double degrade_alpha, double minimum_alpha, boolean statistics, int max_use_Points, int kfold, int closestK, int errorMultiplier) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
         this.centralNode = centralNode;
         this.worth = worth;
-        this.allowed_error = error;
+        this.theta_error = theta_error;
         this.id = sheetNum;
         this.statistics = statistics;
         if (this.statistics) {
@@ -89,22 +90,23 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         this.E_MeanVariance = new OnlineVarianceMean();
         this.Y_MeanVariance = new OnlineVarianceMean();
 
-        this.localModel = new OnlineStochasticGradientDescent(alpha);
-        this.centralNodeModel = new OnlineStochasticGradientDescent(alpha);
+        this.localModel = new OnlineStochasticGradientDescent(learningRate);
+        this.centralNodeModel = new OnlineStochasticGradientDescent(learningRate);
         this.THETA_ERROR_meanVariance = new OnlineVarianceMean();
 
         this.delayMillis = delayMillis;
         this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile, kfold);
 
         if (k != null) {
-            this.clustering = new OnlineKmeans(k, alpha);
+            this.clustering = new OnlineKmeans(k, learningRate);
         } else {
-            this.clustering = new ART(row, alpha);
+            this.clustering = new ART(row, learningRate);
         }
         this.degrade_alpha = degrade_alpha;
         this.minimum_alpha = minimum_alpha;
 
         this.quantizedError = new double[closestK];
+        this.errorMultiplier = errorMultiplier;
     }
 
     @Override
@@ -139,6 +141,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         double tempCentralNodePredict;
         double localError;
         double centralNodeError;
+        double maxErrorStoppingRule = errorMultiplier * theta_error;
         try {
             while (sensorManager.isAvailable()) {
                 while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
@@ -163,54 +166,58 @@ public class LeafNodeImpl implements LeafNode, Runnable {
                             localPredicted[dataCounter - maxLearnPoints - 1] = tempLocalPredict;
                             centralPredicted[dataCounter - maxLearnPoints - 1] = tempCentralNodePredict;
                         }
+
+                        //calculate mean/variance
                         E_DASH_MeanVariance.update(e_dash);
                         E_MeanVariance.update(e);
+                        double y = 0;
                         if (e > e_dash) { //Local model better than central model (probability approx 90%)
-                            Y_MeanVariance.update(e - e_dash);
-                        } else {
-                            Y_MeanVariance.update(0);
+                            y = e - e_dash;
                         }
+                        Y_MeanVariance.update(y);
                         calculateP(e_dash, e);
-                        double differenceInErrorSquared = (localError - centralNodeError) * (localError - centralNodeError);
+
+                        boolean send = false;
                         // IS IT WORTH IT TO SEND IT ?
                         switch (worth) {
                             case ALL:
-                                sendKnowledge();
-                                total_central_node_error += e_dash;
-                                total_local_error += e_dash;
+                                send = true;
                                 break;
                             case CHANGE_IN_WEIGHT:
                                 //Manhattan distance
                                 double manhattanDistance = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
-                                if (manhattanDistance > allowed_error) {
-                                    LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, allowed_error);
-                                    sendKnowledge();
-                                    total_central_node_error += e_dash;
-                                } else {
-                                    //local model not sent
-                                    total_central_node_error += e;
-                                    timesErrorAcceptable++;
+                                if (manhattanDistance > theta_error) {
+                                    LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, theta_error);
+                                    send = true;
                                 }
-                                total_local_error += e_dash;
                                 break;
                             case THETA:
-                                THETA_ERROR_meanVariance.update(differenceInErrorSquared);
-                                if (differenceInErrorSquared > allowed_error) {
-                                    LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, differenceInErrorSquared, allowed_error);
-                                    sendKnowledge();
-                                    total_central_node_error += e_dash;
-                                } else {
-                                    //local model not sent
-                                    total_central_node_error += e;
-                                    timesErrorAcceptable++;
+                                THETA_ERROR_meanVariance.update(y);
+                                if (y > theta_error) {
+                                    LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, y, theta_error);
+                                    send = true;
                                 }
-                                total_local_error += e_dash;
                                 break;
                             case STOPPING_RULE:
+                                currentAccumulatedError += e; //add the central node error
+                                double errorRemaining = maxErrorStoppingRule - currentAccumulatedError;
+                                if (isProbableToReachError(errorRemaining)) {
+                                    LOGGER.debug("Device {} states that it is probable that it will reach {} error remaining therefore sending knowledge", id, errorRemaining);
+                                    send = true;
+                                }
                                 break;
                             default:
                                 throw new AssertionError(worth.name());
                         }
+                        if (send) {
+                            currentAccumulatedError = 0;
+                            total_central_node_error += e_dash;
+                            sendKnowledge();
+                        } else {
+                            total_central_node_error += e;
+                            timesErrorAcceptable++;
+                        }
+                        total_local_error += e_dash;
 
                         if (delayMillis != 0) {
                             try {
@@ -255,6 +262,19 @@ public class LeafNodeImpl implements LeafNode, Runnable {
             LOGGER.error("CRITICAL ERROR in sendData.. ", e);
             System.exit(1);
         }
+    }
+
+    /**
+     * Calculate the probability using the integral of the PDF
+     *
+     * @param errorRemaining
+     * @return true if it is probable to reach the errorRemaining
+     */
+    private boolean isProbableToReachError(double errorRemaining) {
+        PDF pdf = new PDF(Y_MeanVariance.getMean(), Y_MeanVariance.getVariance(), -10, 10);
+        // Use integral of pdf with limits errorRemaining and infinity ?    
+        double probability = 0.0;
+        return probability > 0.05;
     }
 
     private void calculateP(double localPredict, double centralNodePredict) {

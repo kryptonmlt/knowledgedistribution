@@ -29,8 +29,8 @@ public class MastersScenario {
     public static void main(String[] args) throws SocketException, IOException {
 
         double error = Double.parseDouble(args[0]);
-        int max_stations = Integer.parseInt(args[2]);
         String clusterParameter = args[1];
+        int max_stations = Integer.parseInt(args[2]);  //max=36
         Integer k = null;
         float row = 0.05f; // ART - only used when k is null
         if (clusterParameter.contains(".")) {
@@ -39,16 +39,14 @@ public class MastersScenario {
             k = Integer.parseInt(clusterParameter);
         }
 
+        int errorMultiplier = 10;
         int delayMillis = 0;
         String datafile = "NormalizedData.xlsx";
         int startFeature = 1;
         int numberOfFeatures = 3;
         int maxLearnPoints = 1000;
-        //double error = 0.005;
         float alpha = 0.05f;
-        //int max_stations = 36;  //max=36
         WorthType type = WorthType.THETA;
-        //Integer k = 4; // Online K-Means
         float DEGRADING_ALPHA = 0.01f;
         float MINIMUM_ALPHA = 0;
         boolean useStats = false;
@@ -66,7 +64,7 @@ public class MastersScenario {
         for (int i = 0; i < max_stations; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
             leafNodes.add(new LeafNodeImpl((CentralNodeImpl) centralNode, delayMillis, datafile, i, sheet, startFeature,
-                    numberOfFeatures, alpha, maxLearnPoints, type, error, k, row, DEGRADING_ALPHA, MINIMUM_ALPHA, useStats, use_max_points, kfold, closestK.length));
+                    numberOfFeatures, alpha, maxLearnPoints, type, error, k, row, DEGRADING_ALPHA, MINIMUM_ALPHA, useStats, use_max_points, kfold, closestK.length, errorMultiplier));
         }
         file.close();
 
