@@ -115,7 +115,6 @@ public class QueryPerformer implements Runnable {
             int totalP = 0;
             double[] quantizedError = new double[closestK.length];
             double generalError = 0;
-            int queries = 0;
 
             //statistics
             List<Double> E_DASH = new ArrayList<>(); // local model
@@ -176,16 +175,14 @@ public class QueryPerformer implements Runnable {
                     quantizedError[i] += tempQError[i];
                 }
                 generalError += leafNodes.get(id).getGeneralError();
-                queries += leafNodes.get(id).getQueries();
 
                 peersCount++;
             }
-            if (queries > 0) {
-                for (int i = 0; i < closestK.length; i++) {
-                    quantizedError[i] = quantizedError[i] / (float) queries;
-                }
-                generalError = generalError / (float) queries;
+            
+            for (int i = 0; i < closestK.length; i++) {
+                quantizedError[i] = quantizedError[i] / (float) peersCount;
             }
+            generalError = generalError / (float) peersCount;
 
             bw.write("System " + peersCount + " devices (Using " + worthType.name() + " at " + theta + " error):\n");
             bw.write(totalUpdates + " of " + totalDataToBeSent + " = " + df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "% messages sent.\n");

@@ -31,8 +31,8 @@ public class DisplayErrorStudy {
     private final static String[] THETA_MEAN = {THETA, MEAN, ""};
     private final static String[] THETA_VARIANCE = {THETA, VARIANCE, ""};
     private final static String[] THETA_P = {THETA, P, ""};
-    private final static int PDF_MIN = -200;
-    private final static int PDF_MAX = 200;
+    private final static int PDF_MIN = -20;
+    private final static int PDF_MAX = 20;
 
     public static void main(String args[]) throws Exception, FileNotFoundException {
         if (args.length != 3) {

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeerMock;
+import org.kryptonmlt.networkdemonstrator.pojos.NodeDistance;
 import org.kryptonmlt.networkdemonstrator.pojos.Peer;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 import org.kryptonmlt.networkdemonstrator.utils.VisualizationUtils;
@@ -56,39 +58,24 @@ public class CentralNodeImpl implements CentralNode {
 
     public double queryK(double[] x, int k) {
         //select closest K nodes
-        Long[] nodeIds = new Long[k];
-        double[] distance = new double[k];
-        for (int i = 0; i < distance.length; i++) {
-            distance[i] = Double.MAX_VALUE;
-            nodeIds[i] = -1l;
-        }
+        List<NodeDistance> nd = new ArrayList<>();
         synchronized (peers) {
             for (Long peerId : peers.keySet()) {
                 for (double[] centroid : peers.get(peerId).getQuantizedNodes()) {
                     double d = VectorUtils.distance(centroid, x);
-                    int idMax = 0;
-                    for (int i = 1; i < distance.length; i++) {
-                        if (distance[i] > distance[idMax]) {
-                            idMax = i;
-                        }
-                    }
-                    if (d < distance[idMax]) {
-                        distance[idMax] = d;
-                        nodeIds[idMax] = peerId;
-                    }
+                    nd.add(new NodeDistance(peerId, d));
                 }
             }
         }
-        LOGGER.debug("Received Query: {}, ClosestIds: {}, Distance: {}", Arrays.toString(x), Arrays.toString(nodeIds), Arrays.toString(distance));
+        Collections.sort(nd);
         //closest K nodes selected now compute prediction based on them.
         double[] predictions = new double[k];
-        for (int i = 0; i < distance.length; i++) {
-            if (nodeIds[i] != -1l) {
-                predictions[i] = peers.get(nodeIds[i]).predict(x[0], x[1]);
-            }
+        for (int i = 0; i < k; i++) {
+            predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]);
         }
         //average predictions and return it.
         double result = VectorUtils.average(predictions);
+        LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
         return result;
     }
 
@@ -114,7 +101,7 @@ public class CentralNodeImpl implements CentralNode {
         return peers;
     }
 
-    public void addKnowledge(long id, double[] weights, List<double[]> centroids) {
+    public void addKnowledge(long id, double[] weights, List<double[]> centroids, List<Double> errors) {
         synchronized (peers) {
             LOGGER.debug("Updating peer {} - {} and {} centroids", id, Arrays.toString(weights), centroids.size());
             Peer peer = this.getPeer(id);

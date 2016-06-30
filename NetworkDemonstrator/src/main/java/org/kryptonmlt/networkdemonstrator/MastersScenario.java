@@ -50,7 +50,7 @@ public class MastersScenario {
         boolean useStats = false;
         int use_max_points = 1000;
         double samplingRate = 0.1;
-        int[] closestK = {1, 10, 30};
+        int[] closestK = {1, 3, 10};
 
         // Initialize Central Node
         CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, closestK, MastersScenario.COLUMN_NAMES, false);

@@ -141,7 +141,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         try {
             while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
                 double[] dataGathered = sensorManager.requestData();
-                learnFromData(dataGathered);
+                int cluster = learnFromData(dataGathered);
                 if (dataCounter > maxLearnPoints) {
                     tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
                     tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
@@ -149,6 +149,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
                     centralNodeError = tempCentralNodePredict - dataGathered[2];
                     double e_dash = localError * localError;
                     double e = centralNodeError * centralNodeError;
+                    clustering.updateError(cluster, e_dash);
                     if (statistics) {
                         E_DASH[dataCounter - maxLearnPoints - 1] = e_dash;
                         E[dataCounter - maxLearnPoints - 1] = e;
@@ -235,12 +236,18 @@ public class LeafNodeImpl implements LeafNode, Runnable {
                     double[] quantizedResult = centralNode.query(query);
                     double generalResult = centralNode.queryAll(query);
                     for (int i = 0; i < quantizedResult.length; i++) {
-                        quantizedError[i] += Math.abs(data[2] - quantizedResult[i]);
+                        quantizedError[i] += Math.pow(data[2] - quantizedResult[i],2);
                     }
-                    generalError += Math.abs(data[2] - generalResult);
+                    generalError += Math.pow(data[2] - generalResult,2);
                     queries++;
                 }
             }
+            //calulate average query error
+            for (int i = 0; i < quantizedError.length; i++) {
+                quantizedError[i] = quantizedError[i] / (float) queries;
+            }
+            generalError = generalError / (float) queries;
+            
             LOGGER.info("Device {} finished, Local Error {}, Central Error: {}", id, this.getAverageLocalError(), this.getAverageCentralNodeError());
             finished = true;
         } catch (Exception e) {
@@ -270,7 +277,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
 
     private void sendKnowledge() throws IOException {
         LOGGER.debug("Device {} sending: {} and {} centroids", id, Arrays.toString(localModel.getWeights()), clustering.getCentroids().size());
-        centralNode.addKnowledge(id, localModel.getWeights(), clustering.getCentroids());
+        centralNode.addKnowledge(id, localModel.getWeights(), clustering.getCentroids(), clustering.getErrors());
         centralNodeModel.setWeights(localModel.getWeights());
         LOGGER.debug("Device {} sent data successfully", id);
         timesErrorExceeded++;
@@ -280,10 +287,10 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         centralNode.addFeatures(id, dataGathered);
     }
 
-    private void learnFromData(double[] dataGathered) {
+    private int learnFromData(double[] dataGathered) {
         localModel.learn(dataGathered[0], dataGathered[1], dataGathered[2]);
         double[] inputSpace = {dataGathered[0], dataGathered[1]};
-        clustering.update(inputSpace);
+        return clustering.update(inputSpace);
     }
 
     @Override

@@ -9,6 +9,7 @@ public class OnlineKmeans implements Clustering {
 
     private final int k;
     private List<double[]> centroids = new ArrayList<>();
+    private List<Double> errors = new ArrayList<>();
     private final double alpha;
 
     public OnlineKmeans(int k, double alpha) {
@@ -22,9 +23,15 @@ public class OnlineKmeans implements Clustering {
     }
 
     @Override
+    public List<Double> getErrors() {
+        return errors;
+    }
+
+    @Override
     public Integer update(double[] point) {
         if (centroids.size() < k) {
             centroids.add(point);
+            errors.add(0d);
             return centroids.size() - 1;
         } else {
             Integer nearestCentroid = VectorUtils.classify(point, centroids);
@@ -37,6 +44,12 @@ public class OnlineKmeans implements Clustering {
     }
 
     @Override
+    public void updateError(int i, double e) {
+        double oldError = errors.get(i);
+        errors.set(i, (alpha * e) + oldError);
+    }
+
+    @Override
     public String getDescription() {
         return k + "_" + alpha;
     }
@@ -44,6 +57,10 @@ public class OnlineKmeans implements Clustering {
     @Override
     public void setCentroids(List<double[]> centroids) {
         this.centroids = centroids;
+    }
 
+    @Override
+    public void setErrors(List<Double> errors) {
+        this.errors = errors;
     }
 }

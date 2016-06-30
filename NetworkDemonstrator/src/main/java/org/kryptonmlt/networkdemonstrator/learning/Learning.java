@@ -15,4 +15,5 @@ public interface Learning {
     double getAlpha();
 
     void setAlpha(double alpha);
+
 }

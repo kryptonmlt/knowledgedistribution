@@ -28,4 +28,10 @@ public interface Clustering {
      * @param centroids
      */
     void setCentroids(List<double[]> centroids);
+
+    public void updateError(int i, double e);
+
+    public List<Double> getErrors();
+
+    public void setErrors(List<Double> errors);
 }

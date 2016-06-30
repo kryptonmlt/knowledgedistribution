@@ -7,6 +7,7 @@ import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 public class ART implements Clustering {
 
     private List<double[]> centroids = new ArrayList<>();
+    private List<Double> errors = new ArrayList<>();
     private final double row;
     private final double alpha;
 
@@ -26,6 +27,7 @@ public class ART implements Clustering {
         int nearestCentroid = VectorUtils.classify(point, centroids);
         if (nearestCentroid == -1) {
             centroids.add(point);
+            errors.add(0d);
             nearestCentroid = 0;
         } else if (VectorUtils.distance(point, centroids.get(nearestCentroid)) < row) {
             // Move centroid
@@ -40,6 +42,12 @@ public class ART implements Clustering {
     }
 
     @Override
+    public void updateError(int i, double e) {
+        double oldError = errors.get(i);
+        errors.set(i, (alpha * e) + oldError);
+    }
+
+    @Override
     public String getDescription() {
         return row + "_" + alpha;
     }
@@ -47,6 +55,15 @@ public class ART implements Clustering {
     @Override
     public void setCentroids(List<double[]> centroids) {
         this.centroids = centroids;
+    }
 
+    @Override
+    public void setErrors(List<Double> errors) {
+        this.errors = errors;
+    }
+
+    @Override
+    public List<Double> getErrors() {
+        return errors;
     }
 }
