@@ -2,6 +2,7 @@ package org.kryptonmlt.networkdemonstrator.sensors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,54 +16,37 @@ public class SensorManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(SensorManager.class);
 
     private final List<double[]> data;
+    private final List<double[]> sampledData = new ArrayList<>();
     private int counter = 0;
-    private int currentGeneration = 0;
-    private final int splitAmount;
-    private final int maximumGeneration;
+    private final double samplingRate;
+    private final Random r;
 
-    public SensorManager(XSSFSheet sheet, int startCol, int numberOfFeatures, String filename, int kFold) {
+    public SensorManager(XSSFSheet sheet, int startCol, int numberOfFeatures, String filename, double samplingRate) {
         this.data = new DataLoader(sheet, startCol, numberOfFeatures, filename).getFeatures();
-        this.splitAmount = (data.size() / kFold) - 1;
-        this.maximumGeneration = kFold;
+        this.samplingRate = samplingRate;
+        this.r = new Random();
     }
 
     public double[] requestData() {
-        if (counter == (currentGeneration * splitAmount)) {
-            counter += splitAmount;
-        }
         double[] result = data.get(counter);
         counter++;
+        double gen = r.nextDouble();
+        if (gen < samplingRate) {
+            sampledData.add(result);
+        }
         return result;
     }
 
     public List<double[]> requestValidationData() {
-        List<double[]> temp = new ArrayList<>();
-        int start = currentGeneration * splitAmount;
-        for (int i = 0; i < splitAmount; i++) {
-            temp.add(this.data.get(start + i));
-        }
-        return temp;
+        return sampledData;
     }
 
     public boolean isReadyForRead() {
         return counter < data.size();
     }
 
-    public boolean isAvailable() {
-        return currentGeneration < maximumGeneration;
-    }
-
     public void reset() {
         counter = 0;
-        currentGeneration++;
-    }
-
-    public int getCurrentGeneration() {
-        return currentGeneration;
-    }
-
-    public int getMaximumGeneration() {
-        return maximumGeneration;
     }
 
 }

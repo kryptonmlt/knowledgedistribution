@@ -28,7 +28,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final int delayMillis;
     private final WorthType worth;
     private final double theta_error;
-    private int errorMultiplier;
+    private final int errorMultiplier;
 
     // Statistics
     private final boolean statistics;
@@ -63,13 +63,11 @@ public class LeafNodeImpl implements LeafNode, Runnable {
 
     private final CentralNodeImpl centralNode;
     private boolean finished;
-    private final double degrade_alpha;
-    private final double minimum_alpha;
 
     public LeafNodeImpl(CentralNodeImpl centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, int startFeature, int numberOfFeatures,
             float learningRate, int maxLearnPoints, WorthType worth, double theta_error, Integer k, double row,
-            double degrade_alpha, double minimum_alpha, boolean statistics, int max_use_Points, int kfold, int closestK, int errorMultiplier) throws IOException {
+            boolean statistics, int max_use_Points, double samplingRate, int closestK, int errorMultiplier) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
         this.centralNode = centralNode;
@@ -95,15 +93,13 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         this.THETA_ERROR_meanVariance = new OnlineVarianceMean();
 
         this.delayMillis = delayMillis;
-        this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile, kfold);
+        this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile, samplingRate);
 
         if (k != null) {
             this.clustering = new OnlineKmeans(k, learningRate);
         } else {
             this.clustering = new ART(row, learningRate);
         }
-        this.degrade_alpha = degrade_alpha;
-        this.minimum_alpha = minimum_alpha;
 
         this.quantizedError = new double[closestK];
         this.errorMultiplier = errorMultiplier;
@@ -143,120 +139,109 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         double centralNodeError;
         double maxErrorStoppingRule = errorMultiplier * theta_error;
         try {
-            while (sensorManager.isAvailable()) {
-                while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
-                    double[] dataGathered = sensorManager.requestData();
-                    learnFromData(dataGathered);
-                    if (dataCounter > maxLearnPoints) {
-                        tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
-                        tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
-                        localError = tempLocalPredict - dataGathered[2];
-                        centralNodeError = tempCentralNodePredict - dataGathered[2];
-                        double e_dash = localError * localError;
-                        double e = centralNodeError * centralNodeError;
-                        if (statistics) {
-                            E_DASH[dataCounter - maxLearnPoints - 1] = e_dash;
-                            E[dataCounter - maxLearnPoints - 1] = e;
-                            if (e > e_dash) { //Local model better than central model (probability approx 90%)
-                                Y[dataCounter - maxLearnPoints - 1] = e - e_dash;
-                            } else {
-                                Y[dataCounter - maxLearnPoints - 1] = 0;
-                            }
-                            actual[dataCounter - maxLearnPoints - 1] = dataGathered[2];
-                            localPredicted[dataCounter - maxLearnPoints - 1] = tempLocalPredict;
-                            centralPredicted[dataCounter - maxLearnPoints - 1] = tempCentralNodePredict;
-                        }
-
-                        //calculate mean/variance
-                        E_DASH_MeanVariance.update(e_dash);
-                        E_MeanVariance.update(e);
-                        double y = 0;
-                        if (e > e_dash) { //Local model better than central model (probability approx 90%)
-                            y = e - e_dash;
-                        }
-                        Y_MeanVariance.update(y);
-                        calculateP(e_dash, e);
-
-                        boolean send = false;
-                        // IS IT WORTH IT TO SEND IT ?
-                        switch (worth) {
-                            case ALL:
-                                send = true;
-                                break;
-                            case CHANGE_IN_WEIGHT:
-                                //Manhattan distance
-                                double manhattanDistance = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
-                                if (manhattanDistance > theta_error) {
-                                    LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, theta_error);
-                                    send = true;
-                                }
-                                break;
-                            case THETA:
-                                THETA_ERROR_meanVariance.update(y);
-                                if (y > theta_error) {
-                                    LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, y, theta_error);
-                                    send = true;
-                                }
-                                break;
-                            case STOPPING_RULE:
-                                currentAccumulatedError += e; //add the central node error
-                                double errorRemaining = maxErrorStoppingRule - currentAccumulatedError;
-                                if (isProbableToReachError(errorRemaining)) {
-                                    LOGGER.debug("Device {} states that it is probable that it will reach {} error remaining therefore sending knowledge", id, errorRemaining);
-                                    send = true;
-                                }
-                                break;
-                            default:
-                                throw new AssertionError(worth.name());
-                        }
-                        if (send) {
-                            currentAccumulatedError = 0;
-                            total_central_node_error += e_dash;
-                            sendKnowledge();
-                        } else {
-                            total_central_node_error += e;
-                            timesErrorAcceptable++;
-                        }
-                        total_local_error += e_dash;
-
-                        if (delayMillis != 0) {
-                            try {
-                                Thread.sleep(delayMillis);
-                            } catch (InterruptedException ex) {
-                                LOGGER.error("Error when waiting to read from sensor", ex);
-                            }
-                        }
-                    } else if (dataCounter == maxLearnPoints) {
-                        LOGGER.info("Device {} finished learning stage now sending knowledge.. ", id);
-                        sendKnowledge();
-                    }
-                    dataCounter++;
-                }
-
-                // DEGRADE LEARNING RATE
-                double alphaUpdate = localModel.getAlpha() - degrade_alpha;
-                if (alphaUpdate >= minimum_alpha) {
-                    this.localModel.setAlpha(alphaUpdate);
-                }
-
+            while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
+                double[] dataGathered = sensorManager.requestData();
+                learnFromData(dataGathered);
                 if (dataCounter > maxLearnPoints) {
-                    //Run query tests            
-                    for (double[] data : sensorManager.requestValidationData()) {
-                        double[] query = {data[0], data[1]};
-                        double[] quantizedResult = centralNode.query(query);
-                        double generalResult = centralNode.queryAll(query);
-                        for (int i = 0; i < quantizedResult.length; i++) {
-                            quantizedError[i] += Math.abs(data[2] - quantizedResult[i]);
+                    tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
+                    tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
+                    localError = tempLocalPredict - dataGathered[2];
+                    centralNodeError = tempCentralNodePredict - dataGathered[2];
+                    double e_dash = localError * localError;
+                    double e = centralNodeError * centralNodeError;
+                    if (statistics) {
+                        E_DASH[dataCounter - maxLearnPoints - 1] = e_dash;
+                        E[dataCounter - maxLearnPoints - 1] = e;
+                        if (e > e_dash) { //Local model better than central model (probability approx 90%)
+                            Y[dataCounter - maxLearnPoints - 1] = e - e_dash;
+                        } else {
+                            Y[dataCounter - maxLearnPoints - 1] = 0;
                         }
-                        generalError += Math.abs(data[2] - generalResult);
-                        queries++;
+                        actual[dataCounter - maxLearnPoints - 1] = dataGathered[2];
+                        localPredicted[dataCounter - maxLearnPoints - 1] = tempLocalPredict;
+                        centralPredicted[dataCounter - maxLearnPoints - 1] = tempCentralNodePredict;
                     }
+
+                    //calculate mean/variance
+                    E_DASH_MeanVariance.update(e_dash);
+                    E_MeanVariance.update(e);
+                    double y = 0;
+                    if (e > e_dash) { //Local model better than central model (probability approx 90%)
+                        y = e - e_dash;
+                    }
+                    Y_MeanVariance.update(y);
+                    calculateP(e_dash, e);
+
+                    boolean send = false;
+                    // IS IT WORTH IT TO SEND IT ?
+                    switch (worth) {
+                        case ALL:
+                            send = true;
+                            break;
+                        case CHANGE_IN_WEIGHT:
+                            //Manhattan distance
+                            double manhattanDistance = VectorUtils.summation(VectorUtils.abs(VectorUtils.subtract(centralNodeModel.getWeights(), localModel.getWeights())));
+                            if (manhattanDistance > theta_error) {
+                                LOGGER.debug("Discrepancy in weights between device {} and Central Node is {} which is greater than {}", id, manhattanDistance, theta_error);
+                                send = true;
+                            }
+                            break;
+                        case THETA:
+                            THETA_ERROR_meanVariance.update(y);
+                            if (y > theta_error) {
+                                LOGGER.debug("Discrepancy in error between device {} and Central Node is {} which is greater than {}", id, y, theta_error);
+                                send = true;
+                            }
+                            break;
+                        case STOPPING_RULE:
+                            currentAccumulatedError += e; //add the central node error
+                            double errorRemaining = maxErrorStoppingRule - currentAccumulatedError;
+                            if (isProbableToReachError(errorRemaining)) {
+                                LOGGER.debug("Device {} states that it is probable that it will reach {} error remaining therefore sending knowledge", id, errorRemaining);
+                                send = true;
+                            }
+                            break;
+                        default:
+                            throw new AssertionError(worth.name());
+                    }
+                    if (send) {
+                        currentAccumulatedError = 0;
+                        total_central_node_error += e_dash;
+                        sendKnowledge();
+                    } else {
+                        total_central_node_error += e;
+                        timesErrorAcceptable++;
+                    }
+                    total_local_error += e_dash;
+
+                    if (delayMillis != 0) {
+                        try {
+                            Thread.sleep(delayMillis);
+                        } catch (InterruptedException ex) {
+                            LOGGER.error("Error when waiting to read from sensor", ex);
+                        }
+                    }
+                } else if (dataCounter == maxLearnPoints) {
+                    LOGGER.info("Device {} finished learning stage now sending knowledge.. ", id);
+                    sendKnowledge();
                 }
-                LOGGER.info("Device {} is at generation {} of {}, Local Error {}, Central Error: {}", id, sensorManager.getCurrentGeneration(), sensorManager.getMaximumGeneration(),
-                        this.getAverageLocalError(), this.getAverageCentralNodeError());
-                // START SENSOR FROM START increasing generation
-                sensorManager.reset();
+                dataCounter++;
             }
+
+            if (dataCounter > maxLearnPoints) {
+                //Run query tests            
+                for (double[] data : sensorManager.requestValidationData()) {
+                    double[] query = {data[0], data[1]};
+                    double[] quantizedResult = centralNode.query(query);
+                    double generalResult = centralNode.queryAll(query);
+                    for (int i = 0; i < quantizedResult.length; i++) {
+                        quantizedError[i] += Math.abs(data[2] - quantizedResult[i]);
+                    }
+                    generalError += Math.abs(data[2] - generalResult);
+                    queries++;
+                }
+            }
+            LOGGER.info("Device {} finished, Local Error {}, Central Error: {}", id, this.getAverageLocalError(), this.getAverageCentralNodeError());
             finished = true;
         } catch (Exception e) {
             LOGGER.error("CRITICAL ERROR in sendData.. ", e);

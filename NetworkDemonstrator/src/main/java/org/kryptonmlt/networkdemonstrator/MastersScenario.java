@@ -44,14 +44,12 @@ public class MastersScenario {
         String datafile = "NormalizedData.xlsx";
         int startFeature = 1;
         int numberOfFeatures = 3;
-        int maxLearnPoints = 1000;
+        int learnLimit = 1000;
         float alpha = 0.05f;
         WorthType type = WorthType.THETA;
-        float DEGRADING_ALPHA = 0.01f;
-        float MINIMUM_ALPHA = 0;
         boolean useStats = false;
         int use_max_points = 1000;
-        int kfold = 5;
+        double samplingRate = 0.1;
         int[] closestK = {1, 10, 30};
 
         // Initialize Central Node
@@ -64,7 +62,7 @@ public class MastersScenario {
         for (int i = 0; i < max_stations; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
             leafNodes.add(new LeafNodeImpl((CentralNodeImpl) centralNode, delayMillis, datafile, i, sheet, startFeature,
-                    numberOfFeatures, alpha, maxLearnPoints, type, error, k, row, DEGRADING_ALPHA, MINIMUM_ALPHA, useStats, use_max_points, kfold, closestK.length, errorMultiplier));
+                    numberOfFeatures, alpha, learnLimit, type, error, k, row, useStats, use_max_points, samplingRate, closestK.length, errorMultiplier));
         }
         file.close();
 

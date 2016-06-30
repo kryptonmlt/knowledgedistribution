@@ -4,3 +4,6 @@ KnowledgeDiffusion/target/
 NetworkDemonstrator/target/
 *.log
 /AutomatedVisualizer/target/
+NetworkDemonstrator/ERRORS_STUDY/
+NetworkDemonstrator/SENSOR_STUDY/
+NetworkDemonstrator/AUTOMATED_ERRORS_STUDY/
