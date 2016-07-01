@@ -15,8 +15,12 @@ public interface Peer {
     double[] getWeights();
 
     List<double[]> getQuantizedNodes();
+    
+    List<Double> getQuantizedErrors();
 
     void setQuantizedNodes(List<double[]> quantizedNodes);
+
+    void setQuantizedErrors(List<Double> quantizedErrors);
 
     void setWeights(double[] weights);
 

@@ -18,4 +18,6 @@ public interface CentralNode {
 
     public ScatterPlot3D getPlot();
     
+    public double queryLeafNode(long peerId, double[] x);
+    
 }

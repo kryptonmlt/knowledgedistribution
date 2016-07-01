@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
@@ -70,9 +71,9 @@ public class QueryPerformer implements Runnable {
             LOGGER.error("Error when trying before starting query loop..", ex);
         }
         while (!allfinished) {
-            Map<Long, Peer> peers = centralNode.getPeers();
-            for (Long id : peers.keySet()) {
-                int updates = peers.get(id).getTimesWeightsUpdated();
+            Set<Long> peers = centralNode.getPeers().keySet();
+            for (Long id : peers) {
+                int updates = centralNode.getPeers().get(id).getTimesWeightsUpdated();
                 int totalDataToBeSent = leafNodes.get(id).getTotalMessagesToBeSentSoFar();
                 LOGGER.info("Peer {} Finished:{} sent {} of {} = {}% messages sent. Local Average Error: {}, Server Average Error: {}",
                         id, leafNodes.get(id).isFinished(), updates, totalDataToBeSent, df.format((updates / (float) totalDataToBeSent) * 100),
@@ -95,8 +96,24 @@ public class QueryPerformer implements Runnable {
                 }
             }
         }
-
+        //compute query ensemble learning validation
         LOGGER.info("Run finished");
+        LOGGER.info("Starting query evaluation");
+        double clusteringError = 0;
+        int tempC = 0;
+        for (LeafNode leaf : leafNodes.values()) {
+            double leafClusterError = 0;
+            for (double e : leaf.getClustering().getErrors()) {
+                leafClusterError += e;
+            }
+            clusteringError += leafClusterError / (float) leaf.getClustering().getErrors().size();
+            LOGGER.info("Device {} has Clustering Error {}", leaf.getId(), leafClusterError);
+            tempC++;
+            leaf.queryValidation();
+        }
+        clusteringError = clusteringError / (float) tempC;
+        LOGGER.info("Finished query evaluation Clustering Error = {}", clusteringError);
+
         float timeTakenSeconds = (System.currentTimeMillis() - timeStarted) / 1000.0f;
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + "_" + clusterParameter + ".txt")));
@@ -115,6 +132,7 @@ public class QueryPerformer implements Runnable {
             int totalP = 0;
             double[] quantizedError = new double[closestK.length];
             double generalError = 0;
+            double idealError = 0;
 
             //statistics
             List<Double> E_DASH = new ArrayList<>(); // local model
@@ -175,14 +193,16 @@ public class QueryPerformer implements Runnable {
                     quantizedError[i] += tempQError[i];
                 }
                 generalError += leafNodes.get(id).getGeneralError();
+                idealError += leafNodes.get(id).getIdealError();
 
                 peersCount++;
             }
-            
+
             for (int i = 0; i < closestK.length; i++) {
                 quantizedError[i] = quantizedError[i] / (float) peersCount;
             }
             generalError = generalError / (float) peersCount;
+            idealError = idealError / (float) peersCount;
 
             bw.write("System " + peersCount + " devices (Using " + worthType.name() + " at " + theta + " error):\n");
             bw.write(totalUpdates + " of " + totalDataToBeSent + " = " + df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "% messages sent.\n");
@@ -209,6 +229,7 @@ public class QueryPerformer implements Runnable {
             bw.write("Closest K Used: " + Arrays.toString(closestK) + "\n");
             bw.write("Quantized Error: " + Arrays.toString(quantizedError) + "\n");
             bw.write("General Error: " + df.format(generalError) + "\n");
+            bw.write("Ideal Error: " + df.format(idealError) + "\n");
 
             bw.write("Took " + timeTakenSeconds + " seconds");
             bw.flush();
@@ -229,6 +250,7 @@ public class QueryPerformer implements Runnable {
             automatedBW.write(Arrays.toString(closestK).replace(" ", "").replace("[", "").replace("]", "") + "\n");
             automatedBW.write(Arrays.toString(quantizedError).replace(" ", "").replace("[", "").replace("]", "") + "\n");
             automatedBW.write(df.format(generalError) + "\n");
+            automatedBW.write(df.format(idealError) + "\n");
             for (int i = 0; i < Y.size(); i++) {
                 //automatedBW.write(E_DASH.get(i) + "," + E.get(i) + "," + Y.get(i) + "\n");
                 detailValuesBW.write(actual.get(i) + "," + localPredicted.get(i) + "," + centralPredicted.get(i) + "\n");

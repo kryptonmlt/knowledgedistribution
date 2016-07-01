@@ -56,21 +56,30 @@ public class CentralNodeImpl implements CentralNode {
         return result;
     }
 
+    @Override
+    public double queryLeafNode(long peerId, double[] x) {
+        return peers.get(peerId).predict(x[0], x[1]);
+    }
+
     public double queryK(double[] x, int k) {
         //select closest K nodes
         List<NodeDistance> nd = new ArrayList<>();
         synchronized (peers) {
             for (Long peerId : peers.keySet()) {
-                for (double[] centroid : peers.get(peerId).getQuantizedNodes()) {
-                    double d = VectorUtils.distance(centroid, x);
-                    nd.add(new NodeDistance(peerId, d));
+                for (int i = 0; i < peers.get(peerId).getQuantizedNodes().size(); i++) {
+                    double d = VectorUtils.distance(peers.get(peerId).getQuantizedNodes().get(i), x);
+                    nd.add(new NodeDistance(peerId, d, peers.get(peerId).getQuantizedErrors().get(i)));
                 }
             }
         }
         Collections.sort(nd);
         //closest K nodes selected now compute prediction based on them.
-        double[] predictions = new double[k];
-        for (int i = 0; i < k; i++) {
+        int tempSize = k;
+        if (k > nd.size()) {
+            tempSize = nd.size();
+        }
+        double[] predictions = new double[tempSize];
+        for (int i = 0; i < tempSize; i++) {
             predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]);
         }
         //average predictions and return it.
@@ -111,8 +120,13 @@ public class CentralNodeImpl implements CentralNode {
                 centroidsCopy.add(centroid.clone());
             });
             peer.setQuantizedNodes(centroidsCopy);
-            SimpleEntry<Coord3d[], Color[]> plotInfo = VisualizationUtils.getPointsAndColors(peers);
+            List<Double> errorsCopy = new ArrayList<>();
+            for (Double e : errors) {
+                errorsCopy.add(e.doubleValue());
+            }
+            peer.setQuantizedErrors(errorsCopy);
             if (plot != null) {
+                SimpleEntry<Coord3d[], Color[]> plotInfo = VisualizationUtils.getPointsAndColors(peers);
                 plot.setPoints(plotInfo.getKey(), plotInfo.getValue());
             }
         }

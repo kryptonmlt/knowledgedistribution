@@ -18,6 +18,7 @@ public class DevicePeerMock implements Peer {
     private double[] weights = null;
     private int timesWeightsUpdated;
     private List<double[]> quantizedNodes;
+    private List<Double> quantizedErrors;
     private final List<double[]> features = new ArrayList<>();
 
     public DevicePeerMock(long id) {
@@ -73,6 +74,16 @@ public class DevicePeerMock implements Peer {
             return 0.0;
         }
         return LearningUtils.hypothesis(weights, x1, x2);
+    }
+
+    @Override
+    public List<Double> getQuantizedErrors() {
+        return quantizedErrors;
+    }
+
+    @Override
+    public void setQuantizedErrors(List<Double> quantizedErrors) {
+        this.quantizedErrors = quantizedErrors;
     }
 
 }

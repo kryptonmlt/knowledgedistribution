@@ -49,6 +49,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final OnlineVarianceMean Y_MeanVariance;
     private final double[] quantizedError;
     private double generalError = 0;
+    private double idealError = 0;
     private int queries = 0;
 
     //Sensor Learning
@@ -66,7 +67,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
 
     public LeafNodeImpl(CentralNodeImpl centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, int startFeature, int numberOfFeatures,
-            float learningRate, int maxLearnPoints, WorthType worth, double theta_error, Integer k, double row,
+            float learningRate, float clusteringAlpha, int maxLearnPoints, WorthType worth, double theta_error, Integer k, double row,
             boolean statistics, int max_use_Points, double samplingRate, int closestK, int errorMultiplier) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
@@ -96,9 +97,9 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile, samplingRate);
 
         if (k != null) {
-            this.clustering = new OnlineKmeans(k, learningRate);
+            this.clustering = new OnlineKmeans(k, learningRate, clusteringAlpha);
         } else {
-            this.clustering = new ART(row, learningRate);
+            this.clustering = new ART(row, learningRate, clusteringAlpha);
         }
 
         this.quantizedError = new double[closestK];
@@ -228,32 +229,35 @@ public class LeafNodeImpl implements LeafNode, Runnable {
                 }
                 dataCounter++;
             }
-
-            if (dataCounter > maxLearnPoints) {
-                //Run query tests            
-                for (double[] data : sensorManager.requestValidationData()) {
-                    double[] query = {data[0], data[1]};
-                    double[] quantizedResult = centralNode.query(query);
-                    double generalResult = centralNode.queryAll(query);
-                    for (int i = 0; i < quantizedResult.length; i++) {
-                        quantizedError[i] += Math.pow(data[2] - quantizedResult[i],2);
-                    }
-                    generalError += Math.pow(data[2] - generalResult,2);
-                    queries++;
-                }
-            }
-            //calulate average query error
-            for (int i = 0; i < quantizedError.length; i++) {
-                quantizedError[i] = quantizedError[i] / (float) queries;
-            }
-            generalError = generalError / (float) queries;
-            
             LOGGER.info("Device {} finished, Local Error {}, Central Error: {}", id, this.getAverageLocalError(), this.getAverageCentralNodeError());
             finished = true;
         } catch (Exception e) {
             LOGGER.error("CRITICAL ERROR in sendData.. ", e);
             System.exit(1);
         }
+    }
+
+    @Override
+    public void queryValidation() {
+        //Run query tests            
+        for (double[] data : sensorManager.requestValidationData()) {
+            double[] query = {data[0], data[1]};
+            double[] quantizedResult = centralNode.query(query);
+            double generalResult = centralNode.queryAll(query);
+            double idealQuery = centralNode.queryLeafNode(id, query);
+            for (int i = 0; i < quantizedResult.length; i++) {
+                quantizedError[i] += Math.pow(data[2] - quantizedResult[i], 2);
+            }
+            generalError += Math.pow(data[2] - generalResult, 2);
+            idealError += Math.pow(data[2] - idealQuery, 2);
+            queries++;
+        }
+        //calulate average query error
+        for (int i = 0; i < quantizedError.length; i++) {
+            quantizedError[i] = quantizedError[i] / (float) queries;
+        }
+        generalError = generalError / (float) queries;
+        idealError = idealError / (float) queries;
     }
 
     /**
@@ -398,8 +402,18 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     }
 
     @Override
+    public double getIdealError() {
+        return idealError;
+    }
+
+    @Override
     public int getQueries() {
         return queries;
+    }
+
+    @Override
+    public Clustering getClustering() {
+        return clustering;
     }
 
 }

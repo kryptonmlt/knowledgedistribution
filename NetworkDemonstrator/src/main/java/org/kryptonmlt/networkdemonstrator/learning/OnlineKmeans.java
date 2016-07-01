@@ -11,10 +11,12 @@ public class OnlineKmeans implements Clustering {
     private List<double[]> centroids = new ArrayList<>();
     private List<Double> errors = new ArrayList<>();
     private final double alpha;
+    private final double clusteringAlpha;
 
-    public OnlineKmeans(int k, double alpha) {
+    public OnlineKmeans(int k, double alpha, double clusteringAlpha) {
         this.k = k;
         this.alpha = alpha;
+        this.clusteringAlpha = clusteringAlpha;
     }
 
     @Override
@@ -46,7 +48,8 @@ public class OnlineKmeans implements Clustering {
     @Override
     public void updateError(int i, double e) {
         double oldError = errors.get(i);
-        errors.set(i, (alpha * e) + oldError);
+        double update = e - oldError;
+        errors.set(i, (clusteringAlpha * update) + oldError);
     }
 
     @Override

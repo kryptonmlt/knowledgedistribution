@@ -58,6 +58,7 @@ public class DisplayErrorStudy {
         //Query stuff
         Map<Float, Map<Integer, List<Coord3d>>> clusterParameterQuantizedError = new HashMap<>();
         Map<Float, List<Coord3d>> clusterParameterGeneralError = new HashMap<>();
+        Map<Float, List<Coord3d>> clusterParameterIdealError = new HashMap<>();
 
         //2D Plot
         List<Double> E_DASH = new ArrayList<>();
@@ -105,6 +106,7 @@ public class DisplayErrorStudy {
                     if (clusterParameterQuantizedError.get(theta) == null) {
                         clusterParameterQuantizedError.put(theta, new HashMap<>());
                         clusterParameterGeneralError.put(theta, new ArrayList<>());
+                        clusterParameterIdealError.put(theta, new ArrayList<>());
                     }
                     for (String tempK : closestK) {
                         int k = Integer.parseInt(tempK);
@@ -121,6 +123,10 @@ public class DisplayErrorStudy {
                     // general error
                     String generalError = br.readLine();
                     clusterParameterGeneralError.get(theta).add(new Coord3d(clusterParameter, Float.parseFloat(generalError), 0f));
+
+                    // ideal error
+                    String idealError = br.readLine();
+                    clusterParameterIdealError.get(theta).add(new Coord3d(clusterParameter, Float.parseFloat(idealError), 0f));
 
                     //START STATISTICS
                     String tempLine;
@@ -149,7 +155,7 @@ public class DisplayErrorStudy {
         drawPDFs("Theta vs E'", E_DASH_thetaMeanVariance);
         drawPDFs("Theta vs E", E_thetaMeanVariance);
         drawPDFs("Theta vs Y", Y_thetaMeanVariance);
-        plot2D("", clusterParameterQuantizedError, clusterParameterGeneralError);
+        plot2D("", clusterParameterQuantizedError, clusterParameterGeneralError, clusterParameterIdealError);
 
         if (messagesErrorInfo.size() > 2) {
             //showGraph(messagesErrorInfo, MESSAGES_ERROR);
@@ -177,7 +183,7 @@ public class DisplayErrorStudy {
         pdfPlot.display();
     }
 
-    public static void plot2D(String name, Map<Float, Map<Integer, List<Coord3d>>> series1, Map<Float, List<Coord3d>> series2) {
+    public static void plot2D(String name, Map<Float, Map<Integer, List<Coord3d>>> series1, Map<Float, List<Coord3d>> series2, Map<Float, List<Coord3d>> series3) {
         Plot2D pdfPlot = new Plot2D("K/row vs Error", "Query Error", "Clusters", "Error");
         for (Float theta : series1.keySet()) {
             for (Integer k : series1.get(theta).keySet()) {
@@ -185,9 +191,10 @@ public class DisplayErrorStudy {
                 Color tc = ColorUtils.getInstance().getNextDarkColor();
                 pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error", new java.awt.Color(tc.r, tc.g, tc.b), false);
             }
-            List<Coord3d> generalData = series2.get(theta);
             Color tc = ColorUtils.getInstance().getNextDarkColor();
-            pdfPlot.addSeries(generalData, "Theta: " + theta + " KNN=ALL", new java.awt.Color(tc.r, tc.g, tc.b), true);
+            pdfPlot.addSeries(series2.get(theta), "Theta: " + theta + " Average Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
+            tc = ColorUtils.getInstance().getNextDarkColor();
+            pdfPlot.addSeries(series3.get(theta), "Theta: " + theta + " Ideal Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
         }
         pdfPlot.display();
     }

@@ -10,10 +10,12 @@ public class ART implements Clustering {
     private List<Double> errors = new ArrayList<>();
     private final double row;
     private final double alpha;
+    private final double clusteringAlpha;
 
-    public ART(double row, double alpha) {
+    public ART(double row, double alpha, double clusteringAlpha) {
         this.row = row;
         this.alpha = alpha;
+        this.clusteringAlpha = clusteringAlpha;
 
     }
 
@@ -44,7 +46,8 @@ public class ART implements Clustering {
     @Override
     public void updateError(int i, double e) {
         double oldError = errors.get(i);
-        errors.set(i, (alpha * e) + oldError);
+        double update = e - oldError;
+        errors.set(i, (clusteringAlpha * update) + oldError);
     }
 
     @Override

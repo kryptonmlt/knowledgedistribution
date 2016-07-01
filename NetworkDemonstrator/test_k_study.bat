@@ -1,6 +1,6 @@
 set "THETA=0"
 set "K=1 5 10 15 30"
-set "MAX_STATIONS=1"
+set "MAX_STATIONS=36"
 
  for %%i in (%THETA%) do (
  	for %%j in (%K%) do (
