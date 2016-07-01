@@ -12,7 +12,7 @@ import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeerMock;
-import org.kryptonmlt.networkdemonstrator.pojos.NodeDistance;
+import org.kryptonmlt.networkdemonstrator.pojos.NodeDistanceError;
 import org.kryptonmlt.networkdemonstrator.pojos.Peer;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 import org.kryptonmlt.networkdemonstrator.utils.VisualizationUtils;
@@ -48,10 +48,10 @@ public class CentralNodeImpl implements CentralNode {
     }
 
     @Override
-    public double[] query(double[] x) {
+    public double[] query(double[] x, boolean error) {
         double[] result = new double[this.closestK.length];
         for (int i = 0; i < this.closestK.length; i++) {
-            result[i] = queryK(x, this.closestK[i]);
+            result[i] = queryK(x, this.closestK[i], error);
         }
         return result;
     }
@@ -61,14 +61,18 @@ public class CentralNodeImpl implements CentralNode {
         return peers.get(peerId).predict(x[0], x[1]);
     }
 
-    public double queryK(double[] x, int k) {
+    public double queryK(double[] x, int k, boolean useError) {
         //select closest K nodes
-        List<NodeDistance> nd = new ArrayList<>();
+        List<NodeDistanceError> nd = new ArrayList<>();
         synchronized (peers) {
             for (Long peerId : peers.keySet()) {
                 for (int i = 0; i < peers.get(peerId).getQuantizedNodes().size(); i++) {
                     double d = VectorUtils.distance(peers.get(peerId).getQuantizedNodes().get(i), x);
-                    nd.add(new NodeDistance(peerId, d, peers.get(peerId).getQuantizedErrors().get(i)));
+                    double e = 1.0;
+                    if (useError) {
+                        e = peers.get(peerId).getQuantizedErrors().get(i);
+                    }
+                    nd.add(new NodeDistanceError(peerId, d, e));
                 }
             }
         }

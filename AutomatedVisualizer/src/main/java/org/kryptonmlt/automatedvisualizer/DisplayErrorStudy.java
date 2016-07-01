@@ -35,13 +35,14 @@ public class DisplayErrorStudy {
     private final static int PDF_MAX = 20;
 
     public static void main(String args[]) throws Exception, FileNotFoundException {
-        if (args.length != 3) {
-            System.err.println("3 parameters needed: FOLDER_PATH WORTH_TYPE VALID_PEERS\n Example: AUTOMATED_ERRORS_STUDY THETA 36");
+        if (args.length != 4) {
+            System.err.println("4 parameters needed: FOLDER_PATH WORTH_TYPE VALID_PEERS SHOW_LABELS\n Example: AUTOMATED_ERRORS_STUDY THETA 36 false");
             return;
         }
         String folderPath = args[0];
         String worth_type = args[1];
         int validPeers = Integer.parseInt(args[2]);
+        boolean showLabels = Boolean.getBoolean(args[3]);
 
         List<Coord3d> messagesErrorInfo = new ArrayList<>();
         List<Coord3d> thetaMessagesInfo = new ArrayList<>();
@@ -57,6 +58,7 @@ public class DisplayErrorStudy {
 
         //Query stuff
         Map<Float, Map<Integer, List<Coord3d>>> clusterParameterQuantizedError = new HashMap<>();
+        Map<Float, Map<Integer, List<Coord3d>>> clusterParameterQuantizedErrorDistanceOnly = new HashMap<>();
         Map<Float, List<Coord3d>> clusterParameterGeneralError = new HashMap<>();
         Map<Float, List<Coord3d>> clusterParameterIdealError = new HashMap<>();
 
@@ -105,6 +107,7 @@ public class DisplayErrorStudy {
                     String[] closestK = br.readLine().split(",");
                     if (clusterParameterQuantizedError.get(theta) == null) {
                         clusterParameterQuantizedError.put(theta, new HashMap<>());
+                        clusterParameterQuantizedErrorDistanceOnly.put(theta, new HashMap<>());
                         clusterParameterGeneralError.put(theta, new ArrayList<>());
                         clusterParameterIdealError.put(theta, new ArrayList<>());
                     }
@@ -112,6 +115,7 @@ public class DisplayErrorStudy {
                         int k = Integer.parseInt(tempK);
                         if (clusterParameterQuantizedError.get(theta).get(k) == null) {
                             clusterParameterQuantizedError.get(theta).put(k, new ArrayList<>());
+                            clusterParameterQuantizedErrorDistanceOnly.get(theta).put(k, new ArrayList<>());
                         }
                     }
                     // quantized errors
@@ -119,6 +123,11 @@ public class DisplayErrorStudy {
                     for (int j = 0; j < closestK.length; j++) {
                         int k = Integer.parseInt(closestK[j]);
                         clusterParameterQuantizedError.get(theta).get(k).add(new Coord3d(clusterParameter, Float.parseFloat(queryErrors[j]), 0f));
+                    }
+                    String[] queryErrorsDistanceOnly = br.readLine().split(",");
+                    for (int j = 0; j < closestK.length; j++) {
+                        int k = Integer.parseInt(closestK[j]);
+                        clusterParameterQuantizedErrorDistanceOnly.get(theta).get(k).add(new Coord3d(clusterParameter, Float.parseFloat(queryErrorsDistanceOnly[j]), 0f));
                     }
                     // general error
                     String generalError = br.readLine();
@@ -152,29 +161,29 @@ public class DisplayErrorStudy {
         drawHistogram("E", E);
         drawHistogram("Y", Y);*/
 
-        drawPDFs("Theta vs E'", E_DASH_thetaMeanVariance);
-        drawPDFs("Theta vs E", E_thetaMeanVariance);
-        drawPDFs("Theta vs Y", Y_thetaMeanVariance);
-        plot2D("", clusterParameterQuantizedError, clusterParameterGeneralError, clusterParameterIdealError);
+        drawPDFs("Theta vs E'", E_DASH_thetaMeanVariance, false);
+        drawPDFs("Theta vs E", E_thetaMeanVariance, false);
+        drawPDFs("Theta vs Y", Y_thetaMeanVariance, false);
+        plot2D("", clusterParameterQuantizedError, clusterParameterQuantizedErrorDistanceOnly, clusterParameterGeneralError, clusterParameterIdealError, showLabels);
 
         if (messagesErrorInfo.size() > 2) {
             //showGraph(messagesErrorInfo, MESSAGES_ERROR);
-            plot2D(messagesErrorInfo, MESSAGES_ERROR, "Messages Sent % vs Difference Error", worth_type + " " + validPeers + " devices");
+            plot2D(messagesErrorInfo, MESSAGES_ERROR, "Messages Sent % vs Difference Error", worth_type + " " + validPeers + " devices", false);
             //showGraph(thetaMessagesInfo, THETA_MESSAGES);
-            plot2D(thetaMessagesInfo, THETA_MESSAGES, "Theta vs Messages Sent %", worth_type + " " + validPeers + " devices");
+            plot2D(thetaMessagesInfo, THETA_MESSAGES, "Theta vs Messages Sent %", worth_type + " " + validPeers + " devices", false);
             //showGraph(thetaErrorInfo, THETA_ERROR);
-            plot2D(thetaErrorInfo, THETA_ERROR, "Theta vs Difference Error", worth_type + " " + validPeers + " devices");
+            plot2D(thetaErrorInfo, THETA_ERROR, "Theta vs Difference Error", worth_type + " " + validPeers + " devices", false);
             //showGraph(thetaMean, THETA_MEAN);
-            plot2D(thetaMean, THETA_MEAN, "Theta vs Mean", worth_type + " " + validPeers + " devices");
+            plot2D(thetaMean, THETA_MEAN, "Theta vs Mean", worth_type + " " + validPeers + " devices", false);
             //showGraph(thetaVariance, THETA_VARIANCE);
-            plot2D(thetaVariance, THETA_VARIANCE, "Theta vs Variance", worth_type + " " + validPeers + " devices");
+            plot2D(thetaVariance, THETA_VARIANCE, "Theta vs Variance", worth_type + " " + validPeers + " devices", false);
             //showGraph(thetaP, THETA_P);
-            plot2D(thetaP, THETA_P, "Theta vs P", worth_type + " " + validPeers + " devices");
+            plot2D(thetaP, THETA_P, "Theta vs P", worth_type + " " + validPeers + " devices", false);
         }
     }
 
-    public static void drawPDFs(String name, List<Coord3d> data) {
-        Plot2D pdfPlot = new Plot2D("Probablity Distribution Function", name, "Error", "P");
+    public static void drawPDFs(String name, List<Coord3d> data, boolean showLabels) {
+        Plot2D pdfPlot = new Plot2D("Probablity Distribution Function", name, "Error", "P", showLabels);
         for (Coord3d thetaPDF : data) {
             PDF pdf = new PDF(thetaPDF.y, thetaPDF.z, DisplayErrorStudy.PDF_MIN, DisplayErrorStudy.PDF_MAX);
             Color tc = ColorUtils.getInstance().getNextDarkColor();
@@ -183,24 +192,30 @@ public class DisplayErrorStudy {
         pdfPlot.display();
     }
 
-    public static void plot2D(String name, Map<Float, Map<Integer, List<Coord3d>>> series1, Map<Float, List<Coord3d>> series2, Map<Float, List<Coord3d>> series3) {
-        Plot2D pdfPlot = new Plot2D("K/row vs Error", "Query Error", "Clusters", "Error");
+    public static void plot2D(String name, Map<Float, Map<Integer, List<Coord3d>>> series1, Map<Float, Map<Integer, List<Coord3d>>> series2,
+            Map<Float, List<Coord3d>> series3, Map<Float, List<Coord3d>> series4, boolean showLabels) {
+        Plot2D pdfPlot = new Plot2D("K/row vs Error", "Query Error", "Clusters", "Error", showLabels);
         for (Float theta : series1.keySet()) {
             for (Integer k : series1.get(theta).keySet()) {
                 List<Coord3d> quantizedData = series1.get(theta).get(k);
                 Color tc = ColorUtils.getInstance().getNextDarkColor();
-                pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error", new java.awt.Color(tc.r, tc.g, tc.b), false);
+                pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error (DistanceError)", new java.awt.Color(tc.r, tc.g, tc.b), false);
+            }
+            for (Integer k : series2.get(theta).keySet()) {
+                List<Coord3d> quantizedData = series2.get(theta).get(k);
+                Color tc = ColorUtils.getInstance().getNextDarkColor();
+                pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error Distance", new java.awt.Color(tc.r, tc.g, tc.b), false);
             }
             Color tc = ColorUtils.getInstance().getNextDarkColor();
-            pdfPlot.addSeries(series2.get(theta), "Theta: " + theta + " Average Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
+            pdfPlot.addSeries(series3.get(theta), "Theta: " + theta + " Average Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
             tc = ColorUtils.getInstance().getNextDarkColor();
-            pdfPlot.addSeries(series3.get(theta), "Theta: " + theta + " Ideal Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
+            pdfPlot.addSeries(series4.get(theta), "Theta: " + theta + " Ideal Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
         }
         pdfPlot.display();
     }
 
-    public static void plot2D(List<Coord3d> points, String[] names, String title, String seriesName) {
-        Plot2D pdfPlot = new Plot2D(title, title, names[0], names[1]);
+    public static void plot2D(List<Coord3d> points, String[] names, String title, String seriesName, boolean showLabels) {
+        Plot2D pdfPlot = new Plot2D(title, title, names[0], names[1], showLabels);
         pdfPlot.addSeries(points, seriesName, java.awt.Color.RED, false);
         pdfPlot.display();
     }

@@ -131,6 +131,7 @@ public class QueryPerformer implements Runnable {
             int totalVariance = 0;
             int totalP = 0;
             double[] quantizedError = new double[closestK.length];
+            double[] quantizedErrorDistanceOnly = new double[closestK.length];
             double generalError = 0;
             double idealError = 0;
 
@@ -192,6 +193,10 @@ public class QueryPerformer implements Runnable {
                 for (int i = 0; i < closestK.length; i++) {
                     quantizedError[i] += tempQError[i];
                 }
+                double[] tempQErrorDistanceOnly = leafNodes.get(id).getQuantizedErrorDistanceOnly();
+                for (int i = 0; i < closestK.length; i++) {
+                    quantizedErrorDistanceOnly[i] += tempQErrorDistanceOnly[i];
+                }
                 generalError += leafNodes.get(id).getGeneralError();
                 idealError += leafNodes.get(id).getIdealError();
 
@@ -200,6 +205,7 @@ public class QueryPerformer implements Runnable {
 
             for (int i = 0; i < closestK.length; i++) {
                 quantizedError[i] = quantizedError[i] / (float) peersCount;
+                quantizedErrorDistanceOnly[i] = quantizedErrorDistanceOnly[i] / (float) peersCount;
             }
             generalError = generalError / (float) peersCount;
             idealError = idealError / (float) peersCount;
@@ -227,7 +233,8 @@ public class QueryPerformer implements Runnable {
                 bw.write("Row: " + clusterParameter + "\n");
             }
             bw.write("Closest K Used: " + Arrays.toString(closestK) + "\n");
-            bw.write("Quantized Error: " + Arrays.toString(quantizedError) + "\n");
+            bw.write("Quantized Error (Distance and Error): " + Arrays.toString(quantizedError) + "\n");
+            bw.write("Quantized Error: (Distance Only)" + Arrays.toString(quantizedErrorDistanceOnly) + "\n");
             bw.write("General Error: " + df.format(generalError) + "\n");
             bw.write("Ideal Error: " + df.format(idealError) + "\n");
 
@@ -249,6 +256,7 @@ public class QueryPerformer implements Runnable {
             automatedBW.write(clusterParameter + "\n");
             automatedBW.write(Arrays.toString(closestK).replace(" ", "").replace("[", "").replace("]", "") + "\n");
             automatedBW.write(Arrays.toString(quantizedError).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+            automatedBW.write(Arrays.toString(quantizedErrorDistanceOnly).replace(" ", "").replace("[", "").replace("]", "") + "\n");
             automatedBW.write(df.format(generalError) + "\n");
             automatedBW.write(df.format(idealError) + "\n");
             for (int i = 0; i < Y.size(); i++) {

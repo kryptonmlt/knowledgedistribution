@@ -14,10 +14,10 @@ public interface CentralNode {
 
     public double queryAll(double[] query);
 
-    public double[] query(double[] query);
+    public double[] query(double[] query, boolean useError);
 
     public ScatterPlot3D getPlot();
-    
+
     public double queryLeafNode(long peerId, double[] x);
-    
+
 }

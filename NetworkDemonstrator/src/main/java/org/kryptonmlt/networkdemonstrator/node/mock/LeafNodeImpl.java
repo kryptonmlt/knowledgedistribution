@@ -48,6 +48,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final OnlineVarianceMean E_MeanVariance;
     private final OnlineVarianceMean Y_MeanVariance;
     private final double[] quantizedError;
+    private final double[] quantizedErrorDistanceOnly;
     private double generalError = 0;
     private double idealError = 0;
     private int queries = 0;
@@ -103,6 +104,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         }
 
         this.quantizedError = new double[closestK];
+        this.quantizedErrorDistanceOnly = new double[closestK];
         this.errorMultiplier = errorMultiplier;
     }
 
@@ -242,19 +244,26 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         //Run query tests            
         for (double[] data : sensorManager.requestValidationData()) {
             double[] query = {data[0], data[1]};
-            double[] quantizedResult = centralNode.query(query);
-            double generalResult = centralNode.queryAll(query);
-            double idealQuery = centralNode.queryLeafNode(id, query);
-            for (int i = 0; i < quantizedResult.length; i++) {
-                quantizedError[i] += Math.pow(data[2] - quantizedResult[i], 2);
+            double[] quantizedResultError = centralNode.query(query, true);
+            for (int i = 0; i < quantizedResultError.length; i++) {
+                quantizedError[i] += Math.pow(data[2] - quantizedResultError[i], 2);
             }
+            double[] quantizedResultSimple = centralNode.query(query, false);
+            for (int i = 0; i < quantizedResultSimple.length; i++) {
+                quantizedErrorDistanceOnly[i] += Math.pow(data[2] - quantizedResultSimple[i], 2);
+            }
+            double generalResult = centralNode.queryAll(query);
             generalError += Math.pow(data[2] - generalResult, 2);
+            double idealQuery = centralNode.queryLeafNode(id, query);
             idealError += Math.pow(data[2] - idealQuery, 2);
             queries++;
         }
         //calulate average query error
         for (int i = 0; i < quantizedError.length; i++) {
             quantizedError[i] = quantizedError[i] / (float) queries;
+        }
+        for (int i = 0; i < quantizedErrorDistanceOnly.length; i++) {
+            quantizedErrorDistanceOnly[i] = quantizedErrorDistanceOnly[i] / (float) queries;
         }
         generalError = generalError / (float) queries;
         idealError = idealError / (float) queries;
@@ -394,6 +403,11 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     @Override
     public double[] getQuantizedError() {
         return quantizedError;
+    }
+
+    @Override
+    public double[] getQuantizedErrorDistanceOnly() {
+        return quantizedErrorDistanceOnly;
     }
 
     @Override

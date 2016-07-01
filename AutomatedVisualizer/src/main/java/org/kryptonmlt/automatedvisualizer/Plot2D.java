@@ -2,14 +2,16 @@ package org.kryptonmlt.automatedvisualizer;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JScrollPane;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
@@ -24,10 +26,12 @@ public class Plot2D extends ApplicationFrame {
 
     private final XYSeriesCollection dataset = new XYSeriesCollection();
     private final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+    private final List<String> names = new ArrayList<>();
     private int counter = 0;
     private final float STROKE_SIZE = 1.0f;
+    private boolean showLabels;
 
-    public Plot2D(String applicationTitle, String chartTitle, String xName, String yName) {
+    public Plot2D(String applicationTitle, String chartTitle, String xName, String yName, boolean showLabels) {
         super(applicationTitle);
         JFreeChart xylineChart = ChartFactory.createXYLineChart(
                 chartTitle, xName, yName, dataset,
@@ -39,6 +43,7 @@ public class Plot2D extends ApplicationFrame {
         final XYPlot plot = xylineChart.getXYPlot();
         plot.setRenderer(renderer);
         this.setContentPane(chartPanel);
+        this.showLabels = showLabels;
     }
 
     public void display() {
@@ -72,6 +77,14 @@ public class Plot2D extends ApplicationFrame {
         }
         renderer.setSeriesShapesVisible(counter, false);
         dataset.addSeries(series);
+        names.add(name);
+        renderer.setSeriesItemLabelGenerator(counter, new XYItemLabelGenerator() {
+            @Override
+            public String generateLabel(XYDataset xyd, int series, int item) {
+                return names.get(series);
+            }
+        });
+        renderer.setSeriesItemLabelsVisible(counter, showLabels);
         counter++;
     }
 

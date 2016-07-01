@@ -1,1 +1,1 @@
-call java -jar AutomatedVisualizer-1.0-SNAPSHOT-jar-with-dependencies.jar AUTOMATED_ERRORS_STUDY THETA 36
+call java -jar AutomatedVisualizer-1.0-SNAPSHOT-jar-with-dependencies.jar AUTOMATED_ERRORS_STUDY THETA 36 true
