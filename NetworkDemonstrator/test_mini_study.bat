@@ -1,4 +1,4 @@
-set "THETA=0 0.001 0.01 0.1 5.0"
+set "THETA=0 0.001 0.01 0.1 1.0 5.0"
 set "K=1 5 15"
 set "MAX_STATIONS=36"
 

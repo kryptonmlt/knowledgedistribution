@@ -1,5 +1,5 @@
-set "THETA=0.0"
-set "K=1 5 10 15 30"
+set "THETA=1.0"
+set "K=1 5 15"
 set "MAX_STATIONS=36"
 
  for %%i in (%THETA%) do (
