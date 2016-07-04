@@ -12,6 +12,7 @@ import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
 import org.kryptonmlt.networkdemonstrator.learning.Clustering;
 import org.kryptonmlt.networkdemonstrator.learning.DummyClustering;
+import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.pojos.NodeDistance;
@@ -35,6 +36,8 @@ public class CentralNodeImpl implements CentralNode {
     private final int[] closestK;
     private final int allK;
     private ScatterPlot3D plot;
+    private int featuresReceived = 0;
+    private final OnlineStochasticGradientDescent featureModel;
 
     public CentralNodeImpl(int numberOfFeatures, int[] closestK, int allK, String[] columnNames, boolean showVisualization) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
@@ -48,6 +51,7 @@ public class CentralNodeImpl implements CentralNode {
                 LOGGER.error("Error when trying to show Central Node Visualization", ex);
             }
         }
+        featureModel = new OnlineStochasticGradientDescent(0.05);
         LOGGER.info("Central Node started up.. listening for deivces with {} features", this.numberOfFeatures);
     }
 
@@ -67,6 +71,11 @@ public class CentralNodeImpl implements CentralNode {
     @Override
     public double queryLeafNode(long peerId, double[] x) {
         return peers.get(peerId).predict(x[0], x[1]);
+    }
+
+    @Override
+    public double queryBaseLineSolution(double[] x) {
+        return featureModel.predict(x[0], x[1]);
     }
 
     public double[] queryKError(double[] x, int k) {
@@ -185,9 +194,8 @@ public class CentralNodeImpl implements CentralNode {
     }
 
     public synchronized void addFeatures(long id, double[] dataGathered) {
-        synchronized (peers) {
-            this.getPeer(id).getFeatures().add(dataGathered);
-        }
+        featureModel.learn(dataGathered[0], dataGathered[1], dataGathered[2]);
+        featuresReceived++;
     }
 
     private DevicePeer getPeer(long id) {

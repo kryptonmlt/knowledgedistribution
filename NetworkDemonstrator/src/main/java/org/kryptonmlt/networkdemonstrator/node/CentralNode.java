@@ -20,4 +20,6 @@ public interface CentralNode {
 
     public double queryLeafNode(long peerId, double[] x);
 
+    public double queryBaseLineSolution(double[] x);
+
 }

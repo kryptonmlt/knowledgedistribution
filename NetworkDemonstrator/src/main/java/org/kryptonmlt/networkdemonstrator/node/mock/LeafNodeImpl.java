@@ -51,6 +51,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final double[][] quantizedErrorDistanceOnly;
     private double generalError = 0;
     private double idealError = 0;
+    private double baseLineError = 0;
     private int queries = 0;
 
     //Sensor Learning
@@ -149,6 +150,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         try {
             while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
                 double[] dataGathered = sensorManager.requestData();
+                sendFeatures(dataGathered);
                 int[] clustersChosen = learnFromData(dataGathered);
                 if (dataCounter > maxLearnPoints) {
                     tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
@@ -268,6 +270,8 @@ public class LeafNodeImpl implements LeafNode, Runnable {
             generalError += Math.pow(data[2] - generalResult, 2);
             double idealQuery = centralNode.queryLeafNode(id, query);
             idealError += Math.pow(data[2] - idealQuery, 2);
+            double baseLineQuery = centralNode.queryBaseLineSolution(query);
+            baseLineError += Math.pow(data[2] - baseLineQuery, 2);
             queries++;
         }
         //calulate average query error
@@ -283,6 +287,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         }
         generalError = generalError / (float) queries;
         idealError = idealError / (float) queries;
+        baseLineError = baseLineError / (float) queries;
     }
 
     /**
@@ -438,6 +443,11 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     @Override
     public double getIdealError() {
         return idealError;
+    }
+
+    @Override
+    public double getBaseLineError() {
+        return baseLineError;
     }
 
     @Override

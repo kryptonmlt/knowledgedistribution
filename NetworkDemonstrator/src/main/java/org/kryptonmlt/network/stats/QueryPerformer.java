@@ -129,6 +129,7 @@ public class QueryPerformer implements Runnable {
             double[][] quantizedErrorDistanceOnly = new double[closestK.length][clusterParameter.length];
             double generalError = 0;
             double idealError = 0;
+            double baseLineError = 0;
 
             //statistics
             List<Double> E_DASH = new ArrayList<>(); // local model
@@ -198,6 +199,7 @@ public class QueryPerformer implements Runnable {
                 }
                 generalError += leafNodes.get(id).getGeneralError();
                 idealError += leafNodes.get(id).getIdealError();
+                baseLineError += leafNodes.get(id).getBaseLineError();
 
                 peersCount++;
             }
@@ -210,6 +212,7 @@ public class QueryPerformer implements Runnable {
             }
             generalError = generalError / (float) peersCount;
             idealError = idealError / (float) peersCount;
+            baseLineError = baseLineError / (float) peersCount;
 
             bw.write("System " + peersCount + " devices (Using " + worthType.name() + " at " + theta + " error):\n");
             bw.write(totalUpdates + " of " + totalDataToBeSent + " = " + df.format((totalUpdates / (float) totalDataToBeSent) * 100) + "% messages sent.\n");
@@ -244,7 +247,7 @@ public class QueryPerformer implements Runnable {
             }
             bw.write("General Error: " + df.format(generalError) + "\n");
             bw.write("Ideal Error: " + df.format(idealError) + "\n");
-
+            bw.write("BaseLine Error: " + df.format(baseLineError) + "\n");
             bw.write("Took " + timeTakenSeconds + " seconds");
             bw.flush();
             bw.close();
@@ -270,6 +273,7 @@ public class QueryPerformer implements Runnable {
             }
             automatedBW.write(df.format(generalError) + "\n");
             automatedBW.write(df.format(idealError) + "\n");
+            automatedBW.write(df.format(baseLineError) + "\n");
             for (int i = 0; i < Y.size(); i++) {
                 //automatedBW.write(E_DASH.get(i) + "," + E.get(i) + "," + Y.get(i) + "\n");
                 detailValuesBW.write(actual.get(i) + "," + localPredicted.get(i) + "," + centralPredicted.get(i) + "\n");

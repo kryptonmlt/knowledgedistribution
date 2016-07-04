@@ -63,4 +63,6 @@ public interface LeafNode {
     public Clustering[] getClustering();
 
     public double getIdealError();
+
+    public double getBaseLineError();
 }

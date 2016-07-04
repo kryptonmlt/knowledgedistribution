@@ -69,6 +69,7 @@ public class DisplayErrorStudy {
         Map<Float, Map<Integer, List<Coord3d>>> clusterParameterQuantizedErrorDistanceOnly = new HashMap<>();
         Map<Float, List<Coord3d>> clusterParameterGeneralError = new HashMap<>();
         Map<Float, List<Coord3d>> clusterParameterIdealError = new HashMap<>();
+        Map<Float, List<Coord3d>> clusterParameterBaseLineError = new HashMap<>();
 
         //2D Plot
         List<Double> E_DASH = new ArrayList<>();
@@ -121,6 +122,7 @@ public class DisplayErrorStudy {
                                 clusterParameterQuantizedErrorDistanceOnly.put(theta, new HashMap<>());
                                 clusterParameterGeneralError.put(theta, new ArrayList<>());
                                 clusterParameterIdealError.put(theta, new ArrayList<>());
+                                clusterParameterBaseLineError.put(theta, new ArrayList<>());
                             }
                             for (String tempK : closestK) {
                                 int k = Integer.parseInt(tempK);
@@ -154,6 +156,10 @@ public class DisplayErrorStudy {
                             String idealError = br.readLine();
                             for (int l = 0; l < clusterParameter.length; l++) {
                                 clusterParameterIdealError.get(theta).add(new Coord3d(clusterParameter[l], Float.parseFloat(idealError), 0f));
+                            }
+                            String baseLineError = br.readLine();
+                            for (int l = 0; l < clusterParameter.length; l++) {
+                                clusterParameterBaseLineError.get(theta).add(new Coord3d(clusterParameter[l], Float.parseFloat(baseLineError), 0f));
                             }
 
                             //START STATISTICS
@@ -189,7 +195,8 @@ public class DisplayErrorStudy {
         String[] xyzNames = {"Clusters", "KNN", "Error"};
         Set<Integer> knn = clusterParameterQuantizedErrorDistanceOnly.get(clusterParameterQuantizedErrorDistanceOnly.keySet().iterator().next()).keySet();
         showErrors(clusterParameterQuantizedError, clusterParameterQuantizedErrorDistanceOnly,
-                SurfacePlot3D.convertKNN0(clusterParameterGeneralError, knn), SurfacePlot3D.convertKNN0(clusterParameterIdealError, knn), xyzNames);
+                SurfacePlot3D.convertKNN0(clusterParameterGeneralError, knn), SurfacePlot3D.convertKNN0(clusterParameterIdealError, knn),
+                SurfacePlot3D.convertKNN0(clusterParameterBaseLineError, knn), xyzNames);
 
         if (messagesErrorInfo.size() > 2) {
             //showGraph(messagesErrorInfo, MESSAGES_ERROR);
@@ -258,7 +265,8 @@ public class DisplayErrorStudy {
     private static void showErrors(Map<Float, Map<Integer, List<Coord3d>>> clusterParameterQuantizedError,
             Map<Float, Map<Integer, List<Coord3d>>> clusterParameterQuantizedErrorDistanceOnly,
             Map<Float, Map<Integer, List<Coord3d>>> clusterParameterGeneralError,
-            Map<Float, Map<Integer, List<Coord3d>>> clusterParameterIdealError, String[] names) throws Exception {
+            Map<Float, Map<Integer, List<Coord3d>>> clusterParameterIdealError,
+            Map<Float, Map<Integer, List<Coord3d>>> clusterParameterBaseLineError, String[] names) throws Exception {
 
         for (Float theta : clusterParameterQuantizedError.keySet()) {
             BufferedWriter bw = new BufferedWriter(new FileWriter("VISUALIZE_QUERIES/" + theta + "_study.csv"));
@@ -289,6 +297,13 @@ public class DisplayErrorStudy {
                     float clusterParameter = c.x;
                     float error = c.y;
                     bw.write(clusterParameter + "," + knn + "," + error + ",3" + "\n");
+                }
+            }
+            for (Integer knn : clusterParameterBaseLineError.get(theta).keySet()) {
+                for (Coord3d c : clusterParameterBaseLineError.get(theta).get(knn)) {
+                    float clusterParameter = c.x;
+                    float error = c.y;
+                    bw.write(clusterParameter + "," + knn + "," + error + ",4" + "\n");
                 }
             }
             bw.flush();
