@@ -9,14 +9,22 @@ public class NodeDistanceError implements Comparable<NodeDistanceError> {
     private long id;
     private double distance;
     private double error;
+    private double weight;
 
-    public NodeDistanceError(long id, double distance, double error) {
+    public NodeDistanceError(long id, double distance, Double error) {
         this.id = id;
         this.distance = distance;
-        if (error == 0.0) {
-            error = Double.MAX_VALUE;
+
+        if (error == null) {
+            this.weight = 1;
+            this.error = 1;
+        } else {
+            if (error == 0.0) {
+                error = Double.MAX_VALUE;
+            }
+            this.error = error;
+            this.weight = (0.5 * Math.exp(-this.distance)) + (0.5 * Math.exp(-this.error));
         }
-        this.error = error;
     }
 
     public long getId() {
@@ -43,16 +51,20 @@ public class NodeDistanceError implements Comparable<NodeDistanceError> {
         this.error = error;
     }
 
+    public double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
     @Override
     public int compareTo(NodeDistanceError o) {
-        double e0 = this.getError();
-        double e1 = o.getError();
-        double d0 = Math.pow(this.getDistance(), 4);
-        double d1 = Math.pow(o.getDistance(), 4);
-        if (d0 * e0 < d1 * e1) {
-            return -1;
-        } else if (d0 * e0 > d1 * e1) {
+        if (this.getDistance() < o.getDistance()) {
             return 1;
+        } else if (this.getDistance() > o.getDistance()) {
+            return -1;
         }
         return 0;
     }

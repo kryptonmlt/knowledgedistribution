@@ -50,9 +50,9 @@ public interface LeafNode {
 
     public double[] getActual();
 
-    public double[] getQuantizedError();
+    public double[][] getQuantizedError();
 
-    public double[] getQuantizedErrorDistanceOnly();
+    public double[][] getQuantizedErrorDistanceOnly();
 
     public double getGeneralError();
 
@@ -60,7 +60,7 @@ public interface LeafNode {
 
     public void queryValidation();
 
-    public Clustering getClustering();
+    public Clustering[] getClustering();
 
     public double getIdealError();
 }

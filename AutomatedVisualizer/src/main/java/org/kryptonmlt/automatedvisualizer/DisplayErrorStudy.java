@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
 
@@ -102,56 +103,67 @@ public class DisplayErrorStudy {
                             E_DASH_thetaMeanVariance.add(new Coord3d(theta, Float.parseFloat(mVData[0]), Float.parseFloat(mVData[1])));
                             E_thetaMeanVariance.add(new Coord3d(theta, Float.parseFloat(mVData[2]), Float.parseFloat(mVData[3])));
                             Y_thetaMeanVariance.add(new Coord3d(theta, Float.parseFloat(mVData[4]), Float.parseFloat(mVData[5])));
-                        }
 
-                        String t = br.readLine();
-                        float clusterParameter; //k or row
-                        if (t.contains(".")) {
-                            clusterParameter = Float.parseFloat(t);
-                        } else {
-                            clusterParameter = Integer.parseInt(t);
-                        }
-                        // closest k
-                        String[] closestK = br.readLine().split(",");
-                        if (clusterParameterQuantizedError.get(theta) == null) {
-                            clusterParameterQuantizedError.put(theta, new HashMap<>());
-                            clusterParameterQuantizedErrorDistanceOnly.put(theta, new HashMap<>());
-                            clusterParameterGeneralError.put(theta, new ArrayList<>());
-                            clusterParameterIdealError.put(theta, new ArrayList<>());
-                        }
-                        for (String tempK : closestK) {
-                            int k = Integer.parseInt(tempK);
-                            if (clusterParameterQuantizedError.get(theta).get(k) == null) {
-                                clusterParameterQuantizedError.get(theta).put(k, new ArrayList<>());
-                                clusterParameterQuantizedErrorDistanceOnly.get(theta).put(k, new ArrayList<>());
+                            String[] t = br.readLine().split(",");
+                            //k or row
+                            float[] clusterParameter = new float[t.length];
+                            for (int j = 0; j < t.length; j++) {
+                                if (t[j].contains(".")) {
+                                    clusterParameter[j] = Float.parseFloat(t[j]);
+                                } else {
+                                    clusterParameter[j] = Integer.parseInt(t[j]);
+                                }
                             }
-                        }
-                        // quantized errors
-                        String[] queryErrors = br.readLine().split(",");
-                        for (int j = 0; j < closestK.length; j++) {
-                            int k = Integer.parseInt(closestK[j]);
-                            clusterParameterQuantizedError.get(theta).get(k).add(new Coord3d(clusterParameter, Float.parseFloat(queryErrors[j]), 0f));
-                        }
-                        String[] queryErrorsDistanceOnly = br.readLine().split(",");
-                        for (int j = 0; j < closestK.length; j++) {
-                            int k = Integer.parseInt(closestK[j]);
-                            clusterParameterQuantizedErrorDistanceOnly.get(theta).get(k).add(new Coord3d(clusterParameter, Float.parseFloat(queryErrorsDistanceOnly[j]), 0f));
-                        }
-                        // general error
-                        String generalError = br.readLine();
-                        clusterParameterGeneralError.get(theta).add(new Coord3d(clusterParameter, Float.parseFloat(generalError), 0f));
+                            // closest k
+                            String[] closestK = br.readLine().split(",");
+                            if (clusterParameterQuantizedError.get(theta) == null) {
+                                clusterParameterQuantizedError.put(theta, new HashMap<>());
+                                clusterParameterQuantizedErrorDistanceOnly.put(theta, new HashMap<>());
+                                clusterParameterGeneralError.put(theta, new ArrayList<>());
+                                clusterParameterIdealError.put(theta, new ArrayList<>());
+                            }
+                            for (String tempK : closestK) {
+                                int k = Integer.parseInt(tempK);
+                                if (clusterParameterQuantizedError.get(theta).get(k) == null) {
+                                    clusterParameterQuantizedError.get(theta).put(k, new ArrayList<>());
+                                    clusterParameterQuantizedErrorDistanceOnly.get(theta).put(k, new ArrayList<>());
+                                }
+                            }
+                            // quantized errors
+                            for (int j = 0; j < closestK.length; j++) {
+                                String[] queryErrors = br.readLine().split(",");
+                                int k = Integer.parseInt(closestK[j]);
+                                for (int l = 0; l < clusterParameter.length; l++) {
+                                    clusterParameterQuantizedError.get(theta).get(k).add(new Coord3d(clusterParameter[l], Float.parseFloat(queryErrors[l]), 0f));
+                                }
+                            }
+                            for (int j = 0; j < closestK.length; j++) {
+                                String[] queryErrorsDistanceOnly = br.readLine().split(",");
+                                int k = Integer.parseInt(closestK[j]);
+                                for (int l = 0; l < clusterParameter.length; l++) {
+                                    clusterParameterQuantizedErrorDistanceOnly.get(theta).get(k).add(new Coord3d(clusterParameter[l], Float.parseFloat(queryErrorsDistanceOnly[l]), 0f));
+                                }
+                            }
+                            // general error
+                            String generalError = br.readLine();
+                            for (int l = 0; l < clusterParameter.length; l++) {
+                                clusterParameterGeneralError.get(theta).add(new Coord3d(clusterParameter[l], Float.parseFloat(generalError), 0f));
+                            }
 
-                        // ideal error
-                        String idealError = br.readLine();
-                        clusterParameterIdealError.get(theta).add(new Coord3d(clusterParameter, Float.parseFloat(idealError), 0f));
+                            // ideal error
+                            String idealError = br.readLine();
+                            for (int l = 0; l < clusterParameter.length; l++) {
+                                clusterParameterIdealError.get(theta).add(new Coord3d(clusterParameter[l], Float.parseFloat(idealError), 0f));
+                            }
 
-                        //START STATISTICS
-                        String tempLine;
-                        while ((tempLine = br.readLine()) != null) {
-                            String[] data = tempLine.split(",");
-                            E_DASH.add(Double.parseDouble(data[0]));
-                            E.add(Double.parseDouble(data[1]));
-                            Y.add(Double.parseDouble(data[2]));
+                            //START STATISTICS
+                            String tempLine;
+                            while ((tempLine = br.readLine()) != null) {
+                                String[] data = tempLine.split(",");
+                                E_DASH.add(Double.parseDouble(data[0]));
+                                E.add(Double.parseDouble(data[1]));
+                                Y.add(Double.parseDouble(data[2]));
+                            }
                         }
                         pastTheta = theta;
                     } else {
@@ -173,10 +185,11 @@ public class DisplayErrorStudy {
         drawPDFs("Theta vs E'", E_DASH_thetaMeanVariance, false);
         drawPDFs("Theta vs E", E_thetaMeanVariance, false);
         drawPDFs("Theta vs Y", Y_thetaMeanVariance, false);
-        //plot2D("", clusterParameterQuantizedError, clusterParameterQuantizedErrorDistanceOnly, clusterParameterGeneralError, clusterParameterIdealError, showLabels);
+        plot2D("", clusterParameterQuantizedError, clusterParameterQuantizedErrorDistanceOnly, clusterParameterGeneralError, clusterParameterIdealError, showLabels);
         String[] xyzNames = {"Clusters", "KNN", "Error"};
+        Set<Integer> knn = clusterParameterQuantizedErrorDistanceOnly.get(clusterParameterQuantizedErrorDistanceOnly.keySet().iterator().next()).keySet();
         showErrors(clusterParameterQuantizedError, clusterParameterQuantizedErrorDistanceOnly,
-                SurfacePlot3D.convertKNN0(clusterParameterGeneralError), SurfacePlot3D.convertKNN0(clusterParameterIdealError), xyzNames);
+                SurfacePlot3D.convertKNN0(clusterParameterGeneralError, knn), SurfacePlot3D.convertKNN0(clusterParameterIdealError, knn), xyzNames);
 
         if (messagesErrorInfo.size() > 2) {
             //showGraph(messagesErrorInfo, MESSAGES_ERROR);
@@ -192,6 +205,7 @@ public class DisplayErrorStudy {
             //showGraph(thetaP, THETA_P);
             plot2D(thetaP, THETA_P, "Theta vs P", worth_type + " " + validPeers + " devices", false);
         }
+        System.out.println("Finished!");
     }
 
     public static void drawPDFs(String name, List<Coord3d> data, boolean showLabels) {
@@ -247,7 +261,7 @@ public class DisplayErrorStudy {
             Map<Float, Map<Integer, List<Coord3d>>> clusterParameterIdealError, String[] names) throws Exception {
 
         for (Float theta : clusterParameterQuantizedError.keySet()) {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(theta + "_study.csv"));
+            BufferedWriter bw = new BufferedWriter(new FileWriter("VISUALIZE_QUERIES/" + theta + "_study.csv"));
             bw.write(names[0] + "," + names[1] + "," + names[2] + ",Algorithm" + "\n");
             for (Integer knn : clusterParameterQuantizedError.get(theta).keySet()) {
                 for (Coord3d c : clusterParameterQuantizedError.get(theta).get(knn)) {

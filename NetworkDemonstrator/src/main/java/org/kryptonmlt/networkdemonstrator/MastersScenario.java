@@ -29,15 +29,9 @@ public class MastersScenario {
     public static void main(String[] args) throws SocketException, IOException {
 
         double error = Double.parseDouble(args[0]);
-        String clusterParameter = args[1];
-        int max_stations = Integer.parseInt(args[2]);  //max=36
-        Integer k = null;
-        float row = 0.05f; // ART - only used when k is null
-        if (clusterParameter.contains(".")) {
-            row = Float.parseFloat(clusterParameter);
-        } else {
-            k = Integer.parseInt(clusterParameter);
-        }
+        int max_stations = Integer.parseInt(args[1]);  //max=36
+        int[] k = {1, 3, 5, 7, 10, 15, 20, 30};
+        float[] row = {0.05f}; // ART - only used when k is null
 
         int errorMultiplier = 10;
         int delayMillis = 0;
@@ -51,10 +45,16 @@ public class MastersScenario {
         boolean useStats = false;
         int use_max_points = 1000;
         double samplingRate = 0.1;
-        int[] closestK = {1, 3, 30, 50, 300, 500};
+        int[] closestK = {1, 3, 30, 50, 100, 300, 500};
 
+        int numberOfClusters;
+        if (k == null) {
+            numberOfClusters = row.length;
+        } else {
+            numberOfClusters = k.length;
+        }
         // Initialize Central Node
-        CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, closestK, MastersScenario.COLUMN_NAMES, false);
+        CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, closestK, numberOfClusters, MastersScenario.COLUMN_NAMES, false);
 
         // Initialize IOT Devices (Sensors)
         FileInputStream file = new FileInputStream(new File(datafile));

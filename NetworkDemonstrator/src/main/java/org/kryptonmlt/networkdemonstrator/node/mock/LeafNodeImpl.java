@@ -47,8 +47,8 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final OnlineVarianceMean E_DASH_MeanVariance;
     private final OnlineVarianceMean E_MeanVariance;
     private final OnlineVarianceMean Y_MeanVariance;
-    private final double[] quantizedError;
-    private final double[] quantizedErrorDistanceOnly;
+    private final double[][] quantizedError;
+    private final double[][] quantizedErrorDistanceOnly;
     private double generalError = 0;
     private double idealError = 0;
     private int queries = 0;
@@ -59,7 +59,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final OnlineStochasticGradientDescent localModel;
     private final OnlineStochasticGradientDescent centralNodeModel;
     private final OnlineVarianceMean THETA_ERROR_meanVariance;
-    private final Clustering clustering;
+    private Clustering[] clustering;
     private final int maxLearnPoints;
     private int dataCounter = 0;
 
@@ -68,7 +68,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
 
     public LeafNodeImpl(CentralNodeImpl centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, int startFeature, int numberOfFeatures,
-            float learningRate, float clusteringAlpha, int maxLearnPoints, WorthType worth, double theta_error, Integer k, double row,
+            float learningRate, float clusteringAlpha, int maxLearnPoints, WorthType worth, double theta_error, int[] k, float[] row,
             boolean statistics, int max_use_Points, double samplingRate, int closestK, int errorMultiplier) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
@@ -96,15 +96,20 @@ public class LeafNodeImpl implements LeafNode, Runnable {
 
         this.delayMillis = delayMillis;
         this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile, samplingRate);
-
         if (k != null) {
-            this.clustering = new OnlineKmeans(k, learningRate, clusteringAlpha);
+            clustering = new Clustering[k.length];
+            for (int i = 0; i < k.length; i++) {
+                this.clustering[i] = new OnlineKmeans(k[i], learningRate, clusteringAlpha);
+            }
         } else {
-            this.clustering = new ART(row, learningRate, clusteringAlpha);
+            clustering = new Clustering[row.length];
+            for (int i = 0; i < row.length; i++) {
+                this.clustering[i] = new ART(row[i], learningRate, clusteringAlpha);
+            }
         }
 
-        this.quantizedError = new double[closestK];
-        this.quantizedErrorDistanceOnly = new double[closestK];
+        this.quantizedError = new double[closestK][clustering.length];
+        this.quantizedErrorDistanceOnly = new double[closestK][clustering.length];
         this.errorMultiplier = errorMultiplier;
     }
 
@@ -144,7 +149,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         try {
             while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
                 double[] dataGathered = sensorManager.requestData();
-                int cluster = learnFromData(dataGathered);
+                int[] clustersChosen = learnFromData(dataGathered);
                 if (dataCounter > maxLearnPoints) {
                     tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
                     tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
@@ -152,7 +157,10 @@ public class LeafNodeImpl implements LeafNode, Runnable {
                     centralNodeError = tempCentralNodePredict - dataGathered[2];
                     double e_dash = localError * localError;
                     double e = centralNodeError * centralNodeError;
-                    clustering.updateError(cluster, e_dash);
+                    for (int i = 0; i < clustersChosen.length; i++) {
+                        clustering[i].updateError(clustersChosen[i], e_dash);
+                    }
+
                     if (statistics) {
                         E_DASH[dataCounter - maxLearnPoints - 1] = e_dash;
                         E[dataCounter - maxLearnPoints - 1] = e;
@@ -244,13 +252,17 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         //Run query tests            
         for (double[] data : sensorManager.requestValidationData()) {
             double[] query = {data[0], data[1]};
-            double[] quantizedResultError = centralNode.query(query, true);
+            double[][] quantizedResultError = centralNode.query(query, true);
             for (int i = 0; i < quantizedResultError.length; i++) {
-                quantizedError[i] += Math.pow(data[2] - quantizedResultError[i], 2);
+                for (int j = 0; j < quantizedResultError[i].length; j++) {
+                    quantizedError[i][j] += Math.pow(data[2] - quantizedResultError[i][j], 2);
+                }
             }
-            double[] quantizedResultSimple = centralNode.query(query, false);
+            double[][] quantizedResultSimple = centralNode.query(query, false);
             for (int i = 0; i < quantizedResultSimple.length; i++) {
-                quantizedErrorDistanceOnly[i] += Math.pow(data[2] - quantizedResultSimple[i], 2);
+                for (int j = 0; j < quantizedResultSimple[i].length; j++) {
+                    quantizedErrorDistanceOnly[i][j] += Math.pow(data[2] - quantizedResultSimple[i][j], 2);
+                }
             }
             double generalResult = centralNode.queryAll(query);
             generalError += Math.pow(data[2] - generalResult, 2);
@@ -260,10 +272,14 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         }
         //calulate average query error
         for (int i = 0; i < quantizedError.length; i++) {
-            quantizedError[i] = quantizedError[i] / (float) queries;
+            for (int j = 0; j < quantizedError[i].length; j++) {
+                quantizedError[i][j] = quantizedError[i][j] / (float) queries;
+            }
         }
         for (int i = 0; i < quantizedErrorDistanceOnly.length; i++) {
-            quantizedErrorDistanceOnly[i] = quantizedErrorDistanceOnly[i] / (float) queries;
+            for (int j = 0; j < quantizedError[i].length; j++) {
+                quantizedErrorDistanceOnly[i][j] = quantizedErrorDistanceOnly[i][j] / (float) queries;
+            }
         }
         generalError = generalError / (float) queries;
         idealError = idealError / (float) queries;
@@ -289,8 +305,8 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     }
 
     private void sendKnowledge() throws IOException {
-        LOGGER.debug("Device {} sending: {} and {} centroids", id, Arrays.toString(localModel.getWeights()), clustering.getCentroids().size());
-        centralNode.addKnowledge(id, localModel.getWeights(), clustering.getCentroids(), clustering.getErrors());
+        LOGGER.debug("Device {} sending: {}", id, Arrays.toString(localModel.getWeights()));
+        centralNode.addKnowledge(id, localModel.getWeights(), clustering);
         centralNodeModel.setWeights(localModel.getWeights());
         LOGGER.debug("Device {} sent data successfully", id);
         timesErrorExceeded++;
@@ -300,10 +316,14 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         centralNode.addFeatures(id, dataGathered);
     }
 
-    private int learnFromData(double[] dataGathered) {
+    private int[] learnFromData(double[] dataGathered) {
         localModel.learn(dataGathered[0], dataGathered[1], dataGathered[2]);
         double[] inputSpace = {dataGathered[0], dataGathered[1]};
-        return clustering.update(inputSpace);
+        int[] clustersChosen = new int[clustering.length];
+        for (int i = 0; i < clustersChosen.length; i++) {
+            clustersChosen[i] = clustering[i].update(inputSpace);
+        }
+        return clustersChosen;
     }
 
     @Override
@@ -401,12 +421,12 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     }
 
     @Override
-    public double[] getQuantizedError() {
+    public double[][] getQuantizedError() {
         return quantizedError;
     }
 
     @Override
-    public double[] getQuantizedErrorDistanceOnly() {
+    public double[][] getQuantizedErrorDistanceOnly() {
         return quantizedErrorDistanceOnly;
     }
 
@@ -426,7 +446,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     }
 
     @Override
-    public Clustering getClustering() {
+    public Clustering[] getClustering() {
         return clustering;
     }
 

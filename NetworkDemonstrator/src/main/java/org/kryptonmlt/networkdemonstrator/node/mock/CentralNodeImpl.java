@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Map;
 import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
+import org.kryptonmlt.networkdemonstrator.learning.Clustering;
+import org.kryptonmlt.networkdemonstrator.learning.DummyClustering;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
-import org.kryptonmlt.networkdemonstrator.pojos.DevicePeerMock;
+import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
+import org.kryptonmlt.networkdemonstrator.pojos.NodeDistance;
 import org.kryptonmlt.networkdemonstrator.pojos.NodeDistanceError;
-import org.kryptonmlt.networkdemonstrator.pojos.Peer;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 import org.kryptonmlt.networkdemonstrator.utils.VisualizationUtils;
 import org.kryptonmlt.networkdemonstrator.visualizer.ScatterPlot3D;
@@ -29,13 +31,15 @@ public class CentralNodeImpl implements CentralNode {
     private static final Logger LOGGER = LoggerFactory.getLogger(CentralNodeImpl.class);
 
     private final int numberOfFeatures;
-    private final Map<Long, Peer> peers = new HashMap<>();
+    private final Map<Long, DevicePeer> peers = new HashMap<>();
     private final int[] closestK;
+    private final int allK;
     private ScatterPlot3D plot;
 
-    public CentralNodeImpl(int numberOfFeatures, int[] closestK, String[] columnNames, boolean showVisualization) throws IOException {
+    public CentralNodeImpl(int numberOfFeatures, int[] closestK, int allK, String[] columnNames, boolean showVisualization) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
         this.closestK = closestK;
+        this.allK = allK;
         if (showVisualization) {
             try {
                 plot = new ScatterPlot3D(columnNames, true);
@@ -48,10 +52,14 @@ public class CentralNodeImpl implements CentralNode {
     }
 
     @Override
-    public double[] query(double[] x, boolean error) {
-        double[] result = new double[this.closestK.length];
+    public double[][] query(double[] x, boolean error) {
+        double[][] result = new double[this.closestK.length][];
         for (int i = 0; i < this.closestK.length; i++) {
-            result[i] = queryK(x, this.closestK[i], error);
+            if (error) {
+                result[i] = queryKError(x, this.closestK[i]);
+            } else {
+                result[i] = queryK(x, this.closestK[i]);
+            }
         }
         return result;
     }
@@ -61,35 +69,72 @@ public class CentralNodeImpl implements CentralNode {
         return peers.get(peerId).predict(x[0], x[1]);
     }
 
-    public double queryK(double[] x, int k, boolean useError) {
-        //select closest K nodes
-        List<NodeDistanceError> nd = new ArrayList<>();
-        synchronized (peers) {
-            for (Long peerId : peers.keySet()) {
-                for (int i = 0; i < peers.get(peerId).getQuantizedNodes().size(); i++) {
-                    double d = VectorUtils.distance(peers.get(peerId).getQuantizedNodes().get(i), x);
-                    double e = 1.0;
-                    if (useError) {
-                        e = peers.get(peerId).getQuantizedErrors().get(i);
+    public double[] queryKError(double[] x, int k) {
+        //sort nodes
+        double[] kResults = new double[allK];
+        for (int j = 0; j < kResults.length; j++) {
+            List<NodeDistanceError> nd = new ArrayList<>();
+            synchronized (peers) {
+                for (Long peerId : peers.keySet()) {
+                    for (int i = 0; i < peers.get(peerId).getClusters()[j].getCentroids().size(); i++) {
+                        double d = VectorUtils.distance(peers.get(peerId).getClusters()[j].getCentroids().get(i), x);
+                        Double e = peers.get(peerId).getClusters()[j].getErrors().get(i);
+                        nd.add(new NodeDistanceError(peerId, d, e));
                     }
-                    nd.add(new NodeDistanceError(peerId, d, e));
                 }
             }
+            Collections.sort(nd);
+            int tempSize = k;
+            if (k > nd.size()) {
+                tempSize = nd.size();
+            }
+
+            double totalWeight = 0;
+            for (int i = 0; i < tempSize; i++) {
+                totalWeight += nd.get(i).getWeight();
+            }
+            //closest K nodes selected now compute prediction based on them.
+            double[] predictions = new double[tempSize];
+            double result = 0;
+            for (int i = 0; i < tempSize; i++) {
+                nd.get(i).setWeight(nd.get(i).getWeight() / totalWeight);
+                predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]) * nd.get(i).getWeight();
+                result += predictions[i];
+            }
+            LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
+            kResults[j] = result;
         }
-        Collections.sort(nd);
-        //closest K nodes selected now compute prediction based on them.
-        int tempSize = k;
-        if (k > nd.size()) {
-            tempSize = nd.size();
+        return kResults;
+    }
+
+    public double[] queryK(double[] x, int k) {
+        double[] kResults = new double[allK];
+        for (int j = 0; j < kResults.length; j++) {
+            List<NodeDistance> nd = new ArrayList<>();
+            synchronized (peers) {
+                for (Long peerId : peers.keySet()) {
+                    for (int i = 0; i < peers.get(peerId).getClusters()[j].getCentroids().size(); i++) {
+                        double d = VectorUtils.distance(peers.get(peerId).getClusters()[j].getCentroids().get(i), x);
+                        nd.add(new NodeDistance(peerId, d));
+                    }
+                }
+            }
+            Collections.sort(nd);
+            int tempSize = k;
+            if (k > nd.size()) {
+                tempSize = nd.size();
+            }
+            //closest K nodes selected now compute prediction based on them.
+            double[] predictions = new double[tempSize];
+            for (int i = 0; i < tempSize; i++) {
+                predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]);
+            }
+            //average predictions and return it.
+            double result = VectorUtils.average(predictions);
+            LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
+            kResults[j] = result;
         }
-        double[] predictions = new double[tempSize];
-        for (int i = 0; i < tempSize; i++) {
-            predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]);
-        }
-        //average predictions and return it.
-        double result = VectorUtils.average(predictions);
-        LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
-        return result;
+        return kResults;
     }
 
     @Override
@@ -110,25 +155,28 @@ public class CentralNodeImpl implements CentralNode {
     }
 
     @Override
-    public Map<Long, Peer> getPeers() {
+    public Map<Long, DevicePeer> getPeers() {
         return peers;
     }
 
-    public void addKnowledge(long id, double[] weights, List<double[]> centroids, List<Double> errors) {
+    public void addKnowledge(long id, double[] weights, Clustering[] clusters) {
         synchronized (peers) {
-            LOGGER.debug("Updating peer {} - {} and {} centroids", id, Arrays.toString(weights), centroids.size());
-            Peer peer = this.getPeer(id);
+            LOGGER.debug("Updating peer {} - {}", id, Arrays.toString(weights));
+            DevicePeer peer = this.getPeer(id);
             peer.setWeights(weights);
-            List<double[]> centroidsCopy = new ArrayList<>();
-            centroids.stream().forEach((centroid) -> {
-                centroidsCopy.add(centroid.clone());
-            });
-            peer.setQuantizedNodes(centroidsCopy);
-            List<Double> errorsCopy = new ArrayList<>();
-            for (Double e : errors) {
-                errorsCopy.add(e.doubleValue());
+            Clustering[] clustersCopy = new Clustering[clusters.length];
+            for (int i = 0; i < clusters.length; i++) {
+                List<double[]> centroidsCopy = new ArrayList<>();
+                for (double[] centroid : clusters[i].getCentroids()) {
+                    centroidsCopy.add(centroid.clone());
+                }
+                List<Double> errorsCopy = new ArrayList<>();
+                for (Double error : clusters[i].getErrors()) {
+                    errorsCopy.add(error.doubleValue());
+                }
+                clustersCopy[i] = new DummyClustering(centroidsCopy, errorsCopy);
             }
-            peer.setQuantizedErrors(errorsCopy);
+            peer.setClusters(clustersCopy);
             if (plot != null) {
                 SimpleEntry<Coord3d[], Color[]> plotInfo = VisualizationUtils.getPointsAndColors(peers);
                 plot.setPoints(plotInfo.getKey(), plotInfo.getValue());
@@ -142,10 +190,10 @@ public class CentralNodeImpl implements CentralNode {
         }
     }
 
-    private Peer getPeer(long id) {
-        Peer peer = peers.get(id);
+    private DevicePeer getPeer(long id) {
+        DevicePeer peer = peers.get(id);
         if (peer == null) {
-            peers.put(id, new DevicePeerMock(id));
+            peers.put(id, new DevicePeer(id));
         }
         return peers.get(id);
     }

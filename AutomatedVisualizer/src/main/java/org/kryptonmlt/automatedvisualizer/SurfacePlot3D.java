@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jzy3d.analysis.AbstractAnalysis;
 import org.jzy3d.analysis.AnalysisLauncher;
 import org.jzy3d.chart.Chart;
@@ -65,11 +66,13 @@ public class SurfacePlot3D extends AbstractAnalysis {
 
     }
 
-    public static Map<Float, Map<Integer, List<Coord3d>>> convertKNN0(Map<Float, List<Coord3d>> errors) {
+    public static Map<Float, Map<Integer, List<Coord3d>>> convertKNN0(Map<Float, List<Coord3d>> errors, Set<Integer> knn) {
         Map<Float, Map<Integer, List<Coord3d>>> map = new HashMap<>();
         for (Float theta : errors.keySet()) {
             Map<Integer, List<Coord3d>> added = new HashMap<>();
-            added.put(0, errors.get(theta));
+            for (Integer k : knn) {
+                added.put(k, errors.get(theta));
+            }
             map.put(theta, added);
         }
         return map;

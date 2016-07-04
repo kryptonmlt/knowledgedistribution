@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
-import org.kryptonmlt.networkdemonstrator.pojos.Peer;
+import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.visualizer.ScatterPlot3D;
 
 /**
@@ -26,11 +26,16 @@ public class VisualizationUtils {
         plot.updateLine(points, color, sheetNum);
     }
 
-    public static SimpleEntry<Coord3d[], Color[]> getPointsAndColors(Map<Long, Peer> quantizedNodes) {
+    /**
+     * Showing only clusters[0]
+     * @param quantizedNodes
+     * @return 
+     */
+    public static SimpleEntry<Coord3d[], Color[]> getPointsAndColors(Map<Long, DevicePeer> quantizedNodes) {
         List<Coord3d> points = new ArrayList<>();
         List<Color> colors = new ArrayList<>();
         for (Long peerId : quantizedNodes.keySet()) {
-            for (double[] centroid : quantizedNodes.get(peerId).getQuantizedNodes()) {
+            for (double[] centroid : quantizedNodes.get(peerId).getClusters()[0].getCentroids()) {
                 points.add(new Coord3d(centroid[0], centroid[1], 0.0));
                 colors.add(ColorUtils.getInstance().getLightColor(peerId.intValue()));
             }

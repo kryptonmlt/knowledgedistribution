@@ -14,7 +14,7 @@ import java.util.Set;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
-import org.kryptonmlt.networkdemonstrator.pojos.Peer;
+import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +31,11 @@ public class QueryPerformer implements Runnable {
     private final double theta;
     private final WorthType worthType;
     private long timeStarted = 0;
-    private final float clusterParameter;
+    private final float[] clusterParameter;
     private boolean isKmeans;
     private final int[] closestK;
 
-    public QueryPerformer(CentralNode centralNode, List<LeafNode> leafNodes, double theta, WorthType worthType, Integer k, float row, int[] closestKCount) {
+    public QueryPerformer(CentralNode centralNode, List<LeafNode> leafNodes, double theta, WorthType worthType, int[] k, float[] row, int[] closestKCount) {
         timeStarted = System.currentTimeMillis();
         this.centralNode = centralNode;
         this.worthType = worthType;
@@ -45,7 +45,11 @@ public class QueryPerformer implements Runnable {
             this.clusterParameter = row;
             isKmeans = false;
         } else {
-            this.clusterParameter = k;
+            float[] output = new float[k.length];
+            for (int i = 0; i < k.length; i++) {
+                output[i] = k[i];
+            }
+            this.clusterParameter = output;
             isKmeans = true;
         }
         this.leafNodes = new HashMap<>();
@@ -99,26 +103,17 @@ public class QueryPerformer implements Runnable {
         //compute query ensemble learning validation
         LOGGER.info("Run finished");
         LOGGER.info("Starting query evaluation");
-        double clusteringError = 0;
-        int tempC = 0;
         for (LeafNode leaf : leafNodes.values()) {
-            double leafClusterError = 0;
-            for (double e : leaf.getClustering().getErrors()) {
-                leafClusterError += e;
-            }
-            clusteringError += leafClusterError / (float) leaf.getClustering().getErrors().size();
-            LOGGER.info("Device {} has Clustering Error {}", leaf.getId(), leafClusterError);
-            tempC++;
+            LOGGER.info("Starting query evaluation Device {}", leaf.getId());
             leaf.queryValidation();
         }
-        clusteringError = clusteringError / (float) tempC;
-        LOGGER.info("Finished query evaluation Clustering Error = {}", clusteringError);
+        LOGGER.info("Finished query evaluation Clustering Error");
 
         float timeTakenSeconds = (System.currentTimeMillis() - timeStarted) / 1000.0f;
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + "_" + clusterParameter + ".txt")));
-            BufferedWriter automatedBW = new BufferedWriter(new FileWriter(new File("AUTOMATED_ERRORS_STUDY/AND_" + worthType.name() + "_" + theta + "_" + clusterParameter + ".txt")));
-            BufferedWriter detailValuesBW = new BufferedWriter(new FileWriter(new File("SENSOR_STUDY/sensor_study_" + worthType.name() + "_" + theta + "_" + clusterParameter + ".txt")));
+            BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter automatedBW = new BufferedWriter(new FileWriter(new File("AUTOMATED_ERRORS_STUDY/AND_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter detailValuesBW = new BufferedWriter(new FileWriter(new File("SENSOR_STUDY/sensor_study_" + worthType.name() + "_" + theta + ".txt")));
             int totalUpdates = 0;
             int totalDataToBeSent = 0;
             int peersCount = 0;
@@ -130,8 +125,8 @@ public class QueryPerformer implements Runnable {
             int totalMean = 0;
             int totalVariance = 0;
             int totalP = 0;
-            double[] quantizedError = new double[closestK.length];
-            double[] quantizedErrorDistanceOnly = new double[closestK.length];
+            double[][] quantizedError = new double[closestK.length][clusterParameter.length];
+            double[][] quantizedErrorDistanceOnly = new double[closestK.length][clusterParameter.length];
             double generalError = 0;
             double idealError = 0;
 
@@ -149,7 +144,7 @@ public class QueryPerformer implements Runnable {
             double Y_Mean = 0;
             double Y_Variance = 0;
 
-            Map<Long, Peer> peers = centralNode.getPeers();
+            Map<Long, DevicePeer> peers = centralNode.getPeers();
             for (Long id : peers.keySet()) {
                 totalUpdates += peers.get(id).getTimesWeightsUpdated();
                 totalDataToBeSent += leafNodes.get(id).getTotalMessagesToBeSentSoFar();
@@ -189,13 +184,17 @@ public class QueryPerformer implements Runnable {
                 Y_Mean += leafNodes.get(id).getY_MeanVariance().getMean();
                 Y_Variance += leafNodes.get(id).getY_MeanVariance().getVariance();
 
-                double[] tempQError = leafNodes.get(id).getQuantizedError();
+                double[][] tempQError = leafNodes.get(id).getQuantizedError();
                 for (int i = 0; i < closestK.length; i++) {
-                    quantizedError[i] += tempQError[i];
+                    for (int j = 0; j < clusterParameter.length; j++) {
+                        quantizedError[i][j] += tempQError[i][j];
+                    }
                 }
-                double[] tempQErrorDistanceOnly = leafNodes.get(id).getQuantizedErrorDistanceOnly();
+                double[][] tempQErrorDistanceOnly = leafNodes.get(id).getQuantizedErrorDistanceOnly();
                 for (int i = 0; i < closestK.length; i++) {
-                    quantizedErrorDistanceOnly[i] += tempQErrorDistanceOnly[i];
+                    for (int j = 0; j < clusterParameter.length; j++) {
+                        quantizedErrorDistanceOnly[i][j] += tempQErrorDistanceOnly[i][j];
+                    }
                 }
                 generalError += leafNodes.get(id).getGeneralError();
                 idealError += leafNodes.get(id).getIdealError();
@@ -204,8 +203,10 @@ public class QueryPerformer implements Runnable {
             }
 
             for (int i = 0; i < closestK.length; i++) {
-                quantizedError[i] = quantizedError[i] / (float) peersCount;
-                quantizedErrorDistanceOnly[i] = quantizedErrorDistanceOnly[i] / (float) peersCount;
+                for (int j = 0; j < clusterParameter.length; j++) {
+                    quantizedError[i][j] = quantizedError[i][j] / (float) peersCount;
+                    quantizedErrorDistanceOnly[i][j] = quantizedErrorDistanceOnly[i][j] / (float) peersCount;
+                }
             }
             generalError = generalError / (float) peersCount;
             idealError = idealError / (float) peersCount;
@@ -228,13 +229,19 @@ public class QueryPerformer implements Runnable {
             bw.write("Average Y Mean: " + df.format(Y_Mean / (float) peersCount) + "\n");
             bw.write("Average Y Variance: " + df.format(Y_Variance / (float) peersCount) + "\n");
             if (isKmeans) {
-                bw.write("K: " + clusterParameter + "\n");
+                bw.write("K: " + Arrays.toString(clusterParameter) + "\n");
             } else {
-                bw.write("Row: " + clusterParameter + "\n");
+                bw.write("Row: " + Arrays.toString(clusterParameter) + "\n");
             }
             bw.write("Closest K Used: " + Arrays.toString(closestK) + "\n");
-            bw.write("Quantized Error (Distance and Error): " + Arrays.toString(quantizedError) + "\n");
-            bw.write("Quantized Error: (Distance Only)" + Arrays.toString(quantizedErrorDistanceOnly) + "\n");
+            bw.write("Quantized Error (Distance and Error):\n");
+            for (double[] qe : quantizedError) {
+                bw.write(Arrays.toString(qe) + "\n");
+            }
+            bw.write("Quantized Error: (Distance Only):\n");
+            for (double[] qed : quantizedErrorDistanceOnly) {
+                bw.write(Arrays.toString(qed) + "\n");
+            }
             bw.write("General Error: " + df.format(generalError) + "\n");
             bw.write("Ideal Error: " + df.format(idealError) + "\n");
 
@@ -253,10 +260,14 @@ public class QueryPerformer implements Runnable {
                     + df.format(E_DASH_Variance / (float) peersCount) + ","
                     + df.format(E_Mean / (float) peersCount) + "," + df.format(E_Variance / (float) peersCount) + ","
                     + df.format(Y_Mean / (float) peersCount) + "," + (df.format(Y_Variance / (float) peersCount) + "\n"));
-            automatedBW.write(clusterParameter + "\n");
+            automatedBW.write(Arrays.toString(clusterParameter).replace(" ", "").replace("[", "").replace("]", "") + "\n");
             automatedBW.write(Arrays.toString(closestK).replace(" ", "").replace("[", "").replace("]", "") + "\n");
-            automatedBW.write(Arrays.toString(quantizedError).replace(" ", "").replace("[", "").replace("]", "") + "\n");
-            automatedBW.write(Arrays.toString(quantizedErrorDistanceOnly).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+            for (double[] qe : quantizedError) {
+                automatedBW.write(Arrays.toString(qe).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+            }
+            for (double[] qed : quantizedErrorDistanceOnly) {
+                automatedBW.write(Arrays.toString(qed).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+            }
             automatedBW.write(df.format(generalError) + "\n");
             automatedBW.write(df.format(idealError) + "\n");
             for (int i = 0; i < Y.size(); i++) {

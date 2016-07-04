@@ -7,3 +7,5 @@ NetworkDemonstrator/target/
 NetworkDemonstrator/ERRORS_STUDY/
 NetworkDemonstrator/SENSOR_STUDY/
 NetworkDemonstrator/AUTOMATED_ERRORS_STUDY/
+NetworkDemonstrator/VISUALIZE_QUERIES/old/
+*.csv
