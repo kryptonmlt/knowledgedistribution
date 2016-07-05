@@ -33,9 +33,9 @@ public class NodeDistance implements Comparable<NodeDistance> {
     @Override
     public int compareTo(NodeDistance o) {
         if (this.getDistance() < o.getDistance()) {
-            return 1;
-        } else if (this.getDistance() > o.getDistance()) {
             return -1;
+        } else if (this.getDistance() > o.getDistance()) {
+            return 1;
         }
         return 0;
     }

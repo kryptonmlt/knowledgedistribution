@@ -62,9 +62,9 @@ public class NodeDistanceError implements Comparable<NodeDistanceError> {
     @Override
     public int compareTo(NodeDistanceError o) {
         if (this.getDistance() < o.getDistance()) {
-            return 1;
-        } else if (this.getDistance() > o.getDistance()) {
             return -1;
+        } else if (this.getDistance() > o.getDistance()) {
+            return 1;
         }
         return 0;
     }
