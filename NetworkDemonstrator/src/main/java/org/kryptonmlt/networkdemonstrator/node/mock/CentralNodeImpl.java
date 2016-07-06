@@ -103,8 +103,11 @@ public class CentralNodeImpl implements CentralNode {
             //closest K nodes selected now compute prediction based on them.
             double[] predictions = new double[tempSize];
             double result = 0;
+            double totalNormalizedWeight = 0;
             for (int i = 0; i < tempSize; i++) {
-                nd.get(i).setWeight(nd.get(i).getWeight() / totalWeight);
+                double normalizedWeight = nd.get(i).getWeight() / totalWeight;
+                totalNormalizedWeight += normalizedWeight;
+                nd.get(i).setWeight(normalizedWeight);
                 predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]) * nd.get(i).getWeight();
                 result += predictions[i];
             }

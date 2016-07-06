@@ -17,14 +17,16 @@ public class NodeDistanceError implements Comparable<NodeDistanceError> {
 
         if (error == null) {
             this.error = 0;
-        } else if (error == 0.0) {
-            this.error = Double.MAX_VALUE;
+            this.weight = 1;
         } else {
+            if (error == 0.0) {
+                error = Double.MAX_VALUE;
+            }
             this.error = error;
+            double sigmoidDistance = 1 / (1 + Math.exp(-this.distance));
+            double sigmoidError = 1 / (1 + Math.exp(-this.error));
+            this.weight = (0.5 * Math.exp(-sigmoidDistance)) + (0.5 * Math.exp(-sigmoidError));
         }
-        double sigmoidDistance = 1 / (1 + Math.exp(-this.distance));
-        double sigmoidError = 1 / (1 + Math.exp(-this.error));
-        this.weight = (0.5 * Math.exp(-sigmoidDistance)) + (0.5 * Math.exp(-sigmoidError));
     }
 
     public long getId() {
@@ -68,7 +70,6 @@ public class NodeDistanceError implements Comparable<NodeDistanceError> {
         }
         return 0;
     }*/
-
     @Override
     public int compareTo(NodeDistanceError o) {
         if (this.getDistance() < o.getDistance()) {
@@ -78,7 +79,7 @@ public class NodeDistanceError implements Comparable<NodeDistanceError> {
         }
         return 0;
     }
-    
+
     @Override
     public String toString() {
         return "NodeDistance{" + "id=" + id + ", distance=" + distance + ", error=" + error + '}';

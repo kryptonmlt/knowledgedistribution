@@ -68,7 +68,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private boolean finished;
 
     public LeafNodeImpl(CentralNodeImpl centralNode, int delayMillis,
-            String datafile, int sheetNum, XSSFSheet sheet, int startFeature, int numberOfFeatures,
+            String datafile, int sheetNum, XSSFSheet sheet, XSSFSheet querySheet, int startFeature, int numberOfFeatures,
             float learningRate, float clusteringAlpha, int maxLearnPoints, WorthType worth, double theta_error, int[] k, float[] row,
             boolean statistics, int max_use_Points, double samplingRate, int closestK, int errorMultiplier) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
@@ -96,7 +96,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         this.THETA_ERROR_meanVariance = new OnlineVarianceMean();
 
         this.delayMillis = delayMillis;
-        this.sensorManager = new SensorManager(sheet, startFeature, numberOfFeatures, datafile, samplingRate);
+        this.sensorManager = new SensorManager(sheet, querySheet, startFeature, numberOfFeatures, datafile, samplingRate);
         if (k != null) {
             clustering = new Clustering[k.length];
             for (int i = 0; i < k.length; i++) {
@@ -281,7 +281,7 @@ public class LeafNodeImpl implements LeafNode, Runnable {
             }
         }
         for (int i = 0; i < quantizedErrorDistanceOnly.length; i++) {
-            for (int j = 0; j < quantizedError[i].length; j++) {
+            for (int j = 0; j < quantizedErrorDistanceOnly[i].length; j++) {
                 quantizedErrorDistanceOnly[i][j] = quantizedErrorDistanceOnly[i][j] / (float) queries;
             }
         }

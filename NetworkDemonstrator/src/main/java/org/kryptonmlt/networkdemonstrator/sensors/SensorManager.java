@@ -16,24 +16,18 @@ public class SensorManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(SensorManager.class);
 
     private final List<double[]> data;
-    private final List<double[]> sampledData = new ArrayList<>();
+    private final List<double[]> sampledData;
     private int counter = 0;
-    private final double samplingRate;
-    private final Random r;
 
-    public SensorManager(XSSFSheet sheet, int startCol, int numberOfFeatures, String filename, double samplingRate) {
-        this.data = new DataLoader(sheet, startCol, numberOfFeatures, filename).getFeatures();
-        this.samplingRate = samplingRate;
-        this.r = new Random();
+    public SensorManager(XSSFSheet sheet, XSSFSheet querySheet, int startCol, int numberOfFeatures, String filename, double samplingRate) {
+        DataLoader dL = new DataLoader(sheet, querySheet, startCol, numberOfFeatures, filename, samplingRate);
+        this.data = dL.getFeatures();
+        this.sampledData = dL.getSampledData();
     }
 
     public double[] requestData() {
         double[] result = data.get(counter);
         counter++;
-        double gen = r.nextDouble();
-        if (gen < samplingRate) {
-            sampledData.add(result);
-        }
         return result;
     }
 

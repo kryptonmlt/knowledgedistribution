@@ -2,9 +2,11 @@ package org.kryptonmlt.networkdemonstrator;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -35,7 +37,8 @@ public class MastersScenario {
 
         int errorMultiplier = 10;
         int delayMillis = 0;
-        String datafile = "NormalizedData.xlsx";
+        String dataFileName = "NormalizedData.xlsx";
+        String queryFileName = "QueryData.xlsx";
         int startFeature = 1;
         int numberOfFeatures = 3;
         int learnLimit = 1000;
@@ -57,15 +60,35 @@ public class MastersScenario {
         CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, closestK, numberOfClusters, MastersScenario.COLUMN_NAMES, false);
 
         // Initialize IOT Devices (Sensors)
-        FileInputStream file = new FileInputStream(new File(datafile));
+        FileInputStream file = new FileInputStream(new File(dataFileName));
         XSSFWorkbook workbook = new XSSFWorkbook(file);
+
+        File queryFile = new File(queryFileName);
+        XSSFWorkbook queryWorkbook;
+        if (queryFile.exists()) {
+            queryWorkbook = new XSSFWorkbook(new FileInputStream(queryFile));
+        } else {
+            queryWorkbook = new XSSFWorkbook();
+            Iterator<XSSFSheet> queryIter = workbook.iterator();
+            while (queryIter.hasNext()) {
+                queryWorkbook.createSheet(queryIter.next().getSheetName());
+            }
+        }
+
         final List<LeafNode> leafNodes = new ArrayList<>();
         for (int i = 0; i < max_stations; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
-            leafNodes.add(new LeafNodeImpl((CentralNodeImpl) centralNode, delayMillis, datafile, i, sheet, startFeature,
+            final XSSFSheet querySheet = queryWorkbook.getSheet(sheet.getSheetName());
+            leafNodes.add(new LeafNodeImpl((CentralNodeImpl) centralNode, delayMillis, dataFileName, i, sheet, querySheet, startFeature,
                     numberOfFeatures, alpha, clusteringAlpha, learnLimit, type, error, k, row, useStats, use_max_points, samplingRate, closestK.length, errorMultiplier));
         }
         file.close();
+        if (!queryFile.exists()) {
+            FileOutputStream fos = new FileOutputStream(queryFile);
+            queryWorkbook.write(fos);
+            fos.flush();
+            fos.close();
+        }
 
         // Start communication with central node      
         for (int i = 0; i < leafNodes.size(); i++) {
