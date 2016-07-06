@@ -38,7 +38,7 @@ public class CentralNodeImpl implements CentralNode {
     private int featuresReceived = 0;
     private final OnlineStochasticGradientDescent featureModel;
 
-    public CentralNodeImpl(int numberOfFeatures, int[] closestK, int allK, String[] columnNames, boolean showVisualization) throws IOException {
+    public CentralNodeImpl(int numberOfFeatures, int[] closestK, int allK, String[] columnNames, double alpha, boolean showVisualization) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
         this.closestK = closestK;
         this.allK = allK;
@@ -50,7 +50,7 @@ public class CentralNodeImpl implements CentralNode {
                 LOGGER.error("Error when trying to show Central Node Visualization", ex);
             }
         }
-        featureModel = new OnlineStochasticGradientDescent(0.05);
+        featureModel = new OnlineStochasticGradientDescent(alpha);
         LOGGER.info("Central Node started up.. listening for deivces with {} features", this.numberOfFeatures);
     }
 

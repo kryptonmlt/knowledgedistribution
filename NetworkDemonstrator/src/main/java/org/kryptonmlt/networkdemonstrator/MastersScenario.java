@@ -57,7 +57,7 @@ public class MastersScenario {
             numberOfClusters = k.length;
         }
         // Initialize Central Node
-        CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, closestK, numberOfClusters, MastersScenario.COLUMN_NAMES, false);
+        CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, closestK, numberOfClusters, MastersScenario.COLUMN_NAMES, alpha, false);
 
         // Initialize IOT Devices (Sensors)
         FileInputStream file = new FileInputStream(new File(dataFileName));
