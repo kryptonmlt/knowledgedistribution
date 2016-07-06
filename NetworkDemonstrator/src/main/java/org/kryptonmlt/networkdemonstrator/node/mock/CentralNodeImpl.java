@@ -15,7 +15,6 @@ import org.kryptonmlt.networkdemonstrator.learning.DummyClustering;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
-import org.kryptonmlt.networkdemonstrator.pojos.NodeDistance;
 import org.kryptonmlt.networkdemonstrator.pojos.NodeDistanceError;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 import org.kryptonmlt.networkdemonstrator.utils.VisualizationUtils;
@@ -59,11 +58,7 @@ public class CentralNodeImpl implements CentralNode {
     public double[][] query(double[] x, boolean error) {
         double[][] result = new double[this.closestK.length][];
         for (int i = 0; i < this.closestK.length; i++) {
-            if (error) {
-                result[i] = queryKError(x, this.closestK[i]);
-            } else {
-                result[i] = queryK(x, this.closestK[i]);
-            }
+            result[i] = queryK(x, this.closestK[i], error);
         }
         return result;
     }
@@ -78,7 +73,7 @@ public class CentralNodeImpl implements CentralNode {
         return featureModel.predict(x[0], x[1]);
     }
 
-    public double[] queryKError(double[] x, int k) {
+    public double[] queryK(double[] x, int k, boolean useError) {
         //sort nodes
         double[] kResults = new double[allK];
         for (int j = 0; j < kResults.length; j++) {
@@ -87,7 +82,10 @@ public class CentralNodeImpl implements CentralNode {
                 for (Long peerId : peers.keySet()) {
                     for (int i = 0; i < peers.get(peerId).getClusters()[j].getCentroids().size(); i++) {
                         double d = VectorUtils.distance(peers.get(peerId).getClusters()[j].getCentroids().get(i), x);
-                        Double e = peers.get(peerId).getClusters()[j].getErrors().get(i);
+                        Double e = null;
+                        if (useError) {
+                            e = peers.get(peerId).getClusters()[j].getErrors().get(i);
+                        }
                         nd.add(new NodeDistanceError(peerId, d, e));
                     }
                 }
@@ -110,36 +108,6 @@ public class CentralNodeImpl implements CentralNode {
                 predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]) * nd.get(i).getWeight();
                 result += predictions[i];
             }
-            LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
-            kResults[j] = result;
-        }
-        return kResults;
-    }
-
-    public double[] queryK(double[] x, int k) {
-        double[] kResults = new double[allK];
-        for (int j = 0; j < kResults.length; j++) {
-            List<NodeDistance> nd = new ArrayList<>();
-            synchronized (peers) {
-                for (Long peerId : peers.keySet()) {
-                    for (int i = 0; i < peers.get(peerId).getClusters()[j].getCentroids().size(); i++) {
-                        double d = VectorUtils.distance(peers.get(peerId).getClusters()[j].getCentroids().get(i), x);
-                        nd.add(new NodeDistance(peerId, d));
-                    }
-                }
-            }
-            Collections.sort(nd);
-            int tempSize = k;
-            if (k > nd.size()) {
-                tempSize = nd.size();
-            }
-            //closest K nodes selected now compute prediction based on them.
-            double[] predictions = new double[tempSize];
-            for (int i = 0; i < tempSize; i++) {
-                predictions[i] = peers.get(nd.get(i).getId()).predict(x[0], x[1]);
-            }
-            //average predictions and return it.
-            double result = VectorUtils.average(predictions);
             LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
             kResults[j] = result;
         }
