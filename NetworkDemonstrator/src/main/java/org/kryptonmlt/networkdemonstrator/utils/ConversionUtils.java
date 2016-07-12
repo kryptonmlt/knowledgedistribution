@@ -2,6 +2,7 @@ package org.kryptonmlt.networkdemonstrator.utils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -89,5 +90,25 @@ public class ConversionUtils {
             arr[(i * 2) + 1] = list.get(i)[1];
         }
         return arr;
+    }
+
+    public static double[] convertStringArrayToDoubleArray(String[] s) {
+        double[] d = new double[s.length];
+        for (int i = 0; i < d.length; i++) {
+            d[i] = Double.parseDouble(s[i]);
+        }
+        return d;
+    }
+
+    public static String cleanDoubleArrayToString(double[] d) {
+        return Arrays.toString(d).replace(" ", "").replace("[", "").replace("]", "");
+    }
+
+    public static String cleanFloatArrayToString(float[] d) {
+        return Arrays.toString(d).replace(" ", "").replace("[", "").replace("]", "");
+    }
+    
+    public static String cleanIntArrayToString(int[] d) {
+        return Arrays.toString(d).replace(" ", "").replace("[", "").replace("]", "");
     }
 }

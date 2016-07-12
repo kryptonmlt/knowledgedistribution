@@ -181,4 +181,15 @@ public class CentralNodeImpl implements CentralNode {
     public ScatterPlot3D getPlot() {
         return plot;
     }
+
+    @Override
+    public OnlineStochasticGradientDescent getFeatureModel() {
+        return featureModel;
+    }
+
+    @Override
+    public void setFeaturesReceived(int featuresReceived) {
+        this.featuresReceived = featuresReceived;
+    }
+
 }

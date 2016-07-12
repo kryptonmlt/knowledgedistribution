@@ -1,6 +1,7 @@
 package org.kryptonmlt.networkdemonstrator.node;
 
 import java.util.Map;
+import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.visualizer.ScatterPlot3D;
 
@@ -21,5 +22,9 @@ public interface CentralNode {
     public double queryLeafNode(long peerId, double[] x);
 
     public double queryBaseLineSolution(double[] x);
+
+    public OnlineStochasticGradientDescent getFeatureModel();
+
+    public void setFeaturesReceived(int featuresReceived);
 
 }

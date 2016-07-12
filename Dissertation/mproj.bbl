@@ -1,8 +1,42 @@
 \begin{thebibliography}{1}
 
-\bibitem{BK08}
-C.~Baier and J.-P. Katoen.
-\newblock {\em Principles of Model Checking}.
-\newblock MIT Press, 2008.
+\bibitem{knn}
+N.~S. Altman.
+\newblock {An Introduction to Kernel and Nearest-Neighbor Nonparametric
+  Regression}.
+\newblock {\em The American Statistician}, 46(3):175--185, 1992.
+
+\bibitem{onlinekmeans}
+WESAM BARBAKH and COLIN FYFE.
+\newblock Online clustering algorithms.
+\newblock {\em International Journal of Neural Systems}, 18(03):185--194, 2008.
+\newblock PMID: 18595148.
+
+\bibitem{LargeScaleOnlineLearning}
+Léon Bottou and Yann LeCun.
+\newblock Large scale online learning.
+\newblock In Sebastian Thrun, Lawrence~K. Saul, and Bernhard Schölkopf,
+  editors, {\em NIPS}, pages 217--224. MIT Press, 2003.
+
+\bibitem{art}
+Gail~A. Carpenter and Stephen Grossberg.
+\newblock {\em Adaptive Resonance Theory}, pages 22--35.
+\newblock Springer US, Boston, MA, 2010.
+
+\bibitem{normalization}
+R.~Charles Fawcett University of~Virginia Edward S. Neukrug Old
+  Dominion~University.
+\newblock {\em Essentials of Testing and Assessment: A Practical Guide for
+  Counselors, Social Workers, and Psychologists, 3rd Edition}.
+\newblock Brooks Cole, 3 edition, 2015.
+
+\bibitem{Karp}
+Richard~M. Karp.
+\newblock On-line algorithms versus off-line algorithms: How much is it worth
+  to know the future?
+\newblock In {\em Proceedings of the IFIP 12th World Computer Congress on
+  Algorithms, Software, Architecture - Information Processing '92, Volume 1 -
+  Volume I}, pages 416--429, Amsterdam, The Netherlands, The Netherlands, 1992.
+  North-Holland Publishing Co.
 
 \end{thebibliography}

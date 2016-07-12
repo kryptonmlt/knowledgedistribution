@@ -11,6 +11,7 @@ import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDesce
 import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
 import org.kryptonmlt.networkdemonstrator.learning.PDF;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
+import org.kryptonmlt.networkdemonstrator.pojos.MinMax;
 import org.kryptonmlt.networkdemonstrator.sensors.SensorManager;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 import org.slf4j.Logger;
@@ -60,9 +61,11 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final OnlineStochasticGradientDescent localModel;
     private final OnlineStochasticGradientDescent centralNodeModel;
     private final OnlineVarianceMean THETA_ERROR_meanVariance;
-    private Clustering[] clustering;
+    private final Clustering[] clustering;
     private final int maxLearnPoints;
     private int dataCounter = 0;
+    private final MinMax X1 = new MinMax();
+    private final MinMax X2 = new MinMax();
 
     private final CentralNodeImpl centralNode;
     private boolean finished;
@@ -150,8 +153,10 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         try {
             while (sensorManager.isReadyForRead() && (!statistics || dataCounter < maxLearnPoints + 1 + Y.length)) {
                 double[] dataGathered = sensorManager.requestData();
-                sendFeatures(dataGathered);
+                //sendFeatures(dataGathered);
+                //learn local model
                 int[] clustersChosen = learnFromData(dataGathered);
+                //if we reached 1000 points 
                 if (dataCounter > maxLearnPoints) {
                     tempLocalPredict = localModel.predict(dataGathered[0], dataGathered[1]);
                     tempCentralNodePredict = centralNodeModel.predict(dataGathered[0], dataGathered[1]);
@@ -322,6 +327,8 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     }
 
     private int[] learnFromData(double[] dataGathered) {
+        X1.update(dataGathered[0]);
+        X2.update(dataGathered[1]);
         localModel.learn(dataGathered[0], dataGathered[1], dataGathered[2]);
         double[] inputSpace = {dataGathered[0], dataGathered[1]};
         int[] clustersChosen = new int[clustering.length];
@@ -460,4 +467,18 @@ public class LeafNodeImpl implements LeafNode, Runnable {
         return clustering;
     }
 
+    @Override
+    public OnlineStochasticGradientDescent getLocalModel() {
+        return localModel;
+    }
+
+    @Override
+    public MinMax getX1() {
+        return X1;
+    }
+
+    @Override
+    public MinMax getX2() {
+        return X2;
+    }
 }

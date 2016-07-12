@@ -15,6 +15,7 @@ import org.kryptonmlt.networkdemonstrator.enums.WorthType;
 import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
+import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,13 +108,17 @@ public class QueryPerformer implements Runnable {
             LOGGER.info("Starting query evaluation Device {}", leaf.getId());
             leaf.queryValidation();
         }
-        LOGGER.info("Finished query evaluation Clustering Error");
+        LOGGER.info("Finished query evaluation");
 
         float timeTakenSeconds = (System.currentTimeMillis() - timeStarted) / 1000.0f;
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(new File("ERRORS_STUDY/ND_" + worthType.name() + "_" + theta + ".txt")));
             BufferedWriter automatedBW = new BufferedWriter(new FileWriter(new File("AUTOMATED_ERRORS_STUDY/AND_" + worthType.name() + "_" + theta + ".txt")));
             BufferedWriter detailValuesBW = new BufferedWriter(new FileWriter(new File("SENSOR_STUDY/sensor_study_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter concentratorWeightsValuesBW = new BufferedWriter(new FileWriter(new File("SENSOR_STUDY/concentrator_weights_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter localWeightsValuesBW = new BufferedWriter(new FileWriter(new File("SENSOR_STUDY/local_weights_" + worthType.name() + "_" + theta + ".txt")));
+            BufferedWriter minMaxValuesBW = new BufferedWriter(new FileWriter(new File("SENSOR_STUDY/min_max_" + worthType.name() + "_" + theta + ".txt")));
+
             int totalUpdates = 0;
             int totalDataToBeSent = 0;
             int peersCount = 0;
@@ -144,7 +149,7 @@ public class QueryPerformer implements Runnable {
             double E_Variance = 0;
             double Y_Mean = 0;
             double Y_Variance = 0;
-
+            List<double[]> weights = new ArrayList<>();
             Map<Long, DevicePeer> peers = centralNode.getPeers();
             for (Long id : peers.keySet()) {
                 totalUpdates += peers.get(id).getTimesWeightsUpdated();
@@ -200,9 +205,19 @@ public class QueryPerformer implements Runnable {
                 generalError += leafNodes.get(id).getGeneralError();
                 idealError += leafNodes.get(id).getIdealError();
                 baseLineError += leafNodes.get(id).getBaseLineError();
-
+                concentratorWeightsValuesBW.write(ConversionUtils.cleanDoubleArrayToString(peers.get(id).getWeights()) + "\n");
+                localWeightsValuesBW.write(ConversionUtils.cleanDoubleArrayToString(leafNodes.get(id).getLocalModel().getWeights()) + "\n");
+                minMaxValuesBW.write(leafNodes.get(id).getX1().getMin() + "," + leafNodes.get(id).getX1().getMax() + ","
+                        + leafNodes.get(id).getX2().getMin() + "," + leafNodes.get(id).getX2().getMax() + "\n");
                 peersCount++;
             }
+
+            concentratorWeightsValuesBW.flush();
+            concentratorWeightsValuesBW.close();
+            localWeightsValuesBW.flush();
+            localWeightsValuesBW.close();
+            minMaxValuesBW.flush();
+            minMaxValuesBW.close();
 
             for (int i = 0; i < closestK.length; i++) {
                 for (int j = 0; j < clusterParameter.length; j++) {
@@ -263,13 +278,13 @@ public class QueryPerformer implements Runnable {
                     + df.format(E_DASH_Variance / (float) peersCount) + ","
                     + df.format(E_Mean / (float) peersCount) + "," + df.format(E_Variance / (float) peersCount) + ","
                     + df.format(Y_Mean / (float) peersCount) + "," + (df.format(Y_Variance / (float) peersCount) + "\n"));
-            automatedBW.write(Arrays.toString(clusterParameter).replace(" ", "").replace("[", "").replace("]", "") + "\n");
-            automatedBW.write(Arrays.toString(closestK).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+            automatedBW.write(ConversionUtils.cleanFloatArrayToString(clusterParameter) + "\n");
+            automatedBW.write(ConversionUtils.cleanIntArrayToString(closestK) + "\n");
             for (double[] qe : quantizedError) {
-                automatedBW.write(Arrays.toString(qe).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+                automatedBW.write(ConversionUtils.cleanDoubleArrayToString(qe) + "\n");
             }
             for (double[] qed : quantizedErrorDistanceOnly) {
-                automatedBW.write(Arrays.toString(qed).replace(" ", "").replace("[", "").replace("]", "") + "\n");
+                automatedBW.write(ConversionUtils.cleanDoubleArrayToString(qed) + "\n");
             }
             automatedBW.write(df.format(generalError) + "\n");
             automatedBW.write(df.format(idealError) + "\n");

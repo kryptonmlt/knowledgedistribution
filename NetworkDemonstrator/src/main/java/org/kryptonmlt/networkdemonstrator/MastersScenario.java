@@ -1,8 +1,10 @@
 package org.kryptonmlt.networkdemonstrator;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import org.kryptonmlt.networkdemonstrator.node.CentralNode;
 import org.kryptonmlt.networkdemonstrator.node.LeafNode;
 import org.kryptonmlt.networkdemonstrator.node.mock.CentralNodeImpl;
 import org.kryptonmlt.networkdemonstrator.node.mock.LeafNodeImpl;
+import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +36,14 @@ public class MastersScenario {
         double error = Double.parseDouble(args[0]);
         int max_stations = Integer.parseInt(args[1]);  //max=36
         int[] k = {1, 3, 5, 7, 10, 15, 20, 30};
+        //int[] k = {1};
         float[] row = {0.05f}; // ART - only used when k is null
 
         int errorMultiplier = 10;
         int delayMillis = 0;
         String dataFileName = "NormalizedData.xlsx";
         String queryFileName = "QueryData.xlsx";
+        String featureModelFileName = "featureModel.txt";
         int startFeature = 1;
         int numberOfFeatures = 3;
         int learnLimit = 1000;
@@ -48,7 +53,8 @@ public class MastersScenario {
         boolean useStats = false;
         int use_max_points = 1000;
         double samplingRate = 0.1;
-        int[] closestK = {1, 3, 30, 50, 100, 300, 500};
+        int[] knn = {1, 3, 30, 50, 100, 300, 500};//knn
+        //int[] closestK = {3};
 
         int numberOfClusters;
         if (k == null) {
@@ -56,9 +62,21 @@ public class MastersScenario {
         } else {
             numberOfClusters = k.length;
         }
+        File featureModelFile = new File(featureModelFileName);
+        double[] weights = {0, 0, 0};
+        int featuresUsed = 0;
+        if (featureModelFile.exists()) {
+            LOGGER.info("Feature Model file {} found, using it", featureModelFileName);
+            BufferedReader br = new BufferedReader(new FileReader(featureModelFile));
+            weights = ConversionUtils.convertStringArrayToDoubleArray(br.readLine().split(","));
+            featuresUsed = Integer.parseInt(br.readLine());
+        } else {
+            LOGGER.info("Feature Model file {} containing weights not found initializing them to 0", featureModelFileName);
+        }
         // Initialize Central Node
-        CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, closestK, numberOfClusters, MastersScenario.COLUMN_NAMES, alpha, false);
-
+        CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, knn, numberOfClusters, MastersScenario.COLUMN_NAMES, alpha, false);
+        centralNode.getFeatureModel().setWeights(weights);
+        centralNode.setFeaturesReceived(featuresUsed);
         // Initialize IOT Devices (Sensors)
         FileInputStream file = new FileInputStream(new File(dataFileName));
         XSSFWorkbook workbook = new XSSFWorkbook(file);
@@ -80,7 +98,7 @@ public class MastersScenario {
             final XSSFSheet sheet = workbook.getSheetAt(i);
             final XSSFSheet querySheet = queryWorkbook.getSheet(sheet.getSheetName());
             leafNodes.add(new LeafNodeImpl((CentralNodeImpl) centralNode, delayMillis, dataFileName, i, sheet, querySheet, startFeature,
-                    numberOfFeatures, alpha, clusteringAlpha, learnLimit, type, error, k, row, useStats, use_max_points, samplingRate, closestK.length, errorMultiplier));
+                    numberOfFeatures, alpha, clusteringAlpha, learnLimit, type, error, k, row, useStats, use_max_points, samplingRate, knn.length, errorMultiplier));
         }
         file.close();
         if (!queryFile.exists()) {
@@ -98,7 +116,7 @@ public class MastersScenario {
         }
 
         // Perform Queries
-        Thread t = new Thread(new QueryPerformer(centralNode, leafNodes, error, type, k, row, closestK));
+        Thread t = new Thread(new QueryPerformer(centralNode, leafNodes, error, type, k, row, knn));
         t.setName("QueyPerformer Thread");
         t.start();
     }

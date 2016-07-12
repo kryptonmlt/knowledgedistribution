@@ -2,7 +2,9 @@ package org.kryptonmlt.networkdemonstrator.node;
 
 import java.util.List;
 import org.kryptonmlt.networkdemonstrator.learning.Clustering;
+import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
+import org.kryptonmlt.networkdemonstrator.pojos.MinMax;
 
 /**
  *
@@ -65,4 +67,10 @@ public interface LeafNode {
     public double getIdealError();
 
     public double getBaseLineError();
+
+    public OnlineStochasticGradientDescent getLocalModel();
+
+    public MinMax getX1();
+
+    public MinMax getX2();
 }
