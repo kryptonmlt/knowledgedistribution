@@ -33,8 +33,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-
-
+Systems using Wireless Sensor Networks (WSN) are shaped with the consideration of a great number of factors. These include power consumption, lifetime, network topology, responsiveness and transmission errors. Thus, several research challenges are introduced. We propose a system which lets each network node locally gather knowledge and distribute it amongst its peers. Then, based on this knowledge it evaluates the error and decides whether it should send the updated knowledge or not, minimizing power consumption. Using various techniques we will be querying the learnt shared knowledge and evaluating the accuracy of each to study what the effects of increasing the permissible error are.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -58,18 +57,46 @@ Furthermore, I would like to thank my family for all their continuous support in
 
 \chapter{Introduction}\label{intro}
 The Internet of Things (IoT) is a rapidly growing area, with it more data is being stored and made accessible which previously has never even been thought possible. IoT is composed of billions of devices that can gather, share information and sometimes even capable of performing operations on this information. IoT devices are physical objects connected with the internet able to share information. This can include anything ranging from smartphones to Radio Frequency Identification (RFID) tags found in everyday products. As more data is made available for anything imaginable that affects our daily lives, opportunities arise for applications that extract this information and make use of it.
-EXAMPLE SMARTGRID AND REFERENCE. Making all this information useful is very challenging as it needs to be collected, transferred, stored and made accessible. 
+EXAMPLE SMARTGRID AND REFERENCE. Making all this information useful is very challenging as it needs to be collected, transferred, stored and made accessible. \cite{intelligentContextualInformation} 
+
+Since these IoT devices are generally wireless, compact and have very limited resources they can be considered as WSNs. REFERENCE ? WSNs are made up of a large number of nodes, which are capable of wireless communication and minimal computation capabilities. \cite{adaptiveDataForwarding} Each sensor node measures the temporal-spatial field of the area around it. These are called the contextual scalar parameters and can be of any form and value, example; humidity, temperature, acidity, etc.. This contextual information is relayed to a "sink", which can referred to as a central node.
 
 In a naive system all these devices generate massive amounts of data which is periodically sent to central node with more computing resources. This in turn, might restructure the data more effectively to be sent to another node or make it available for querying. All this network transfer drains power and as the network size increases this effect is emphasized even more. This has created a need and opportunity for machine and statistical learning algorithms.\cite{LargeScaleOnlineLearning} According to L.Bottou et al.\cite{LargeScaleOnlineLearning} these technological improvements have outrun the exponential evolution of computing power. Thus, we must rely more on on-line learning algorithms to process these large amounts of data with comparatively less computing power.
 
 The vision of IoT is to allow any device to be continuously connected sharing its knowledge about the surroundings. Machine learning then uses this stream of data to deduce results, infer new knowledge, reason about contextual events or make assumptions. The possibilities for such systems are endless, taking, for instance, the case of thermometers in rooms next to each other and based on previous information the temperature of various rooms can be predicted based on the temperature of adjacent ones.
 
 \section{Problem Synopsis}
+One of the factors in IoT systems is the collection of contextual information from certain sources in an IoT environment.\cite{intelligentContextualInformation} IoT devices communicate in an ad-hoc manner with the Central nodes, also known as collectors to send information. The objective of each collector is that it has the latest up-to-date information/context. This would allow the IoT system to further process the context and make use of it, example environmental monitoring.
 
+In this IoT environment the IoT devices are not able to communicate directly together due to the limited resources, so instead they communicate with the collectors. Even if each device has an infinite power supply, a naive system which periodically transmits the context is not feasible especially as the network grows in size. Collectors would become overloaded with messages from all devices and incur a performance degradation as network size increases. Transmitting wireless messages is very costly and in most cases IoT devices run on limited battery power. These devices need to make intelligent decisions whether to send data or not to conserve battery power and increase their lifetime. In this naive system there is no concept of knowledge, thus withholding data would result in the collectors having gaps of knowledge.
+
+Once the collectors have access to the context of the connected devices, they need to make it available for querying. A naive system stores all the data items inside the context for each device. This would result in a very resource hungry collector due to the huge amount of processing and storage capabilities it would need to support. C.Anagnostopoulos \cite{intelligentContextualInformation} states that the contextual sensor data exhibits high complexity, dynamism, accuracy, precision and timeliness. This is due to the huge volumes, interdependency relationships between devices and continuous updates performed in real-time. From this statement he then argues that "an IoT system should not concern itself with the individual pieces of contextual sensor data: rather, context should be intelligently collected and interpreted into a higher, domain relevant concept."\cite{intelligentContextualInformation}
+
+The research challenge we will be looking at is the building of an energy efficient network which minimises power consumption while simultaneously  minimising transmission error to have highly accurate queries. This system must make use of very little computing resources to maximise its lifetimes while at the same time support scalability and real-time querying for environment monitoring.
 
 \section{Project Aims}
+We argue that instead of directly sending the contextual information, devices should locally learn their context using machine learning algorithms and then transmit this knowledge. If we transmit the local model to the central node each time it is updated then we would not save any power consumption. Thus, we go a step further and set up the notion of a  permissible error, which allows the local and central models to have a limited amount of discrepancy. This allows us to avoid unnecessary transmissions which do not "teach" the collector any valuable knowledge, and in turn reduce the power consumption. Altering the permissible error should determine the percentage of messages being sent, thus directly affecting power consumption.
+
+We will be using on-line linear regression to learn the context of each device with real-time constraints. Primarily we will be investigating how the error discrepancy between devices and collectors affect battery consumption and network lifetime. Secondly we will study how altering this error discrepancy has an effect on the querying accuracy of the collectors.
+
+The primary objectives for this project may be defined as follows:
+\begin{itemize}  
+\item Obtain a clear understanding on how IoT systems operate and what they try to achieve.
+\item Implement On-line machine learning and clustering algorithms.
+\item Build a system capable of simulating a real-life IoT system containing collectors and devices.
+\item Integrate capability of transmitting both raw context and knowledge (with a flexible degree of error) to investigate energy efficiency of our implementation.
+\item Evaluate the query accuracy performance of both naive system and our implementation.
+\end{itemize}
 
 \section{Document Outline}
+The content of this report is organized into the following chapters:
+\begin{itemize}  
+\item 
+\item 
+\item 
+\item 
+\item 
+\end{itemize}
 
 \chapter{Preliminaries}
 In this chapter, we present an overview of the concepts and base principles we mention and make use of in our work. We develop a system which deals with a continuous data stream and thus, has to use specialized algorithms which treat each data item individually without storing past data items. Various algorithms are used which extract knowledge from each individual sensor by minimizing loss and then quantize the input.

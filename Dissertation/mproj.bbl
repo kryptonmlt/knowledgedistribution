@@ -6,6 +6,19 @@ N.~S. Altman.
   Regression}.
 \newblock {\em The American Statistician}, 46(3):175--185, 1992.
 
+\bibitem{adaptiveDataForwarding}
+C.~Anagnostopoulos, T.~Anagnostopoulos, and S.~Hadjiefthymiades.
+\newblock An adaptive data forwarding scheme for energy efficiency in wireless
+  sensor networks.
+\newblock In {\em 2010 5th IEEE International Conference Intelligent Systems},
+  pages 396--401, July 2010.
+
+\bibitem{intelligentContextualInformation}
+Christos Anagnostopoulos.
+\newblock Intelligent contextual information collection in internet of things.
+\newblock {\em International Journal of Wireless Information Networks},
+  23(1):28--39, 2016.
+
 \bibitem{onlinekmeans}
 WESAM BARBAKH and COLIN FYFE.
 \newblock Online clustering algorithms.
