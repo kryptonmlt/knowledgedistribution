@@ -72,7 +72,9 @@ In this IoT environment the IoT devices are not able to communicate directly tog
 
 Once the collectors have access to the context of the connected devices, they need to make it available for querying. A naive system stores all the data items inside the context for each device. This would result in a very resource hungry collector due to the huge amount of processing and storage capabilities it would need to support. C.Anagnostopoulos \cite{intelligentContextualInformation} states that the contextual sensor data exhibits high complexity, dynamism, accuracy, precision and timeliness. This is due to the huge volumes, interdependency relationships between devices and continuous updates performed in real-time. From this statement he then argues that "an IoT system should not concern itself with the individual pieces of contextual sensor data: rather, context should be intelligently collected and interpreted into a higher, domain relevant concept."\cite{intelligentContextualInformation}
 
-The research challenge we will be looking at is the building of an energy efficient network which minimises power consumption while simultaneously  minimising transmission error to have highly accurate queries. This system must make use of very little computing resources to maximise its lifetimes while at the same time support scalability and real-time querying for environment monitoring.
+Using this concept, instead of having access to all the raw data, collectors would contain multiple intelligent contexts. This raises the challenge on whether for each query there exists an optimal set of intelligent contexts that increase the accuracy. In other words it opens the opportunity for ensemble learning \cite{dietterich2002ensemble}. This means that we cannot guarantee to find the best hypothesis (intelligent context) that gives the best accuracy from all contexts. Ensemble learning tries to intelligently choose contexts and assign weight depending on their likelihood of providing the best result. Hence, it aims at reducing the bias and variance of the learning algorithms used to construct the context.\cite{dietterich2002ensemble}
+
+The research challenge we will be looking at is the building of an energy efficient network which minimises power consumption while simultaneously minimising transmission error. Furthermore, we will investigate the use of ensemble learning on the local contexts to achieve more accurate queries. This system must make use of very little computing resources to maximise its lifetimes while at the same time support scalability and real-time querying for environment monitoring.
 
 \section{Project Aims}
 We argue that instead of directly sending the contextual information, devices should locally learn their context using machine learning algorithms and then transmit this knowledge. If we transmit the local model to the central node each time it is updated then we would not save any power consumption. Thus, we go a step further and set up the notion of a  permissible error, which allows the local and central models to have a limited amount of discrepancy. This allows us to avoid unnecessary transmissions which do not "teach" the collector any valuable knowledge, and in turn reduce the power consumption. Altering the permissible error should determine the percentage of messages being sent, thus directly affecting power consumption.
@@ -82,20 +84,21 @@ We will be using on-line linear regression to learn the context of each device w
 The primary objectives for this project may be defined as follows:
 \begin{itemize}  
 \item Obtain a clear understanding on how IoT systems operate and what they try to achieve.
-\item Implement On-line machine learning and clustering algorithms.
-\item Build a system capable of simulating a real-life IoT system containing collectors and devices.
-\item Integrate capability of transmitting both raw context and knowledge (with a flexible degree of error) to investigate energy efficiency of our implementation.
+\item Implement On-line machine learning and clustering algorithms. In particular, we will be focusing on a 3-dimensional implementation.
+\item Build a system capable of simulating a real-life IoT system containing collectors and devices. We will be using the U-Air \cite{air-quality-inference-meets-big-data} dataset, which contains air quality data from real-life stations in Beijing and Shanghai.
+\item Integrate the capability of transmitting both raw context and knowledge (with a flexible degree of error) to investigate energy efficiency of our implementation.
 \item Evaluate the query accuracy performance of both naive system and our implementation.
 \end{itemize}
 
 \section{Document Outline}
 The content of this report is organized into the following chapters:
-\begin{itemize}  
-\item 
-\item 
-\item 
-\item 
-\item 
+\begin{itemize}
+\item \textbf{Chapter 2} provides the reader with the background knowledge required for understanding the basic principles and algorithms behind this work. In particular, we introduce the general theory behind on-line algorithms, linear regression and normalization.
+\item Afterwards, in \textbf{Chapter 3} we analyse the related work in this field to provide us with the required knowledge to improve upon what there already is.
+\item \textbf{Chapter 4} describes our major contributions to the research challenges, namely network efficiency and ensemble learning.
+\item In \textbf{Chapter 5} we describe the major design and implementation decisions of our contributions and simulation system.
+\item \textbf{Chapter 6} contains the evaluation and performance analysis of our work.
+\item Lastly in \textbf{Chapter 7} we identify possible future extensions, and conclude the presented work.
 \end{itemize}
 
 \chapter{Preliminaries}
@@ -184,6 +187,8 @@ KNN \cite{knn} is a straightforward classification technique, in which given an 
 \chapter{Literature Review}
 
 \chapter{Contributions}
+In this chapter we discuss our major contributions with the aim of improving WSNs. More specifically how we can increase network efficiency, which extends the devices' life time. We shall delineate a strategy for creating knowledge from the raw context, by locally learning the context in real-time using on-line stochastic gradient descent. Based on this knowledge, we then decide whether it is worth it to transmit data or not.
+Additionally we look into how we can minimize the error when querying the knowledge found inside the collectors.
 
 \section{Network Efficiency}
 

@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{knn}
 N.~S. Altman.
@@ -36,6 +36,12 @@ Gail~A. Carpenter and Stephen Grossberg.
 \newblock {\em Adaptive Resonance Theory}, pages 22--35.
 \newblock Springer US, Boston, MA, 2010.
 
+\bibitem{dietterich2002ensemble}
+Thomas~G Dietterich.
+\newblock Ensemble learning.
+\newblock {\em The handbook of brain theory and neural networks}, 2:110--125,
+  2002.
+
 \bibitem{normalization}
 R.~Charles Fawcett University of~Virginia Edward S. Neukrug Old
   Dominion~University.
@@ -51,5 +57,11 @@ Richard~M. Karp.
   Algorithms, Software, Architecture - Information Processing '92, Volume 1 -
   Volume I}, pages 416--429, Amsterdam, The Netherlands, The Netherlands, 1992.
   North-Holland Publishing Co.
+
+\bibitem{air-quality-inference-meets-big-data}
+Hsun-Ping~Hsieh Yu~Zheng, Furui~Liu.
+\newblock U-air: When urban air quality inference meets big data.
+\newblock In {\em Proceedings of the 19th SIGKDD conference on Knowledge
+  Discovery and Data Mining}. KDD 2013, August 2013.
 
 \end{thebibliography}
