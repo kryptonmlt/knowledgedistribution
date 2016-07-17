@@ -56,8 +56,7 @@ Furthermore, I would like to thank my family for all their continuous support in
 
 
 \chapter{Introduction}\label{intro}
-The Internet of Things (IoT) is a rapidly growing area, with it more data is being stored and made accessible which previously has never even been thought possible. IoT is composed of billions of devices that can gather, share information and sometimes even capable of performing operations on this information. IoT devices are physical objects connected with the internet able to share information. This can include anything ranging from smartphones to Radio Frequency Identification (RFID) tags found in everyday products. As more data is made available for anything imaginable that affects our daily lives, opportunities arise for applications that extract this information and make use of it.
-EXAMPLE SMARTGRID AND REFERENCE. Making all this information useful is very challenging as it needs to be collected, transferred, stored and made accessible. \cite{intelligentContextualInformation} 
+The Internet of Things (IoT) is a rapidly growing area, with it more data is being stored and made accessible which previously has never even been thought possible. IoT is composed of billions of devices that can gather, share information and sometimes even capable of performing operations on this information. IoT devices are physical objects connected with the internet able to share information. This can include anything ranging from smartphones to Radio Frequency Identification (RFID) tags found in everyday products. As more data is made available for anything imaginable that affects our daily lives, opportunities arise for applications that extract this information and make use of it. Y.Wang et al. \cite{distributedEnergyDistribution} state that the smart grid has been recognized as an important form of IoT. It allows a two-way information flow which produces new perspectives in energy management. Making all this information useful is very challenging as it needs to be collected, transferred, stored and made accessible. \cite{intelligentContextualInformation} 
 
 Since these IoT devices are generally wireless, compact and have very limited resources they can be considered as WSNs. REFERENCE ? WSNs are made up of a large number of nodes, which are capable of wireless communication and minimal computation capabilities. \cite{adaptiveDataForwarding} Each sensor node measures the temporal-spatial field of the area around it. These are called the contextual scalar parameters and can be of any form and value, example; humidity, temperature, acidity, etc.. This contextual information is relayed to a "sink", which can referred to as a central node.
 
@@ -120,9 +119,11 @@ m_i \longleftarrow m_i + \eta (x^t - m_i)
 Equation \ref{eq:chooseCluster} finds the closest centroid to the input. Then the closest centroid is updated as shown in equation \ref{eq:updateCluster} depending on the learning rate defined by $\eta$. A large $\eta$ enhances accuracy but makes $m_i$ oscillate. Therefore to reach convergence one needs to use a small or decaying $\eta$.
 
 \subsection{Adaptive Resonance Theory (ART)}
+\label{sec:artExplanation}
 ART\cite{art} is another unsupervised learning algorithm similar to k-means. It does not require the number of clusters to be predefined before hand. Instead one has to define \textit{vigilance} which represents the degree of similarity between points. An data item $x^t \in X$ is a member of a cluster $m_j$ only if the distance between them is less than vigilance. Similar to the K=means procedure, once $m_j$ is chosen, equation {eq:updateCluster} is used to update the centroid. If no centroid satisfies this constraint, then a new cluster is created. This allows a better flexibility but has the disadvantage of creating an infeasible and unpredictable amount of clusters in certain situations.
 
 \subsection{Linear Regression}
+\label{linearregression}
 Once it is proven that there is a statistically significant correlation between two variables, linear regression allows us to make predictions about one variable based only on the other variable. The relationship between these two values must be linear, else this technique would not be able to model the data accurately.
 
 To perform this supervised learning we must first start by defining the hypothesis example the linear function \ref{eq:hypothesis}.
@@ -177,6 +178,7 @@ z= \frac{x - \mu}{\sigma}
 \end{figure}
 
 \section{K Nearest Neighbours (KNN)}
+\label{sec:knnExplanation}
 KNN \cite{knn} is a straightforward classification technique, in which given an input it is able to classify it to certain class. As the name implies it takes the closest K neighbours and depending on the majority of their classes it determines the class of the input. Figure \ref{fig:knn} demonstrates KNN ($K=3$) while classifying X using a data set containing 3 different classes. In this case input X is classified as Red due to the fact that the majority of its 3 closest neighbours are Red.
 \begin{figure}[H]
 \caption{At KNN=3, Input X is classified as Red}
@@ -189,12 +191,54 @@ KNN \cite{knn} is a straightforward classification technique, in which given an 
 \chapter{Contributions}
 In this chapter we discuss our major contributions with the aim of improving WSNs. More specifically how we can increase network efficiency, which extends the devices' life time. We shall delineate a strategy for creating knowledge from the raw context, by locally learning the context in real-time using on-line stochastic gradient descent. Based on this knowledge, we then decide whether it is worth it to transmit data or not.
 Additionally we look into how we can minimize the error when querying the knowledge found inside the collectors.
+\section{Model Description}
+We start by considering an IOT system composed of sensor nodes and a collector depicted in figure \ref{fig:sn}. Sensor nodes are only capable of communicating with collectors. Collectors can then be queried or in turn be considered as sensor nodes and connected to larger tree structure, creating a larger more complex network. Resources are reserved for communication, processing and data sensing. Message transmission consumes much more energy when compared to the processing and data sensing tasks. \cite{teen} Thus, we argue that if we let the nodes continuously sense data and only transmit this information when it is essential, we could create a more energy efficient network. A.Manjeshwar et al. \cite{teen} states that this is possible because sensor networks are "data centric", meaning that data is requested based on certain attributes and not requested for a certain node. The requirements of each WSN change according to the application as some nodes might be static while others mobile. When nodes are adjacent to each other certain similarity might occur, thus, data can be aggregated. A common query in these systems is for example which area has humidity $<$ 10\% rather than what is the humidity of area $X$. We can use this knowledge to our advantage and define a system that can minimize the number of messages transmitted while at the same time still provide accurate results from queries.
+
+\begin{figure}[H]
+\caption{Model Example}
+\label{fig:sn}
+\centerline{\includegraphics[scale=0.5]{sensornetwork}}
+\end{figure}
 
 \section{Network Efficiency}
+Consider a sensor node $i$ which receives a new data item $p(t)$ at time $t$. Our system needs to decide whether it is worth transmitting this new data or not. To achieve this, we create a local model based on linear regression. The function we compute will enable us to predict the error and have a quantifiable way of deciding whether transmitting $p(t)$ is worth it or not. Since each sensor node has limited resources, both computational and storage limitations we use on-line stochastic gradient descent to calculate the regression line. A full detailed description of on-line stochastic gradient descent can be found in the Preliminaries chapter, section \ref{linearregression}. Using this algorithm we avoid storing a history of values and instead we consider each new data item alone, then discard it. 
+
+Each sensor $i$ locally and incrementally builds its own model from sensing the pairs $(x,y)$. After a period of learning, each sensor sends its model parameters to a centralized concentrator. Take for instance weights $w=[w_0,w_1,w_2]$ from equation \ref{eq:modelParams}. 
+
+\begin{equation}
+\label{eq:modelParams}
+f[i](x) = w_0 + w_1x_1 + w_2x_2
+\end{equation}
+
+Once a sensor $i$ has sent its local model $F[i](x)$ to the concentrator, then for every new $(x,y)$ data pair it receives, it is capable of updating the local model and deciding of whether to update the concentrator model as well. For every new $(x,y)$ the $w$ parameters might change when compared to the original model sent previously to the concentrator. Sensor $i$ upon receiving an $(x,y)$ pair it updates the model and predicts the output $y*$ from its current local $f[i](x)$ with parameters $w'$ and then measures locally the error $e* = |y-y*|$. If the model has not significantly changed the 'obsolete' model in the concentrator will experience a similar error. Sensor $i$ keeps a copy of the original w (obsolete model in concentrator), thus, knows exactly the error the concentrator would experience. Hence, let us denote this error from the original local model as $e\# = |y - y\#|$ where $y\#$ is the prediction of y when involving the original (obsolete) model $f[i](x)$ with parameter $w$. At that time, sensor $i$ has two prediction errors: $e*$ and $e\#$. The $e\#$ is the error that concentrator would experience if the same input $x$ was used.
+
+\begin{equation}
+\label{eq:differenceError}
+De = |e* - e\#|
+\end{equation}
+
+Using Equation \ref{eq:differenceError} we are able to get the discrepancy in error between the 2 models. We then use the condition $De > THETA$ to determine whether it is worth it to update the obsolete model or not. A $THETA=0$ would mean that the local and concentrator model would be synchronized at all times. On the other hand when we increase $THETA$ we transmit less messages, thus, increase network efficiency. This would also mean we are now susceptible to an increase in error between the 2 models. Figure \ref{fig:nea} shows a simplified flowchart of the algorithm just described in this section.
+
+
+\begin{figure}[H]
+\caption{Sensor Node Flowchart}
+\label{fig:nea}
+\centerline{\includegraphics[scale=0.5]{NetworkEfficiencyAlgorithm}}
+\end{figure}
+
 
 \section{Ensemble Learning}
+The previous section explains our algorithm which increases network efficiency by transmitting less messages to the concentrator. This is done by altering $THETA$ which determines the acceptable error. An increase in network efficiency means that sensors working on battery power can last longer without the need of recharging. As previously mentioned the purpose of an IOT system is that it can be queried from the "root" (concentrator). In this section we aim to extend the model defined in the previous section to reduce the error at the concentrator level.
 
-\section{Optimal Stopping}
+Naively the concentrator would have all the $(x,y)$ data pairs and when queried with an arbitrary $x$, it can directly search in its storage for the best match and return $y$ accordingly. In our model the concentrator collects a function $f[i](x)$ for each sensor $i$ which simulates the data collected. The ideal scenario is that when the concentrator receives query $x$, it would also know which function $f$ it should use to predict $y$. Unfortunately, in a real-life scenario this is not possible as we would not know to which sensor $x$ is related.
+
+One solution is that the concentrator proceeds with averaging the prediction results from all the collected functions $f[i](x)$. The concept behind averaging all the predictions ensures that the over-estimates and under-estimates are balanced out. We argue that this might not always produce an optimal result and it can further be improved. There exists scenarios where an input $x$ is not observed by some of the functions, thus, leading to poor predictions. Take for instance the case where multiple thermometers are sparsely placed around a building. Sensors next to a kitchen might in general observe temperature readings in a higher range than sensors placed outside. Given a high temperature $x$, would it be better to average the predictions from all the sensors or use only the kitchen sensors?
+
+With this concept in mind, we extend the previous model and add data representatives of the input space. Using these data representatives, the system would be able to determine whether a function $f$ is familiar to the query $x$ or not. To elect data representatives we use an on-line clustering algorithm which quantizes the input space. We used both K-Means and ART which are described in detail in the Preliminaries chapter, section \ref{sec:knnExplanation} and \ref{sec:artExplanation}. After a data pair $(x,y)$ is used to update the model, we also update the centroids in the clustering algorithm. The centroids are transmitted to the concentrator along with local model.
+
+The concentrator now has the necessary information to determine what the input space of each function is. When query $x$ is submitted the concentrator can select the functions which have data representatives in the vicinity. The assumption is that these functions were generated from values similar to the query, thus, have more reliable knowledge.
+
+\section{Reliable variable}
 
 \chapter{Design and Implementation}
 
