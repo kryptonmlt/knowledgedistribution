@@ -1,3 +1,4 @@
+\select@language {english}
 \contentsline {chapter}{\numberline {1}Introduction}{5}
 \contentsline {section}{\numberline {1.1}Problem Synopsis}{6}
 \contentsline {section}{\numberline {1.2}Project Aims}{6}
@@ -17,7 +18,7 @@
 \contentsline {section}{\numberline {4.1}Model Description}{13}
 \contentsline {section}{\numberline {4.2}Network Efficiency}{14}
 \contentsline {section}{\numberline {4.3}Ensemble Learning}{15}
-\contentsline {section}{\numberline {4.4}Reliable variable}{16}
+\contentsline {section}{\numberline {4.4}Adding the \csqQQ {34}Reliability\csqQQ {34} variable}{16}
 \contentsline {chapter}{\numberline {5}Design and Implementation}{17}
 \contentsline {section}{\numberline {5.1}Network Architecture}{17}
 \contentsline {section}{\numberline {5.2}Query Analytics}{17}

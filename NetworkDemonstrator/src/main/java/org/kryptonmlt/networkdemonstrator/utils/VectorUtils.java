@@ -1,5 +1,6 @@
 package org.kryptonmlt.networkdemonstrator.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -164,5 +165,21 @@ public class VectorUtils {
         float[] update = VectorUtils.subtract(point, centroid);
         update = VectorUtils.multiply(update, alpha);
         return VectorUtils.add(centroid, update);
+    }
+
+    public static List<Double> normalizeList(List<Double> source) {
+        List<Double> normalized = new ArrayList<>();
+        double total = 0;
+        for (Double d : source) {
+            total += d;
+        }
+        for (Double d : source) {
+            if (total == 0) {
+                normalized.add(0.0);
+            } else {
+                normalized.add(d / (double) total);
+            }
+        }
+        return normalized;
     }
 }

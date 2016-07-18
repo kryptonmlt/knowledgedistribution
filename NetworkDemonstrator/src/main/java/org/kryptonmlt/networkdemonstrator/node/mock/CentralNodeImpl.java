@@ -83,10 +83,12 @@ public class CentralNodeImpl implements CentralNode {
                     for (int i = 0; i < peers.get(peerId).getClusters()[j].getCentroids().size(); i++) {
                         double d = VectorUtils.distance(peers.get(peerId).getClusters()[j].getCentroids().get(i), x);
                         Double e = null;
+                        Double used = null;
                         if (useError) {
-                            e = peers.get(peerId).getClusters()[j].getErrors().get(i);
+                            e = peers.get(peerId).getClusters()[j].getErrorsNormalized().get(i);
+                            used = peers.get(peerId).getClusters()[j].getUsedNormalized().get(i);
                         }
-                        nd.add(new NodeDistanceError(peerId, d, e));
+                        nd.add(new NodeDistanceError(peerId, d, e, used));
                     }
                 }
             }
@@ -112,6 +114,9 @@ public class CentralNodeImpl implements CentralNode {
                 result += predictions[i];
             }
             LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
+            if (("" + result).equals("NaN")) {
+                System.out.println("AAAA");
+            }
             kResults[j] = result;
         }
         return kResults;
@@ -151,10 +156,12 @@ public class CentralNodeImpl implements CentralNode {
                     centroidsCopy.add(centroid.clone());
                 }
                 List<Double> errorsCopy = new ArrayList<>();
-                for (Double error : clusters[i].getErrors()) {
-                    errorsCopy.add(error.doubleValue());
+                List<Integer> usedCopy = new ArrayList<>();
+                for (int j = 0; j < clusters[i].getErrors().size(); j++) {
+                    errorsCopy.add(clusters[i].getErrors().get(j).doubleValue());
+                    usedCopy.add(clusters[i].getUsed().get(j).intValue());
                 }
-                clustersCopy[i] = new DummyClustering(centroidsCopy, errorsCopy);
+                clustersCopy[i] = new DummyClustering(centroidsCopy, errorsCopy, usedCopy);
             }
             peer.setClusters(clustersCopy);
             if (plot != null) {

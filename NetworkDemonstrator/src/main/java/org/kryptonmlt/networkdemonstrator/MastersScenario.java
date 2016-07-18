@@ -35,7 +35,7 @@ public class MastersScenario {
 
         double error = Double.parseDouble(args[0]);
         int max_stations = Integer.parseInt(args[1]);  //max=36
-        int[] k = {1, 3, 5, 7, 10, 15, 20, 30};
+        int[] k = {1, 5, 10, 15, 20, 25};
         //int[] k = {1};
         float[] row = {0.05f}; // ART - only used when k is null
 
@@ -53,7 +53,7 @@ public class MastersScenario {
         boolean useStats = false;
         int use_max_points = 1000;
         double samplingRate = 0.1;
-        int[] knn = {1, 3, 30, 50, 100, 300, 500};//knn
+        int[] knn = {1, 5, 10, 25, 50, 150};//knn
         //int[] closestK = {3};
 
         int numberOfClusters;

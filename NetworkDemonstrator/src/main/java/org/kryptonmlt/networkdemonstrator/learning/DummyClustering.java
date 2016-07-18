@@ -2,6 +2,7 @@ package org.kryptonmlt.networkdemonstrator.learning;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 
 /**
@@ -12,10 +13,22 @@ public class DummyClustering implements Clustering {
 
     private List<double[]> centroids;
     private List<Double> errors;
+    private List<Integer> used;
 
-    public DummyClustering(List<double[]> centroids, List<Double> errors) {
+    public DummyClustering(List<double[]> centroids, List<Double> errors, List<Integer> used) {
         this.centroids = centroids;
         this.errors = errors;
+        this.used = used;
+    }
+
+    @Override
+    public List<Double> getUsedNormalized() {
+        return VectorUtils.normalizeList(ConversionUtils.integerListToDoubleList(used));
+    }
+
+    @Override
+    public List<Double> getErrorsNormalized() {
+        return VectorUtils.normalizeList(errors);
     }
 
     @Override
@@ -51,6 +64,16 @@ public class DummyClustering implements Clustering {
     @Override
     public void updateError(int i, double e) {
 
+    }
+
+    @Override
+    public List<Integer> getUsed() {
+        return used;
+    }
+
+    @Override
+    public void setUsed(List<Integer> used) {
+        this.used = used;
     }
 
 }

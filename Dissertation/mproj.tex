@@ -8,6 +8,9 @@
 \usepackage{pdfpages}
 \usepackage{amsmath}
 \usepackage{float}
+\usepackage [english]{babel}
+\usepackage [autostyle, english = american]{csquotes}
+\MakeOuterQuote{"}
 
 % for alternative page numbering use the following package
 % and see documentation for commands
@@ -226,7 +229,6 @@ Using Equation \ref{eq:differenceError} we are able to get the discrepancy in er
 \centerline{\includegraphics[scale=0.5]{NetworkEfficiencyAlgorithm}}
 \end{figure}
 
-
 \section{Ensemble Learning}
 The previous section explains our algorithm which increases network efficiency by transmitting less messages to the concentrator. This is done by altering $THETA$ which determines the acceptable error. An increase in network efficiency means that sensors working on battery power can last longer without the need of recharging. As previously mentioned the purpose of an IOT system is that it can be queried from the "root" (concentrator). In this section we aim to extend the model defined in the previous section to reduce the error at the concentrator level.
 
@@ -238,7 +240,11 @@ With this concept in mind, we extend the previous model and add data representat
 
 The concentrator now has the necessary information to determine what the input space of each function is. When query $x$ is submitted the concentrator can select the functions which have data representatives in the vicinity. The assumption is that these functions were generated from values similar to the query, thus, have more reliable knowledge.
 
-\section{Reliable variable}
+\section{Adding the "Reliability" variable}
+
+Talk about time series.. error might be less from other functions
+
+Right now the concentrator is able to select which functions to use based on the distance between query $x$ and centroids. We believe the distance alone might not be sufficient enough to describe the input space of each function. Thus, associated with each
 
 \chapter{Design and Implementation}
 

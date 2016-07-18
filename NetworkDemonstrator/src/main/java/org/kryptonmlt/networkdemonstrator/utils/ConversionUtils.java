@@ -2,6 +2,7 @@ package org.kryptonmlt.networkdemonstrator.utils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -107,8 +108,16 @@ public class ConversionUtils {
     public static String cleanFloatArrayToString(float[] d) {
         return Arrays.toString(d).replace(" ", "").replace("[", "").replace("]", "");
     }
-    
+
     public static String cleanIntArrayToString(int[] d) {
         return Arrays.toString(d).replace(" ", "").replace("[", "").replace("]", "");
+    }
+
+    public static List<Double> integerListToDoubleList(List<Integer> source) {
+        List<Double> result = new ArrayList<>();
+        for (Integer s : source) {
+            result.add(s.doubleValue());
+        }
+        return result;
     }
 }

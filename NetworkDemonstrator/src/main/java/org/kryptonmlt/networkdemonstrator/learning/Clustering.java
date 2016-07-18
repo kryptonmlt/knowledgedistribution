@@ -34,4 +34,12 @@ public interface Clustering {
     public List<Double> getErrors();
 
     public void setErrors(List<Double> errors);
+
+    public List<Integer> getUsed();
+
+    public void setUsed(List<Integer> used);
+
+    public List<Double> getUsedNormalized();
+
+    public List<Double> getErrorsNormalized();
 }
