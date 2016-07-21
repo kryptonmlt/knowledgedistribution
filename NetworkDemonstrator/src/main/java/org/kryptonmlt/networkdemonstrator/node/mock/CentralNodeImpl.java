@@ -79,14 +79,26 @@ public class CentralNodeImpl implements CentralNode {
         for (int j = 0; j < kResults.length; j++) {
             List<NodeDistanceError> nd = new ArrayList<>();
             synchronized (peers) {
+                //count total error
+                Double totalError = 0.0;
+                Double totalUsed = 0.0;
+                if (useError) {
+                    for (Long peerId : peers.keySet()) {
+                        for (int i = 0; i < peers.get(peerId).getClusters()[j].getCentroids().size(); i++) {
+                            totalError += peers.get(peerId).getClusters()[j].getErrors().get(i);
+                            totalUsed += peers.get(peerId).getClusters()[j].getUsed().get(i);
+                        }
+                    }
+                }
+
                 for (Long peerId : peers.keySet()) {
                     for (int i = 0; i < peers.get(peerId).getClusters()[j].getCentroids().size(); i++) {
                         double d = VectorUtils.distance(peers.get(peerId).getClusters()[j].getCentroids().get(i), x);
                         Double e = null;
                         Double used = null;
                         if (useError) {
-                            e = peers.get(peerId).getClusters()[j].getErrorsNormalized().get(i);
-                            used = peers.get(peerId).getClusters()[j].getUsedNormalized().get(i);
+                            e = peers.get(peerId).getClusters()[j].getErrorsNormalized(null).get(i);
+                            used = peers.get(peerId).getClusters()[j].getUsedNormalized(null).get(i);
                         }
                         nd.add(new NodeDistanceError(peerId, d, e, used));
                     }

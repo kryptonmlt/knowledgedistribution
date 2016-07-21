@@ -232,21 +232,48 @@ Using Equation \ref{eq:differenceError} we are able to get the discrepancy in er
 \section{Ensemble Learning}
 The previous section explains our algorithm which increases network efficiency by transmitting less messages to the concentrator. This is done by altering $THETA$ which determines the acceptable error. An increase in network efficiency means that sensors working on battery power can last longer without the need of recharging. As previously mentioned the purpose of an IOT system is that it can be queried from the "root" (concentrator). In this section we aim to extend the model defined in the previous section to reduce the error at the concentrator level.
 
-Naively the concentrator would have all the $(x,y)$ data pairs and when queried with an arbitrary $x$, it can directly search in its storage for the best match and return $y$ accordingly. In our model the concentrator collects a function $f[i](x)$ for each sensor $i$ which simulates the data collected. The ideal scenario is that when the concentrator receives query $x$, it would also know which function $f$ it should use to predict $y$. Unfortunately, in a real-life scenario this is not possible as we would not know to which sensor $x$ is related.
+Naively the concentrator would have all the $(x,y)$ data pairs and when queried with an arbitrary $x$, it can directly search in its storage for the best match and return $y$ accordingly. In our model the concentrator collects a function $f[i](x)$ for each sensor $i$ which simulates the data collected. The ideal scenario is that when the concentrator receives query $x$, it would also know which function $f$ it should use to predict $y$. Unfortunately, in a real-life scenario this is not possible as we would not know which sensor $x$ is related to.
 
 One solution is that the concentrator proceeds with averaging the prediction results from all the collected functions $f[i](x)$. The concept behind averaging all the predictions ensures that the over-estimates and under-estimates are balanced out. We argue that this might not always produce an optimal result and it can further be improved. There exists scenarios where an input $x$ is not observed by some of the functions, thus, leading to poor predictions. Take for instance the case where multiple thermometers are sparsely placed around a building. Sensors next to a kitchen might in general observe temperature readings in a higher range than sensors placed outside. Given a high temperature $x$, would it be better to average the predictions from all the sensors or use only the kitchen sensors?
 
-With this concept in mind, we extend the previous model and add data representatives of the input space. Using these data representatives, the system would be able to determine whether a function $f$ is familiar to the query $x$ or not. To elect data representatives we use an on-line clustering algorithm which quantizes the input space. We used both K-Means and ART which are described in detail in the Preliminaries chapter, section \ref{sec:knnExplanation} and \ref{sec:artExplanation}. After a data pair $(x,y)$ is used to update the model, we also update the centroids in the clustering algorithm. The centroids are transmitted to the concentrator along with local model.
+With this concept in mind, we extend the previous model and add data representatives of the input space. Using these data representatives, the system would be able to determine whether a function $f$ is familiar to the query $x$ or not. To elect data representatives we use an on-line clustering algorithm which quantizes the input space. We used both K-Means and ART which are described in detail in the Preliminaries chapter; section \ref{sec:knnExplanation} and \ref{sec:artExplanation}. When a data pair $(x,y)$ is used to update the model, we also update the centroids in the clustering algorithm. The centroids are transmitted to the concentrator along with local model.
 
-The concentrator now has the necessary information to determine what the input space of each function is. When query $x$ is submitted the concentrator can select the functions which have data representatives in the vicinity. The assumption is that these functions were generated from values similar to the query, thus, have more reliable knowledge.
+The concentrator now has the necessary information to determine what the input space of each function is. When query $x$ is submitted, the concentrator can select the functions which have data representatives in the vicinity. The assumption is that these functions were generated from values similar to the query, thus, have more reliable knowledge.
 
 \section{Adding the "Reliability" variable}
+Right now the concentrator is able to select which functions to use based on the distance between query $x$ and centroids. We believe the distance alone might not be sufficient enough to describe the input space of each function. Our intuition is that some sensors produce more accurate results than others. To study this, we performed an analysis on the Beijing Air Quality dataset \cite{air-quality-inference-meets-big-data} and trained a regression model for each sensor. We then isolated 2 sensors at a time and predicted the y using 3 different methods; 
 
-Talk about time series.. error might be less from other functions
+\begin{itemize}  
+\item Endogenous error - In this test we predict y of sensor $i$ using regression function $f(i)$.
+\item Exogenous error - In this test we predict y of sensor $i$ using regression function $f(i+1)$.
+\item Fusion error - In this test we predict y of sensor $i$ using both regression functions $f(i)$ and $f(i+1)$ and then take the mean.
+\end{itemize}
 
-Right now the concentrator is able to select which functions to use based on the distance between query $x$ and centroids. We believe the distance alone might not be sufficient enough to describe the input space of each function. Thus, associated with each
+\begin{figure}[H]
+\caption{Endogenous, Exogenous, Fusion errors}
+\label{fig:functionsErrors}
+\centerline{\includegraphics[scale=0.4]{e1e2e3}}
+\end{figure}
+
+Figure \ref{fig:functionsErrors} shows one of the studies done using the first 2 sensors. In this case using just the regression model from another sensor (exogenous) proved to more accurate rather than using its own model. The reason might be because some centroids are more popular, while others yield less error in certain situations. This is were ensemble learning is useful, and we can leverage the knowledge the concentrator has about every sensor attached to it. The concentrator should try to choose a subset from all the sensors to provide more accurate results. Centroids which are frequently updated tend to have a higher average error due to the frequent updates to the regression model. Hence, we should consider the number of times each centroid is used to determine the popularity. Thus, along with each centroid we include an error value and number of times used.
+
+\begin{equation}
+\label{eq:ourEquation}
+weight=\frac{e^{-distance} + e^{-error} + used}{3}
+\end{equation}
+
+\begin{figure}[H]
+\caption{$e^{-x}$ Function}
+\label{fig:e-x}
+\centerline{\includegraphics[scale=0.4]{e-x}}
+\end{figure}
+
+Equation \ref{eq:ourEquation} defines how we assign a weight to each centroid in relation to a given query. Once we sort the centroids in descending order according to their weight, we would get an amalgamation of the 3 properties; closest, lowest error and most popular. Note, that the values of \textit{used} are normalized between 0 and 1 so as to makes use of the exponent function shown in figure \ref{fig:e-x}. As distance and error approach 1 (highest possible due to normalization), the exponent function inverts them and gives them a low value. On the other hand as \textit{used} approaches 1 we would like to give it a higher weight, thus we leave it as is.
 
 \chapter{Design and Implementation}
+In the previous chapter we laid the theoretical groundwork and intuitions of our system, and now we proceed to examine how they were implemented into fully working algorithms. We begin by explaining the dataset that we shall be using and how it is structured as it will affect the design of the system. Afterwards, we explain how our system capable of simulating an IoT environment was designed and implemented. This includes the network aspect and statistics gathering. We then explain in detail our contributions regarding network efficiency and ensemble learning mentioned in the previous chapter.
+
+\section{Dataset}
 
 \section{Network Architecture}
 

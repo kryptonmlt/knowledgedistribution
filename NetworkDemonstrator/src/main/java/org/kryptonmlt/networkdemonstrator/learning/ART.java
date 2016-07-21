@@ -27,13 +27,13 @@ public class ART implements Clustering {
     }
 
     @Override
-    public List<Double> getUsedNormalized() {
-        return VectorUtils.normalizeList(ConversionUtils.integerListToDoubleList(used));
+    public List<Double> getUsedNormalized(Double total) {
+        return VectorUtils.normalizeList(ConversionUtils.integerListToDoubleList(used), total);
     }
 
     @Override
-    public List<Double> getErrorsNormalized() {
-        return VectorUtils.normalizeList(errors);
+    public List<Double> getErrorsNormalized(Double total) {
+        return VectorUtils.normalizeList(errors, total);
     }
 
     @Override

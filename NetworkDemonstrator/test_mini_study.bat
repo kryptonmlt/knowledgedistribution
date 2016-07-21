@@ -1,4 +1,4 @@
-set "THETA=0 0.001 0.01 0.1 1.0 5.0"
+set "THETA=0 0.001 0.01 0.1 0.5 1.0"
 set "MAX_STATIONS=36"
 
 for %%i in (%THETA%) do (

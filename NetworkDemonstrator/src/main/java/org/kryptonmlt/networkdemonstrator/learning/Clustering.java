@@ -39,7 +39,7 @@ public interface Clustering {
 
     public void setUsed(List<Integer> used);
 
-    public List<Double> getUsedNormalized();
+    public List<Double> getUsedNormalized(Double total);
 
-    public List<Double> getErrorsNormalized();
+    public List<Double> getErrorsNormalized(Double total);
 }

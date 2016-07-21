@@ -167,17 +167,21 @@ public class VectorUtils {
         return VectorUtils.add(centroid, update);
     }
 
-    public static List<Double> normalizeList(List<Double> source) {
+    public static List<Double> normalizeList(List<Double> source, Double maxTotal) {
         List<Double> normalized = new ArrayList<>();
         double total = 0;
-        for (Double d : source) {
-            total += d;
+        if (maxTotal == null) {
+            for (Double d : source) {
+                total += d;
+            }
+        } else {
+            total = maxTotal;
         }
         for (Double d : source) {
             if (total == 0) {
                 normalized.add(0.0);
             } else {
-                normalized.add(d / (double) total);
+                normalized.add(d / total);
             }
         }
         return normalized;

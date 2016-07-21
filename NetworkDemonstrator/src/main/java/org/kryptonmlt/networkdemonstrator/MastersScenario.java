@@ -53,7 +53,7 @@ public class MastersScenario {
         boolean useStats = false;
         int use_max_points = 1000;
         double samplingRate = 0.1;
-        int[] knn = {1, 5, 10, 25, 50, 150};//knn
+        int[] knn = {1, 5, 10, 25, 50, 80};//knn
         //int[] closestK = {3};
 
         int numberOfClusters;
