@@ -2,7 +2,7 @@ package org.kryptonmlt.networkdemonstrator.utils;
 
 import java.util.List;
 import org.jzy3d.maths.Coord3d;
-import org.kryptonmlt.networkdemonstrator.learning.Learning;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.Learning;
 
 /**
  *

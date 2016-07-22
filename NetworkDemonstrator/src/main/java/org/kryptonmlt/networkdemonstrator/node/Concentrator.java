@@ -1,7 +1,7 @@
 package org.kryptonmlt.networkdemonstrator.node;
 
 import java.util.Map;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.visualizer.ScatterPlot3D;
 
@@ -9,7 +9,7 @@ import org.kryptonmlt.networkdemonstrator.visualizer.ScatterPlot3D;
  *
  * @author Kurt
  */
-public interface CentralNode {
+public interface Concentrator {
 
     public Map<Long, DevicePeer> getPeers();
 

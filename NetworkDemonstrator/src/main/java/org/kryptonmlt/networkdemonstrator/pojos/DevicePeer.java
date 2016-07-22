@@ -2,7 +2,7 @@ package org.kryptonmlt.networkdemonstrator.pojos;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.kryptonmlt.networkdemonstrator.learning.Clustering;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.Clustering;
 import org.kryptonmlt.networkdemonstrator.utils.LearningUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

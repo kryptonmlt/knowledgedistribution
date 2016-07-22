@@ -1,16 +1,16 @@
 package org.kryptonmlt.networkdemonstrator.node;
 
 import java.util.List;
-import org.kryptonmlt.networkdemonstrator.learning.Clustering;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.Clustering;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineStochasticGradientDescent;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.OnlineVarianceMean;
 import org.kryptonmlt.networkdemonstrator.pojos.MinMax;
 
 /**
  *
  * @author Kurt
  */
-public interface LeafNode {
+public interface Sensor {
 
     public Long getId();
 

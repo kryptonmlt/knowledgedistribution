@@ -1,5 +1,6 @@
-package org.kryptonmlt.networkdemonstrator.learning;
+package org.kryptonmlt.networkdemonstrator.ml_algorithms.impl;
 
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.Learning;
 import org.kryptonmlt.networkdemonstrator.utils.LearningUtils;
 
 /**

@@ -14,13 +14,13 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kryptonmlt.network.stats.QueryPerformer;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
-import org.kryptonmlt.networkdemonstrator.node.CentralNode;
-import org.kryptonmlt.networkdemonstrator.node.LeafNode;
-import org.kryptonmlt.networkdemonstrator.node.mock.CentralNodeImpl;
-import org.kryptonmlt.networkdemonstrator.node.mock.LeafNodeImpl;
+import org.kryptonmlt.networkdemonstrator.node.impl.ConcentratorImpl;
+import org.kryptonmlt.networkdemonstrator.node.impl.SensorImpl;
 import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.kryptonmlt.networkdemonstrator.node.Concentrator;
+import org.kryptonmlt.networkdemonstrator.node.Sensor;
 
 /**
  *
@@ -74,7 +74,7 @@ public class MastersScenario {
             LOGGER.info("Feature Model file {} containing weights not found initializing them to 0", featureModelFileName);
         }
         // Initialize Central Node
-        CentralNode centralNode = new CentralNodeImpl(numberOfFeatures, knn, numberOfClusters, MastersScenario.COLUMN_NAMES, alpha, false);
+        Concentrator centralNode = new ConcentratorImpl(numberOfFeatures, knn, numberOfClusters, MastersScenario.COLUMN_NAMES, alpha, false);
         centralNode.getFeatureModel().setWeights(weights);
         centralNode.setFeaturesReceived(featuresUsed);
         // Initialize IOT Devices (Sensors)
@@ -93,11 +93,11 @@ public class MastersScenario {
             }
         }
 
-        final List<LeafNode> leafNodes = new ArrayList<>();
+        final List<Sensor> leafNodes = new ArrayList<>();
         for (int i = 0; i < max_stations; i++) {
             final XSSFSheet sheet = workbook.getSheetAt(i);
             final XSSFSheet querySheet = queryWorkbook.getSheet(sheet.getSheetName());
-            leafNodes.add(new LeafNodeImpl((CentralNodeImpl) centralNode, delayMillis, dataFileName, i, sheet, querySheet, startFeature,
+            leafNodes.add(new SensorImpl((ConcentratorImpl) centralNode, delayMillis, dataFileName, i, sheet, querySheet, startFeature,
                     numberOfFeatures, alpha, clusteringAlpha, learnLimit, type, error, k, row, useStats, use_max_points, samplingRate, knn.length, errorMultiplier));
         }
         file.close();

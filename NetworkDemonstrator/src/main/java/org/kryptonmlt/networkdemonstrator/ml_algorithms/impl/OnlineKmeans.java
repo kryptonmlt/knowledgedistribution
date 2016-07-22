@@ -1,7 +1,8 @@
-package org.kryptonmlt.networkdemonstrator.learning;
+package org.kryptonmlt.networkdemonstrator.ml_algorithms.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.Clustering;
 import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;

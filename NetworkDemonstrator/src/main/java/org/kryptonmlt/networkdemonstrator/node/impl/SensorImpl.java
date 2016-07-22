@@ -1,29 +1,29 @@
-package org.kryptonmlt.networkdemonstrator.node.mock;
+package org.kryptonmlt.networkdemonstrator.node.impl;
 
 import java.io.IOException;
 import java.util.Arrays;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
-import org.kryptonmlt.networkdemonstrator.learning.ART;
-import org.kryptonmlt.networkdemonstrator.learning.Clustering;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineKmeans;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
-import org.kryptonmlt.networkdemonstrator.learning.PDF;
-import org.kryptonmlt.networkdemonstrator.node.LeafNode;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.ART;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.Clustering;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineKmeans;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineStochasticGradientDescent;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.OnlineVarianceMean;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.PDF;
 import org.kryptonmlt.networkdemonstrator.pojos.MinMax;
 import org.kryptonmlt.networkdemonstrator.sensors.SensorManager;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.kryptonmlt.networkdemonstrator.node.Sensor;
 
 /**
  *
  * @author Kurt
  */
-public class LeafNodeImpl implements LeafNode, Runnable {
+public class SensorImpl implements Sensor, Runnable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LeafNodeImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SensorImpl.class);
 
     private final long id;
     private final int delayMillis;
@@ -67,10 +67,10 @@ public class LeafNodeImpl implements LeafNode, Runnable {
     private final MinMax X1 = new MinMax();
     private final MinMax X2 = new MinMax();
 
-    private final CentralNodeImpl centralNode;
+    private final ConcentratorImpl centralNode;
     private boolean finished;
 
-    public LeafNodeImpl(CentralNodeImpl centralNode, int delayMillis,
+    public SensorImpl(ConcentratorImpl centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, XSSFSheet querySheet, int startFeature, int numberOfFeatures,
             float learningRate, float clusteringAlpha, int maxLearnPoints, WorthType worth, double theta_error, int[] k, float[] row,
             boolean statistics, int max_use_Points, double samplingRate, int closestK, int errorMultiplier) throws IOException {

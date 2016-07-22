@@ -14,7 +14,7 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kryptonmlt.data.pojos.StationWriter;
 import org.kryptonmlt.data.utils.DataUtils;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.OnlineVarianceMean;
 
 public class CrawlerDataSplitter {
 

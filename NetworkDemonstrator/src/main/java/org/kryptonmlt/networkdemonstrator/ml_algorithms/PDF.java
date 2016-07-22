@@ -1,4 +1,4 @@
-package org.kryptonmlt.networkdemonstrator.learning;
+package org.kryptonmlt.networkdemonstrator.ml_algorithms;
 
 import java.util.ArrayList;
 import java.util.List;

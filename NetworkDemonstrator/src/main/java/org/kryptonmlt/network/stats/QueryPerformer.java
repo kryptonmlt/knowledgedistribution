@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
-import org.kryptonmlt.networkdemonstrator.node.CentralNode;
-import org.kryptonmlt.networkdemonstrator.node.LeafNode;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.kryptonmlt.networkdemonstrator.node.Concentrator;
+import org.kryptonmlt.networkdemonstrator.node.Sensor;
 
 /**
  *
@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 public class QueryPerformer implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueryPerformer.class);
-    private final CentralNode centralNode;
-    private final Map<Long, LeafNode> leafNodes;
+    private final Concentrator centralNode;
+    private final Map<Long, Sensor> leafNodes;
     private final DecimalFormat df = new DecimalFormat("0.####");
     private final double theta;
     private final WorthType worthType;
@@ -36,7 +36,7 @@ public class QueryPerformer implements Runnable {
     private boolean isKmeans;
     private final int[] closestK;
 
-    public QueryPerformer(CentralNode centralNode, List<LeafNode> leafNodes, double theta, WorthType worthType, int[] k, float[] row, int[] closestKCount) {
+    public QueryPerformer(Concentrator centralNode, List<Sensor> leafNodes, double theta, WorthType worthType, int[] k, float[] row, int[] closestKCount) {
         timeStarted = System.currentTimeMillis();
         this.centralNode = centralNode;
         this.worthType = worthType;
@@ -54,7 +54,7 @@ public class QueryPerformer implements Runnable {
             isKmeans = true;
         }
         this.leafNodes = new HashMap<>();
-        for (LeafNode lf : leafNodes) {
+        for (Sensor lf : leafNodes) {
             while (!lf.isConnected()) {
                 try {
                     Thread.sleep(1000);
@@ -87,7 +87,7 @@ public class QueryPerformer implements Runnable {
             LOGGER.info("----------------------------------------------------------------------------");
             // Check if all leaf nodes finished sending !
             allfinished = true;
-            for (LeafNode leaf : leafNodes.values()) {
+            for (Sensor leaf : leafNodes.values()) {
                 if (!leaf.isFinished()) {
                     allfinished = false;
                     break;
@@ -104,7 +104,7 @@ public class QueryPerformer implements Runnable {
         //compute query ensemble learning validation
         LOGGER.info("Run finished");
         LOGGER.info("Starting query evaluation");
-        for (LeafNode leaf : leafNodes.values()) {
+        for (Sensor leaf : leafNodes.values()) {
             LOGGER.info("Starting query evaluation Device {}", leaf.getId());
             leaf.queryValidation();
         }

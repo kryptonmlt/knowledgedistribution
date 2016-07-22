@@ -12,7 +12,7 @@ import java.util.Random;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 import org.kryptonmlt.networkdemonstrator.utils.IOUtils;
 

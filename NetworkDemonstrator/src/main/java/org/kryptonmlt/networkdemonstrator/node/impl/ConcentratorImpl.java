@@ -1,4 +1,4 @@
-package org.kryptonmlt.networkdemonstrator.node.mock;
+package org.kryptonmlt.networkdemonstrator.node.impl;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
@@ -10,10 +10,9 @@ import java.util.List;
 import java.util.Map;
 import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
-import org.kryptonmlt.networkdemonstrator.learning.Clustering;
-import org.kryptonmlt.networkdemonstrator.learning.DummyClustering;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
-import org.kryptonmlt.networkdemonstrator.node.CentralNode;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.Clustering;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.DummyClustering;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.pojos.DevicePeer;
 import org.kryptonmlt.networkdemonstrator.pojos.NodeDistanceError;
 import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
@@ -21,14 +20,15 @@ import org.kryptonmlt.networkdemonstrator.utils.VisualizationUtils;
 import org.kryptonmlt.networkdemonstrator.visualizer.ScatterPlot3D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.kryptonmlt.networkdemonstrator.node.Concentrator;
 
 /**
  *
  * @author Kurt
  */
-public class CentralNodeImpl implements CentralNode {
+public class ConcentratorImpl implements Concentrator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CentralNodeImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConcentratorImpl.class);
 
     private final int numberOfFeatures;
     private final Map<Long, DevicePeer> peers = new HashMap<>();
@@ -38,7 +38,7 @@ public class CentralNodeImpl implements CentralNode {
     private int featuresReceived = 0;
     private final OnlineStochasticGradientDescent featureModel;
 
-    public CentralNodeImpl(int numberOfFeatures, int[] closestK, int allK, String[] columnNames, double alpha, boolean showVisualization) throws IOException {
+    public ConcentratorImpl(int numberOfFeatures, int[] closestK, int allK, String[] columnNames, double alpha, boolean showVisualization) throws IOException {
         this.numberOfFeatures = numberOfFeatures;
         this.closestK = closestK;
         this.allK = allK;

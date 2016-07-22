@@ -16,8 +16,8 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jzy3d.maths.Coord2d;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineStochasticGradientDescent;
-import org.kryptonmlt.networkdemonstrator.learning.OnlineVarianceMean;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineStochasticGradientDescent;
+import org.kryptonmlt.networkdemonstrator.ml_algorithms.OnlineVarianceMean;
 import org.kryptonmlt.networkdemonstrator.utils.ColorUtils;
 import org.kryptonmlt.networkdemonstrator.utils.IOUtils;
 

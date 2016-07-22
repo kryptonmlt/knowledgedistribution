@@ -2,6 +2,7 @@
 \usepackage{graphicx}
 
 \usepackage{url}
+\usepackage[]{algorithm2e}
 \usepackage{fancyvrb}
 \usepackage[final]{pdfpages}
 \usepackage{times}
@@ -274,14 +275,102 @@ Equation \ref{eq:ourEquation} defines how we assign a weight to each centroid in
 In the previous chapter we laid the theoretical groundwork and intuitions of our system, and now we proceed to examine how they were implemented into fully working algorithms. We begin by explaining the dataset that we shall be using and how it is structured as it will affect the design of the system. Afterwards, we explain how we implemented a system capable of simulating an IoT environment. This includes the network aspect and statistics gathering. We then explain in detail our contributions regarding network efficiency and ensemble learning mentioned in the previous chapter.
 
 \section{Dataset}
-We will be using the air quality data\cite{air-quality-inference-meets-big-data} collected from air quality monitoring stations in Beijing. There are 36 independent sensors which can be considered as our IoT devices. All of these devices will need to transmit the knowledge to the concentrator. We chose 3 fields from the dataset and verified there was a correlation among them. Let $x_0$ be \texttt{PM25\_AQI}, and $x_1$ be \texttt{PM10\_AQI}. These values represent the concentration levels of fine particulate matter (air pollutant) with aerodynamic diameter of less than 2.5, 1.0 respectively. We will consider $y$ as the \texttt{NO2\_AQI} which represents the concentration levels of Nitrogen Dioxide. These gases are emitted by all combustion processes and have a negative impact on human life, example Nitrogen dioxide is linked with the summer smog.\cite{Richter2005}
+We will be using the air quality data\cite{air-quality-inference-meets-big-data} collected from air quality monitoring stations in Beijing. There are 36 independent sensors which can be considered as our IoT devices. All of these devices will need to transmit the knowledge to the concentrator. We chose 3 fields from the dataset and verified there was a correlation among them. Let $x_1$ be \texttt{PM25\_AQI}, and $x_2$ be \texttt{PM10\_AQI}. These values represent the concentration levels of fine particulate matter (air pollutant) with aerodynamic diameter of less than 2.5, 1.0 respectively. We will consider $y$ as the \texttt{NO2\_AQI} which represents the concentration levels of Nitrogen Dioxide. These gases are emitted by all combustion processes and have a negative impact on human life, example Nitrogen dioxide is linked with the summer smog.\cite{Richter2005}
 
 We normalize the data using the standard score as explained in the Preliminaries chapter. The normalized $x_0,x_1,y$ will be used during the implementation and evaluation phases.
 
 \section{Network Architecture}
-We first started by creating a list of requirements of the system and then designed the system's components around it. We needed to simulate multiple sensors reading information at unpredictable times. This information must be made accessible through a concentrator for querying.
+We first started by creating a list of requirements of the system and then designed the system's components around it. We needed to simulate multiple sensors reading information at unpredictable times. This information had to be made accessible through a concentrator for querying. Additionally we needed to gather statistics so as to be able to analyze the performance and compare different simulations. We decided to us Java to implement the simulator as it felt very intuitive to read the data into multiple threads, add our contributions and analyze them.
+
+A \texttt{SensorManager} class was created that handles the reading of new information from the dataset for each sensor. A \texttt{Sensor} thread is then initiated for each sensor. Each sensor reads data from the \texttt{SensorManager} and acts on it as described in algorithm \ref{alg:talg}. Algorithm \ref{alg:talg} is the implementation of all the contributions described in the previous chapter. 
+
+\begin{algorithm}[H]
+$w'=(w'_0,w'_1,w'_2)$ (local weights)\;
+$w=(w_0,w_1,w_2)$ (concentrator weights)\;
+$f' = w'$ (local model)\;
+$f = w$ (concentrator model)\;
+$centroids$ = create centroids list\;
+ \While{data is available}{
+  $x_1,x_2,y = p(t)$ (read from sensor)\;
+  update $w'$ of $f'$ model using $x_1,x_2,y$\;
+  $c$ = closest centroid to $x_1,x_2$ from $centroids$\;
+  \If{learning phase finished}{
+   $Y' = f'(x)$\;
+   $Y = f(x)$\;
+   $e' = (Y'- y)^2$ (local error)\;
+   $e = (Y - y)^2$ (concentrator error)\;
+   associate $e'$ to $centroids[c]$\;
+  \If{$e > e'$}{
+  	$discrepancy = e - e'$\;
+  	\If{$discrepancy > THETA$}{
+  		Transmit $w'$,$centroids$ (and error associated with each centroid)\; 
+  		$f$ = $f'$\;
+  	}
+  }
+ }
+ }
+ \caption{Transmission algorithm}
+ \label{alg:talg}
+\end{algorithm}
+
+Each sensor stores the local model $f'(x)$ and a copy of the concentrator model $f(x)$. When a new data item is read, $f'(x)$ is updated and the closest cluster determined. After the local and concentrator errors are calculated, an error is associated with the closest cluster so as to have the notion of a reliability factor as explained in the contributions chapter. Lastly the algorithm checks the discrepancy between local and concentrator errors, and if it is larger than $THETA$ is transmits the local knowledge to the concentrator.
 
 \section{Query Analytics}
+The \texttt{Concentrator} class is tasked with continuously receiving local models in no particular order and storing them. Furthermore, the concentrator needs to make its knowledge available for querying. Thus, we expose several methods which allow querying using different algorithms. This allows us to take measurements and then evaluate them to see which gives the minimum error.
+
+\begin{algorithm}[H]
+ query\ = $x_1,x_2$\; 
+ $f$ = List of sensor models\;
+ $y'=0$\;
+ \ForEach{f[i]}{
+ 	$y' += f[i](x_1,x_2)$\;
+ }
+ calculate mean $y'$
+ \caption{Averaging models}
+ \label{alg:avgModels}
+\end{algorithm}
+
+\begin{algorithm}[H]
+ query\ = $x_1,x_2$\;
+ $f$ = List of sensor models\;
+ $centroids$ = list of centroids\;
+ $distances$ = list of distances\;
+ \ForEach{$centroids[i]$}{
+ 	$distances[i] = distance(query,centroids[i])$\;
+ }
+ sort $distances$ ascending\;
+ $y'=0$\;
+ \For{int i=0; i $<$ K; i++}{
+ 	$y' += f[distances[i].nodeId](x_1,x_2)$\;
+ }
+ calculate mean $y'$\;
+ \caption{Closest K nodes}
+ \label{alg:closestModels}
+\end{algorithm}
+
+\begin{algorithm}[H]
+ query\ = $x_1,x_2$\;
+ $f$ = List of sensor models\;
+ $centroids$ = list of centroids\;
+ $errors$ = list of errors\;
+ $used$ = list of times used\;
+ $weights$ = list of weights\;
+ \ForEach{$centroids[i]$}{
+ 	$d = distance(query,centroids[i])$\;
+ 	$e = errors[i]$\;
+ 	$u = used[i]$\;
+ 	$weights[i] = \frac{e^{-d} + e^{-e} + u}{3}$\;
+ }
+ sort $weights$ descending\;
+ $normalizedWeights$ = normalize first K $weights$\;
+ $y'=0$\;
+ \For{int i=0; i $<$ K; i++}{
+ 	$y' += f[weights[i].nodeId](x_1,x_2) * normalizedWeights[i]$\;
+ }
+ calculate mean $y'$\;
+ \caption{Most reliable K nodes}
+ \label{alg:reliableModels}
+\end{algorithm}
 
 \chapter{Evaluation and Case Study}
 
