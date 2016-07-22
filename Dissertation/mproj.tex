@@ -265,17 +265,21 @@ weight=\frac{e^{-distance} + e^{-error} + used}{3}
 \begin{figure}[H]
 \caption{$e^{-x}$ Function}
 \label{fig:e-x}
-\centerline{\includegraphics[scale=0.4]{e-x}}
+\centerline{\includegraphics[scale=0.6]{e-x}}
 \end{figure}
 
 Equation \ref{eq:ourEquation} defines how we assign a weight to each centroid in relation to a given query. Once we sort the centroids in descending order according to their weight, we would get an amalgamation of the 3 properties; closest, lowest error and most popular. Note, that the values of \textit{used} are normalized between 0 and 1 so as to makes use of the exponent function shown in figure \ref{fig:e-x}. As distance and error approach 1 (highest possible due to normalization), the exponent function inverts them and gives them a low value. On the other hand as \textit{used} approaches 1 we would like to give it a higher weight, thus we leave it as is.
 
 \chapter{Design and Implementation}
-In the previous chapter we laid the theoretical groundwork and intuitions of our system, and now we proceed to examine how they were implemented into fully working algorithms. We begin by explaining the dataset that we shall be using and how it is structured as it will affect the design of the system. Afterwards, we explain how our system capable of simulating an IoT environment was designed and implemented. This includes the network aspect and statistics gathering. We then explain in detail our contributions regarding network efficiency and ensemble learning mentioned in the previous chapter.
+In the previous chapter we laid the theoretical groundwork and intuitions of our system, and now we proceed to examine how they were implemented into fully working algorithms. We begin by explaining the dataset that we shall be using and how it is structured as it will affect the design of the system. Afterwards, we explain how we implemented a system capable of simulating an IoT environment. This includes the network aspect and statistics gathering. We then explain in detail our contributions regarding network efficiency and ensemble learning mentioned in the previous chapter.
 
 \section{Dataset}
+We will be using the air quality data\cite{air-quality-inference-meets-big-data} collected from air quality monitoring stations in Beijing. There are 36 independent sensors which can be considered as our IoT devices. All of these devices will need to transmit the knowledge to the concentrator. We chose 3 fields from the dataset and verified there was a correlation among them. Let $x_0$ be \texttt{PM25\_AQI}, and $x_1$ be \texttt{PM10\_AQI}. These values represent the concentration levels of fine particulate matter (air pollutant) with aerodynamic diameter of less than 2.5, 1.0 respectively. We will consider $y$ as the \texttt{NO2\_AQI} which represents the concentration levels of Nitrogen Dioxide. These gases are emitted by all combustion processes and have a negative impact on human life, example Nitrogen dioxide is linked with the summer smog.\cite{Richter2005}
+
+We normalize the data using the standard score as explained in the Preliminaries chapter. The normalized $x_0,x_1,y$ will be used during the implementation and evaluation phases.
 
 \section{Network Architecture}
+We first started by creating a list of requirements of the system and then designed the system's components around it. We needed to simulate multiple sensors reading information at unpredictable times. This information must be made accessible through a concentrator for querying.
 
 \section{Query Analytics}
 
@@ -300,10 +304,6 @@ In the previous chapter we laid the theoretical groundwork and intuitions of our
 \appendix % first appendix
 
 \chapter{First appendix}
-
-\section{Section of first appendix}
-
-\chapter{Second appendix}
 
 \bibliographystyle{plain}
 \bibliography{mproj}
