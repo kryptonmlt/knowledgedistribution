@@ -97,8 +97,8 @@ public class ConcentratorImpl implements Concentrator {
                         Double e = null;
                         Double used = null;
                         if (useError) {
-                            e = peers.get(peerId).getClusters()[j].getErrorsNormalized(null).get(i);
-                            used = peers.get(peerId).getClusters()[j].getUsedNormalized(null).get(i);
+                            e = peers.get(peerId).getClusters()[j].getErrorsNormalized(totalError).get(i);
+                            used = peers.get(peerId).getClusters()[j].getUsedNormalized(totalUsed).get(i);
                         }
                         nd.add(new NodeDistanceError(peerId, d, e, used));
                     }

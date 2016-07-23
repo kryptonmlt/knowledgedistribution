@@ -49,6 +49,14 @@ R.~Charles Fawcett University of~Virginia Edward S. Neukrug Old
   Counselors, Social Workers, and Psychologists, 3rd Edition}.
 \newblock Brooks Cole, 3 edition, 2015.
 
+\bibitem{mica2}
+Tian He, Sudha Krishnamurthy, John~A. Stankovic, Tarek Abdelzaher, Liqian Luo,
+  Radu Stoleru, Ting Yan, Lin Gu, Jonathan Hui, and Bruce Krogh.
+\newblock Energy-efficient surveillance system using wireless sensor networks.
+\newblock In {\em Proceedings of the 2Nd International Conference on Mobile
+  Systems, Applications, and Services}, MobiSys '04, pages 270--283, New York,
+  NY, USA, 2004. ACM.
+
 \bibitem{Karp}
 Richard~M. Karp.
 \newblock On-line algorithms versus off-line algorithms: How much is it worth

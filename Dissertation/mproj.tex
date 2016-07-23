@@ -3,6 +3,7 @@
 
 \usepackage{url}
 \usepackage[]{algorithm2e}
+\usepackage{subcaption}
 \usepackage{fancyvrb}
 \usepackage[final]{pdfpages}
 \usepackage{times}
@@ -166,8 +167,10 @@ The previous algorithm is called batch gradient descent as for each update step 
 \end{equation}
 
 \subsection{Mean and Variance}
+\label{sec:meanvariance}
 
-\section{Probability Distribution Function}
+\section{Probability Density Function (PDF)}
+\label{sec:pdf}
 
 \section{Normalization}
 We use the standard score \cite{normalization} to normalize the dataset. This is done by subtracting each item $x$ by the mean and then dividing it by the standard deviation of the dataset as shown in equation \ref{eq:standardScore}. Performing this normalization allows us to better understand the results as it gives a meaning to a raw value. Figure \ref{fig:zscore} demonstrates the distribution of $z$, a negative value means that x was less than the mean. Furthermore, the magnitude of this value represents the distance from the mean in terms of standard deviation.
@@ -242,6 +245,7 @@ With this concept in mind, we extend the previous model and add data representat
 The concentrator now has the necessary information to determine what the input space of each function is. When query $x$ is submitted, the concentrator can select the functions which have data representatives in the vicinity. The assumption is that these functions were generated from values similar to the query, thus, have more reliable knowledge.
 
 \section{Adding the "Reliability" variable}
+\label{sec:reliabilityVariable}
 Right now the concentrator is able to select which functions to use based on the distance between query $x$ and centroids. We believe the distance alone might not be sufficient enough to describe the input space of each function. Our intuition is that some sensors produce more accurate results than others. To study this, we performed an analysis on the Beijing Air Quality dataset \cite{air-quality-inference-meets-big-data} and trained a regression model for each sensor. We then isolated 2 sensors at a time and predicted the y using 3 different methods; 
 
 \begin{itemize}  
@@ -316,7 +320,7 @@ $centroids$ = create centroids list\;
 Each sensor stores the local model $f'(x)$ and a copy of the concentrator model $f(x)$. When a new data item is read, $f'(x)$ is updated and the closest cluster determined. After the local and concentrator errors are calculated, an error is associated with the closest cluster so as to have the notion of a reliability factor as explained in the contributions chapter. Lastly the algorithm checks the discrepancy between local and concentrator errors, and if it is larger than $THETA$ is transmits the local knowledge to the concentrator.
 
 \section{Query Analytics}
-The \texttt{Concentrator} class is tasked with continuously receiving local models in no particular order and storing them. Furthermore, the concentrator needs to make its knowledge available for querying. Thus, we expose several methods which allow querying using different algorithms. This allows us to take measurements and then evaluate them to see which gives the minimum error.
+The \texttt{Concentrator} class is tasked with continuously receiving local models in no particular order and storing them. Furthermore, the concentrator needs to make its knowledge available for querying. Thus, we expose several methods which allow querying using different algorithms. This allows us to take measurements and then evaluate them to determine which gives the minimum error. Algorithm \ref{alg:avgModels} is the naive approach which predicts $y'$ using all the models and then calculates the mean.
 
 \begin{algorithm}[H]
  query\ = $x_1,x_2$\; 
@@ -329,6 +333,8 @@ The \texttt{Concentrator} class is tasked with continuously receiving local mode
  \caption{Averaging models}
  \label{alg:avgModels}
 \end{algorithm}
+
+Algorithm \ref{alg:closestModels} uses the centroids to calculate the distance between the query and each centroid. Then the nodes are sorted by distance in ascending order and the first $K$ models are used to predict $y'$. The concept is that the we only use the functions which "are built from that quantized space". This should skip the outliers and return a more accurate result when compared to the naive approach (algorithm \ref{alg:avgModels}).
 
 \begin{algorithm}[H]
  query\ = $x_1,x_2$\;
@@ -347,6 +353,8 @@ The \texttt{Concentrator} class is tasked with continuously receiving local mode
  \caption{Closest K nodes}
  \label{alg:closestModels}
 \end{algorithm}
+
+Algorithm \ref{alg:reliableModels} is an extension of algorithm \ref{alg:closestModels}. Rather than considering only the distance from the query we try to materialize a "reliability" factor. With each centroid we store an error value and the number of times the centroid was used. This information is then used to calculate the weight. The equation is explained in detail in the contributions chapter; section \ref{sec:reliabilityVariable}. A low \texttt{error}, low \texttt{distance}, and a large \texttt{used} value would  result in large weight. Thus, we sort the weight in descending order and choose the first $K$ models. We also normalize the first $K$ weights so as to adjust the predict value accordingly. The first $K$ models should be the most reliable and give us a more accurate result when compared to algorithm \ref{alg:closestModels}.
 
 \begin{algorithm}[H]
  query\ = $x_1,x_2$\;
@@ -372,17 +380,99 @@ The \texttt{Concentrator} class is tasked with continuously receiving local mode
  \label{alg:reliableModels}
 \end{algorithm}
 
+\section{Statistics Gathering}
+Lastly, we needed a way to gather performance statistics for each run configuration. Each class mentioned previously keeps track of various statistics such as messages sent, errors, etc.. The \texttt{QueryPerformer} class was created with the simple task of gathering all the performance statistics in one place and saving it into a readable text file for visualization purposes. This class is initialized once all sensors have read the last piece of data and finished running their logic.
+
 \chapter{Evaluation and Case Study}
+In the introduction of this report we pointed out the project objectives which were;
+\begin{itemize}  
+\item The implementation of a system capable of simulating an IoT environment and maximise network efficiency.
+\item Intelligent sensors capable of extracting context and decide whether it is worth to transmit this knowledge or delay.
+\item Evaluate the query accuracy of our system by comparing it to a naive system which sends data continuously without regarding battery consumption.  
+\end{itemize} 
+Up to now we presented our algorithms and described the implementation of our system. In this chapter, we evaluate the performance of our system using the Beijing Air Quality data\cite{air-quality-inference-meets-big-data} and comment on the results. This includes the evaluation of both the network efficiency and the query accuracy contribution.
 
-\section{Data Set}
+\section{THETA study}
+Before measuring the network efficiency we study the effects of altering $THETA$. This is the variable which determines the allowed discrepancy between local and concentrator models. As we increase $THETA$ the number of messages sent drastically decreases but the error between local and concentrator models should increase. This can in fact be seen in the Figures \ref{fig:ThetaMessages} and \ref{fig:ThetaDE}.
 
-\section{Error Allowance vs Messages Sent}
+\begin{figure}[H]
+\caption{$THETA$ vs Messages Sent \%}
+\label{fig:ThetaMessages}
+\centerline{\includegraphics[scale=0.3]{ThetaMessages}}
+\end{figure}
 
-\section{Probability Distribution Functions}
+\begin{figure}[H]
+\caption{$THETA$ vs Difference in Error}
+\label{fig:ThetaDE}
+\centerline{\includegraphics[scale=0.3]{ThetaDE}}
+\end{figure}
+
+In figure \ref{fig:MessagesDe} we eliminate $THETA$ and directly study the relationship between \texttt{Messages Sent} and \texttt{Difference in Error}. One notices that there is barely any difference in error when sending 60\% messages instead of sending all messages (100\%). This means that around 40\% of the messages have no useful information to the concentrator. The concentrator is able to predict $y$ with the same error rate as the local model. We are capable of achieving the usefulness of messages due to the introduction of a learning model. In this chapter; section \ref{sec:networkefficiency} we use a real case study in which we exploit our algorithm to evaluate the effect of transmitting less messages on the devices' battery life.
+
+\begin{figure}[H]
+\caption{Messages Sent \% vs Difference in Error}
+\label{fig:MessagesDe}
+\centerline{\includegraphics[scale=0.3]{MessagesDe}}
+\end{figure}
+
+Furthermore, we stored the number of times the local model was better than the central model for each $THETA$. This is shown in figure \ref{fig:thetaP}. $P$ is the probability that the local model is better than the central model. It is interesting to note that as $THETA$ increases the probability that the local model is better decreases. We believe that this is because as $THETA$ increases the central model is updated less frequently, thus, encapsulating a certain level of generality. This is interesting as it might open up future work regarding whether it would be worthwhile to predict results from a history of models.
+
+\begin{figure}[H]
+\caption{$THETA$ vs $P$}
+\label{fig:thetaP}
+\centerline{\includegraphics[scale=0.3]{thetaP}}
+\end{figure}
+
+\subsection{Probability Density Functions}
+Additionally, we measured the mean and variance of the error using an on-line algorithm described in the Preliminaries chapter; section \ref{sec:meanvariance}. The mean and variance allow us to the plot the probability density function which is also described in the Preliminaries chapter. This visually shows the likelihood of a certain random variable taking a given value. In our case the value with the highest likelihood is 0 since we used the standard score normalization.
+
+\begin{figure}[H]
+  \caption{Local Model PDF (Error $e'$)}
+  \label{fig:thetaedash}
+\centerline{\includegraphics[scale=0.3]{ThetaEDASH}}
+\end{figure}
+
+\begin{figure}[H]
+\caption{Concentrator Model PDF (Error $e$)}
+\label{fig:thetae}
+\centerline{\includegraphics[scale=0.3]{ThetaE}}
+\end{figure}
+
+Figures \ref{fig:thetaedash} and \ref{fig:thetae} show the local and central probability density functions respectively as we increase $THETA$. One notices that the variance increases as we increase $THETA$ meaning that the error is distributed among a larger set of values. Figure \ref{fig:thetay} shows the PDF of the difference between Concentrator and Local model.
+
+\begin{figure}[H]
+\caption{$Concentrator - Local$ Model PDF}
+\label{fig:thetay}
+\centerline{\includegraphics[scale=0.3]{ThetaY}}
+\end{figure}
+
+\section{Network Efficiency}
+\label{sec:networkefficiency}
+In this section we examine whether our system achieves efficient knowledge forwarding at the expense of data accuracy. We compare our system against a simple model which forwards all the data. To evaluate the efficiency we adopt the mica2 \cite{mica2} model. Mica2 operates with a pair of AA batteries that approximately supply 2200 mAh with effective average voltage 3V. The energy costs for a single CPU instruction and transmitting/receiving costs are defined in table \ref{table:energy}
+
+ \begin{table}[!ht]
+ \centering
+ \begin{tabular}{||c | c||}
+ \hline
+ Node Operation Mode & Energy Cost \\
+ \hline\hline
+ Instruction Execution & 4 nJ/Instruction \\ 
+ \hline
+ Idle - Stand by & 9.6 mJ/s - 0.33 mJ/s\\
+ \hline
+ Transmitting - Receiving & 720 nJ/bit - 110 nJ/bit\\
+ \hline
+\end{tabular}
+\caption{Mica2 Energy Costs}
+ \label{table:energy} 
+\end{table}
+
+
 
 \section{Query Validation}
 
-\chapter{Conclusion}\label{conclusion}
+\chapter{Conclusion}
+\label{conclusion}
 
 \section{Achievements}
 

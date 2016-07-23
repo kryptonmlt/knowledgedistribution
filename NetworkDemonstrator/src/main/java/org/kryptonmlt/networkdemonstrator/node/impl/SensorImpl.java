@@ -181,14 +181,10 @@ public class SensorImpl implements Sensor, Runnable {
                         centralPredicted[dataCounter - maxLearnPoints - 1] = tempCentralNodePredict;
                     }
 
-                    //calculate mean/variance
-                    E_DASH_MeanVariance.update(e_dash);
-                    E_MeanVariance.update(e);
                     double y = 0;
                     if (e > e_dash) { //Local model better than central model (probability approx 90%)
                         y = e - e_dash;
                     }
-                    Y_MeanVariance.update(y);
                     calculateP(e_dash, e);
 
                     boolean send = false;
@@ -227,11 +223,16 @@ public class SensorImpl implements Sensor, Runnable {
                         currentAccumulatedError = 0;
                         total_central_node_error += e_dash;
                         sendKnowledge();
+                        E_MeanVariance.update(e_dash);
+                        Y_MeanVariance.update(e_dash);
                     } else {
                         total_central_node_error += e;
                         timesErrorAcceptable++;
+                        E_MeanVariance.update(e);
+                        Y_MeanVariance.update(y);
                     }
                     total_local_error += e_dash;
+                    E_DASH_MeanVariance.update(e_dash);
 
                     if (delayMillis != 0) {
                         try {
