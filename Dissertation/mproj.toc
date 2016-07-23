@@ -28,9 +28,9 @@
 \contentsline {section}{\numberline {6.1}THETA study}{23}
 \contentsline {subsection}{\numberline {6.1.1}Probability Density Functions}{25}
 \contentsline {section}{\numberline {6.2}Network Efficiency}{27}
-\contentsline {section}{\numberline {6.3}Query Validation}{27}
-\contentsline {chapter}{\numberline {7}Conclusion}{28}
-\contentsline {section}{\numberline {7.1}Achievements}{28}
-\contentsline {section}{\numberline {7.2}Future Work}{28}
-\contentsline {section}{\numberline {7.3}Final Remarks}{28}
-\contentsline {chapter}{\numberline {A}First appendix}{29}
+\contentsline {section}{\numberline {6.3}Query Accuracy Evaluation}{27}
+\contentsline {chapter}{\numberline {7}Conclusion}{29}
+\contentsline {section}{\numberline {7.1}Achievements}{29}
+\contentsline {section}{\numberline {7.2}Future Work}{29}
+\contentsline {section}{\numberline {7.3}Final Remarks}{29}
+\contentsline {chapter}{\numberline {A}First appendix}{30}

@@ -234,6 +234,7 @@ Using Equation \ref{eq:differenceError} we are able to get the discrepancy in er
 \end{figure}
 
 \section{Ensemble Learning}
+\label{sec:ensembleLearning}
 The previous section explains our algorithm which increases network efficiency by transmitting less messages to the concentrator. This is done by altering $THETA$ which determines the acceptable error. An increase in network efficiency means that sensors working on battery power can last longer without the need of recharging. As previously mentioned the purpose of an IOT system is that it can be queried from the "root" (concentrator). In this section we aim to extend the model defined in the previous section to reduce the error at the concentrator level.
 
 Naively the concentrator would have all the $(x,y)$ data pairs and when queried with an arbitrary $x$, it can directly search in its storage for the best match and return $y$ accordingly. In our model the concentrator collects a function $f[i](x)$ for each sensor $i$ which simulates the data collected. The ideal scenario is that when the concentrator receives query $x$, it would also know which function $f$ it should use to predict $y$. Unfortunately, in a real-life scenario this is not possible as we would not know which sensor $x$ is related to.
@@ -320,6 +321,7 @@ $centroids$ = create centroids list\;
 Each sensor stores the local model $f'(x)$ and a copy of the concentrator model $f(x)$. When a new data item is read, $f'(x)$ is updated and the closest cluster determined. After the local and concentrator errors are calculated, an error is associated with the closest cluster so as to have the notion of a reliability factor as explained in the contributions chapter. Lastly the algorithm checks the discrepancy between local and concentrator errors, and if it is larger than $THETA$ is transmits the local knowledge to the concentrator.
 
 \section{Query Analytics}
+\label{sec:queryAnalytics}
 The \texttt{Concentrator} class is tasked with continuously receiving local models in no particular order and storing them. Furthermore, the concentrator needs to make its knowledge available for querying. Thus, we expose several methods which allow querying using different algorithms. This allows us to take measurements and then evaluate them to determine which gives the minimum error. Algorithm \ref{alg:avgModels} is the naive approach which predicts $y'$ using all the models and then calculates the mean.
 
 \begin{algorithm}[H]
@@ -438,7 +440,7 @@ Additionally, we measured the mean and variance of the error using an on-line al
 \centerline{\includegraphics[scale=0.3]{ThetaE}}
 \end{figure}
 
-Figures \ref{fig:thetaedash} and \ref{fig:thetae} show the local and central probability density functions respectively as we increase $THETA$. One notices that the variance increases as we increase $THETA$ meaning that the error is distributed among a larger set of values. Figure \ref{fig:thetay} shows the PDF of the difference between Concentrator and Local model.
+Figures \ref{fig:thetaedash} and \ref{fig:thetae} show the local and concentrator probability density functions respectively as we increase $THETA$. One notices that the mean of the concentrator shifts to the right (increases from 0) as we increase $THETA$ meaning that the error increases. Figure \ref{fig:thetay} shows the PDF of the difference between Concentrator and Local model.
 
 \begin{figure}[H]
 \caption{$Concentrator - Local$ Model PDF}
@@ -469,7 +471,20 @@ In this section we examine whether our system achieves efficient knowledge forwa
 
 
 
-\section{Query Validation}
+\section{Query Accuracy Evaluation}
+
+In the previous section we demonstrated how our system gains network efficiency at the expense of data accuracy. This data accuracy value does not depict the full story. This is due to the fact that IoT systems are queried at a concentrator level rather than at device level. When data from several models (nodes) is aggregated together the error might be reduced as all these models contain distributed knowledge about the environment. Thus, from all the data set we randomly select queries and use them to query the concentrator after it finishes learning. This test simulates the typical usage of an IoT system. It will let us study the effect of transmitting less messages on the query accuracy. Furthermore, in the implementation chapter we included 2 variables which will directly affect the query accuracy. These are; the number of clusters (centroids) per device, and the number of models chosen at the concentrator for prediction (Defined as $K$ in section \ref{sec:queryAnalytics}).
+
+As a result of this, we will be running tests changing these 2 variable and $Theta$. For each test the same 5 algorithms (described in the implementation chapter) are used to predict the result of the query. Algorithms:
+
+\begin{itemize}
+\item Base Line - (most expensive algorithm) All data is transmitted to the concentrator and a single model is built.
+\item Ideal - Queries are selected from a particular sensor. We then use only the model for that sensor.
+\item Average - All the models stored in the concentrator are used to calculate the mean.
+\item Distance - The closest $K$ models are used to calculate the result. (section \ref{sec:ensembleLearning})
+\item Reliability factor - The first $K$ models with the highest weight are used to calculate the result. (section \ref{sec:reliabilityVariable})
+\end{itemize}
+
 
 \chapter{Conclusion}
 \label{conclusion}
