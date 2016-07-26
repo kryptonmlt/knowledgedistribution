@@ -14,6 +14,7 @@ import java.util.Map;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jzy3d.colors.Color;
 import org.jzy3d.maths.Coord3d;
 import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.OnlineStochasticGradientDescent;
 import org.kryptonmlt.networkdemonstrator.ml_algorithms.OnlineVarianceMean;
@@ -28,7 +29,7 @@ public class DisplayExcelFile3D {
         int[] colNums = {1, 2, 3};
         String[] names = {"PM25_AQI", "PM10_AQI", "NO2"};
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
-        int sheets = 1;
+        int sheets = 36;
         int startSheet = 0;
 
         FileInputStream file = new FileInputStream(new File("NormalizedData.xlsx"));
@@ -46,6 +47,7 @@ public class DisplayExcelFile3D {
             sgds.put(i, new OnlineStochasticGradientDescent(0.07));
             ovms.put(i, new OnlineVarianceMean());
         }
+        OnlineStochasticGradientDescent general = new OnlineStochasticGradientDescent(0.07);
         System.out.println("Opening file ..");
         XSSFWorkbook workbook = new XSSFWorkbook(file);
         for (int i = startSheet; i < sheets; i++) {
@@ -70,10 +72,11 @@ public class DisplayExcelFile3D {
                 points.get(i).add(point);
                 plot.addPoint(point, ColorUtils.getInstance().getLightColor(i));
                 sgds.get(i).learn(point.x, point.y, point.z);
+                general.learn(point.x, point.y, point.z);
                 if (counter > 1000) {
                     double error = sgds.get(i).predict(point.x, point.y) - point.z;
                     ovms.get(i).update(error * error);
-                    System.out.println("Mean: " + ovms.get(i).getMean() + ", Variance: " + ovms.get(i).getVariance());
+                    //System.out.println("Mean: " + ovms.get(i).getMean() + ", Variance: " + ovms.get(i).getVariance());
                 }
                 counter++;
             }
@@ -88,6 +91,7 @@ public class DisplayExcelFile3D {
             System.out.println("Weights: " + Arrays.toString(sgds.get(i).getWeights()));
             System.out.println("Mean: " + ovms.get(i).getMean() + ", Variance: " + ovms.get(i).getVariance());
         }
+        //VisualizationUtils.drawLine(LearningUtils.computeLine(points.get(0), general), plot, 0, Color.BLACK);
         System.out.println("Finished ..");
     }
 }

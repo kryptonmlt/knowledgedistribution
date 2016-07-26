@@ -13,6 +13,7 @@
 \usepackage [english]{babel}
 \usepackage [autostyle, english = american]{csquotes}
 \MakeOuterQuote{"}
+\SetKwProg{Fn}{Function}{}{}
 
 % for alternative page numbering use the following package
 % and see documentation for commands
@@ -168,9 +169,38 @@ The previous algorithm is called batch gradient descent as for each update step 
 
 \subsection{Mean and Variance}
 \label{sec:meanvariance}
+Generally the naive way of calculating the mean and variance require knowledge of the whole data set. This is not possible in systems where data cannot be stored or there are other resource limitations. Welford \cite{meanvariance} developed algorithm \ref{alg:welfordAlg} which calculates this in a single pass by inspecting one value at a time only once. This algorithm is implemented used in various integral parts of our system.
+
+\begin{algorithm}[H]
+\Fn{online\_variance(data)}{
+    $n = 0$\;
+    $mean = 0.0$\;
+    $M2 = 0.0$\;
+     
+    \ForAll{$x$ in data}{
+        $n += 1$\;
+        $delta = x - mean$\;
+        $mean += delta/n$\;
+        $M2 += delta*(x - mean)$\;
+    	\eIf{$n < 2$}{
+        	return float('nan')\;
+    	}{
+        	return $M2 / (n - 1)$\;
+    	}
+    }
+    }
+\caption{Online Mean and Variance \cite{meanvariance}}
+\label{alg:welfordAlg}
+\end{algorithm}
 
 \section{Probability Density Function (PDF)}
 \label{sec:pdf}
+The PDF \cite{kolmogorov1960foundations} of a continuous random variable is a function that describes the likelihood for the variable to be assigned a certain value. The reason it is called a continuous random variable is because it takes on an uncountably infinite number of possible outcomes. The PDF of the normal distribution shown in equation \ref{eq:pdfEquation} is built using the mean and variance denoted by $\mu$ and $\sigma$ respectively.
+
+\begin{equation}
+\label{eq:pdfEquation}
+f(x;\mu,\sigma^2) = \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}(\frac{x-\mu}{\sigma})^2}
+\end{equation}
 
 \section{Normalization}
 We use the standard score \cite{normalization} to normalize the dataset. This is done by subtracting each item $x$ by the mean and then dividing it by the standard deviation of the dataset as shown in equation \ref{eq:standardScore}. Performing this normalization allows us to better understand the results as it gives a meaning to a raw value. Figure \ref{fig:zscore} demonstrates the distribution of $z$, a negative value means that x was less than the mean. Furthermore, the magnitude of this value represents the distance from the mean in terms of standard deviation.
@@ -194,6 +224,31 @@ KNN \cite{knn} is a straightforward classification technique, in which given an 
 \end{figure}
 
 \chapter{Literature Review}
+\section{Introduction}
+In this chapter we describe the studies and research works that have been carried out in the field of energy efficient sensor networks. Additionally we shall delve into other areas such as ensemble learning and edge computing. We then evaluate the other works whilst comparing them with our approach.
+
+\section{Wireless Networks}
+\cite{teen}
+\cite{adaptiveProtocols}
+\cite{timeOptimizedContextual}
+\cite{CooperativeDiversity}
+\cite{distributedEnergyDistribution}
+\cite{surveyMilitary}
+\cite{SmartSensorWeb}
+\cite{energyAwareRouting}
+\cite{directedDiffusion}
+\cite{energyEfficientDataManagement}
+\cite{informationCollection}
+\cite{optimalSelective}
+
+\section{Edge Computing}
+\cite{authenticatingQueries}
+\cite{fogComputing}
+\cite{replicatingInternetApplications}
+
+\section{Predictive Analysis}
+\cite{EdgePowerConsumptionManufacturing}
+\cite{efficientPredictiveAnalytics}
 
 \chapter{Contributions}
 In this chapter we discuss our major contributions with the aim of improving WSNs. More specifically how we can increase network efficiency, which extends the devices' life time. We shall delineate a strategy for creating knowledge from the raw context, by locally learning the context in real-time using on-line stochastic gradient descent. Based on this knowledge, we then decide whether it is worth it to transmit data or not.
@@ -282,7 +337,13 @@ In the previous chapter we laid the theoretical groundwork and intuitions of our
 \section{Dataset}
 We will be using the air quality data\cite{air-quality-inference-meets-big-data} collected from air quality monitoring stations in Beijing. There are 36 independent sensors which can be considered as our IoT devices. All of these devices will need to transmit the knowledge to the concentrator. We chose 3 fields from the dataset and verified there was a correlation among them. Let $x_1$ be \texttt{PM25\_AQI}, and $x_2$ be \texttt{PM10\_AQI}. These values represent the concentration levels of fine particulate matter (air pollutant) with aerodynamic diameter of less than 2.5, 1.0 respectively. We will consider $y$ as the \texttt{NO2\_AQI} which represents the concentration levels of Nitrogen Dioxide. These gases are emitted by all combustion processes and have a negative impact on human life, example Nitrogen dioxide is linked with the summer smog.\cite{Richter2005}
 
-We normalize the data using the standard score as explained in the Preliminaries chapter. The normalized $x_0,x_1,y$ will be used during the implementation and evaluation phases.
+We normalize the data using the standard score as explained in the Preliminaries chapter. The normalized $x_0,x_1,y$ will be used during the implementation and evaluation phases. Figure \ref{fig:dataset} displays the whole normalized dataset with a general linear regression model amalgamating all the sensors together.
+
+\begin{figure}[H]
+\caption{3D graph plot of dataset along with linear model}
+\label{fig:dataset}
+\centerline{\includegraphics[scale=0.6]{dataset}}
+\end{figure}
 
 \section{Network Architecture}
 We first started by creating a list of requirements of the system and then designed the system's components around it. We needed to simulate multiple sensors reading information at unpredictable times. This information had to be made accessible through a concentrator for querying. Additionally we needed to gather statistics so as to be able to analyze the performance and compare different simulations. We decided to us Java to implement the simulator as it felt very intuitive to read the data into multiple threads, add our contributions and analyze them.
@@ -448,6 +509,66 @@ Figures \ref{fig:thetaedash} and \ref{fig:thetae} show the local and concentrato
 \centerline{\includegraphics[scale=0.3]{ThetaY}}
 \end{figure}
 
+\section{Query Accuracy Evaluation}
+
+In the previous section we demonstrated how our system gains network efficiency at the expense of data accuracy. This data accuracy value does not depict the full story. This is due to the fact that IoT systems are queried at a concentrator level rather than at device level. When data from several models (nodes) is aggregated together the error might be reduced as all these models contain distributed knowledge about the environment. Thus, from all the data set we randomly select queries and use them to query the concentrator after it finishes learning. This test simulates the typical usage of an IoT system. It lets us study the effect of transmitting less messages on the query accuracy. Furthermore, in the implementation chapter we included 2 variables which will directly affect the query accuracy. These are; the $K$ number of clusters (centroids) per device, and the number of models chosen at the concentrator for prediction (Defined as $KNN$ in section \ref{sec:queryAnalytics}).
+
+As a result of this, we will be running tests changing these 2 variable and $Theta$. For each test the following algorithms (described in the implementation chapter) are used to predict the result of the query. Algorithms:
+
+\begin{itemize}
+\item Base Line - (most expensive algorithm) All data is transmitted to the concentrator and a single model is built.
+\item Ideal - Since this is a test scenario we know from which sensor the query is taken. Only the model for that sensor is used to predict the result.
+\item Average - All the models stored in the concentrator are used to calculate the mean.
+\item Distance - The closest $K$ models are used to calculate the result. (section \ref{sec:ensembleLearning})
+\item Reliability factor - The first $K$ models with the highest weight are used to calculate the result. (section \ref{sec:reliabilityVariable})
+\end{itemize}
+
+Figures \ref{fig:0.0}, \ref{fig:0.001}, \ref{fig:0.01}, \ref{fig:0.1}, \ref{fig:0.5}, \ref{fig:1.0} demonstrate our results from these tests. They are 3D graphs, with the x-axis being the KNN, z-axis the K (clusters) and y-axis the error. The different colors show the algorithm used for that particular result. 
+
+\begin{figure}[H]
+\caption{$THETA=0.0$ (99.98\% messages)}
+\label{fig:0.0}
+\centerline{\includegraphics[scale=0.7]{{{0.0}}}}
+\end{figure}
+
+\begin{figure}[H]
+\caption{$THETA=0.001$ (84.7\% messages)}
+\label{fig:0.001}
+\centerline{\includegraphics[scale=0.7]{{{0.001}}}}
+\end{figure}
+
+\begin{figure}[H]
+\caption{$THETA=0.01$ (62.3\% messages)}
+\label{fig:0.01}
+\centerline{\includegraphics[scale=0.7]{{{0.01}}}}
+\end{figure}
+
+\begin{figure}[H]
+\caption{$THETA=0.1$ (26.7\% messages)}
+\label{fig:0.1}
+\centerline{\includegraphics[scale=0.7]{{{0.1}}}}
+\end{figure}
+
+\begin{figure}[H]
+\caption{$THETA=0.5$ (8.1\% messages)}
+\label{fig:0.5}
+\centerline{\includegraphics[scale=0.7]{{{0.5}}}}
+\end{figure}
+
+\begin{figure}[H]
+\caption{$THETA=1.0$ (3.7\% messages)}
+\label{fig:1.0}
+\centerline{\includegraphics[scale=0.7]{{{1.0}}}}
+\end{figure}
+
+From these graphs we can draw a number of conclusions. Firstly, the \texttt{ideal} algorithm seems to perform the worst on average. This means that using the correct sensor only leads to a high error. On the other hand when we naively take the \texttt{average} of all sensors we get much less error. This implies that knowledge is distributed amongst all the sensors and an optimal subset of sensors should exist to get the least amount of error. The \texttt{baseline} demonstrates the scenario where we have access to 100\% of the data and in fact produces the lowest error in most cases. Although one notices that as we increase $THETA$ each algorithm approaches the baseline and in some cases we surpass it. This is due to the fact that with a large $THETA$ the model inside the concentrator only captures the essential information and is much more general than the local models.
+
+We introduced the \texttt{distance} and \texttt{reliability factor} algorithms which in contrast to the other algorithms only use a small subset of the models defined by the $KNN$. If $KNN$ is equal to the number of clusters, then the predicted result would be equal to the \texttt{average}. An important thing to note is that $KNN$ seems to be a more important factor to accuracy rather than the number of clusters. $KNN$ is the variable which defines the number of models to choose for averaging at the concentrator level. If $KNN=1$, then only the first model is chosen. So, assuming that the algorithm we have in place always returns the ideal sensor, we will approach the \texttt{ideal} plane instead of the \texttt{baseline} plane.
+
+The predicted result from a very small $KNN$ will be heavily biased and in fact as one can see from the graphs the error is much higher than the average. From these results we found that the ideal sensor does not produce the least error. Thus, we should have a high $KNN$ but at the same time less than the number of clusters so as to be able to choose a subset of the models, and not all models.
+
+A high number of clusters for each device enables the concentrator to know more about the underlying data. One has to keep in mind that for every cluster, each device has to transmit more bits which would decrease the network efficiency. From these graphs we observe that with 5 clusters for each device we are able to approach the \texttt{baseline} using the \texttt{reliability factor} algorithm. Increasing $KNN$ does not impact network efficiency as everything would have been already stored on the concentrator at this stage. We also noticed that the distance algorithm seems to produce a more stable set of errors.
+
 \section{Network Efficiency}
 \label{sec:networkefficiency}
 In this section we examine whether our system achieves efficient knowledge forwarding at the expense of data accuracy. We compare our system against a simple model which forwards all the data. To evaluate the efficiency we adopt the mica2 \cite{mica2} model. Mica2 operates with a pair of AA batteries that approximately supply 2200 mAh with effective average voltage 3V. The energy costs for a single CPU instruction and transmitting/receiving costs are defined in table \ref{table:energy}
@@ -469,21 +590,28 @@ In this section we examine whether our system achieves efficient knowledge forwa
  \label{table:energy} 
 \end{table}
 
-
-
-\section{Query Accuracy Evaluation}
-
-In the previous section we demonstrated how our system gains network efficiency at the expense of data accuracy. This data accuracy value does not depict the full story. This is due to the fact that IoT systems are queried at a concentrator level rather than at device level. When data from several models (nodes) is aggregated together the error might be reduced as all these models contain distributed knowledge about the environment. Thus, from all the data set we randomly select queries and use them to query the concentrator after it finishes learning. This test simulates the typical usage of an IoT system. It will let us study the effect of transmitting less messages on the query accuracy. Furthermore, in the implementation chapter we included 2 variables which will directly affect the query accuracy. These are; the number of clusters (centroids) per device, and the number of models chosen at the concentrator for prediction (Defined as $K$ in section \ref{sec:queryAnalytics}).
-
-As a result of this, we will be running tests changing these 2 variable and $Theta$. For each test the same 5 algorithms (described in the implementation chapter) are used to predict the result of the query. Algorithms:
-
-\begin{itemize}
-\item Base Line - (most expensive algorithm) All data is transmitted to the concentrator and a single model is built.
-\item Ideal - Queries are selected from a particular sensor. We then use only the model for that sensor.
-\item Average - All the models stored in the concentrator are used to calculate the mean.
-\item Distance - The closest $K$ models are used to calculate the result. (section \ref{sec:ensembleLearning})
-\item Reliability factor - The first $K$ models with the highest weight are used to calculate the result. (section \ref{sec:reliabilityVariable})
-\end{itemize}
+ \begin{table}[!ht]
+ \centering
+ \begin{tabular}{||c | c | c||}
+ \hline
+ Algorithm & Messages & Messages \%\\
+ \hline\hline
+ Simple Model & 111101 & 100\%\\ 
+ \hline
+ THETA 0.001 & 94142 & 84.7\%\\
+ \hline
+ THETA 0.01 & 69282 & 62.3\%\\
+ \hline
+ THETA 0.1 & 29704 & 26.7\%\\
+ \hline
+ THETA 0.5 & 8960 & 8.1\%\\
+ \hline
+ THETA 1.0 & 4126 & 3.7\%\\
+ \hline
+\end{tabular}
+\caption{Theta Messages}
+ \label{table:thetaMessages} 
+\end{table}
 
 
 \chapter{Conclusion}

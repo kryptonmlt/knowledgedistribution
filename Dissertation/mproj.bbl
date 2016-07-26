@@ -13,17 +13,37 @@ C.~Anagnostopoulos, T.~Anagnostopoulos, and S.~Hadjiefthymiades.
 \newblock In {\em 2010 5th IEEE International Conference Intelligent Systems},
   pages 396--401, July 2010.
 
+\bibitem{timeOptimizedContextual}
+Christos Anagnostopoulos.
+\newblock Time-optimized contextual information forwarding in mobile sensor
+  networks.
+\newblock {\em Journal of Parallel and Distributed Computing}, 74(5):2317 --
+  2332, 2014.
+
 \bibitem{intelligentContextualInformation}
 Christos Anagnostopoulos.
 \newblock Intelligent contextual information collection in internet of things.
 \newblock {\em International Journal of Wireless Information Networks},
   23(1):28--39, 2016.
 
+\bibitem{optimalSelective}
+R.~Arroyo-Valles, A.~G. Marques, and J.~Cid-Sueiro.
+\newblock Optimal selective transmission under energy constraints in sensor
+  networks.
+\newblock {\em IEEE Transactions on Mobile Computing}, 8(11):1524--1538, Nov
+  2009.
+
 \bibitem{onlinekmeans}
 WESAM BARBAKH and COLIN FYFE.
 \newblock Online clustering algorithms.
 \newblock {\em International Journal of Neural Systems}, 18(03):185--194, 2008.
 \newblock PMID: 18595148.
+
+\bibitem{fogComputing}
+Flavio Bonomi, Rodolfo Milito, Jiang Zhu, and Sateesh Addepalli.
+\newblock Fog computing and its role in the internet of things.
+\newblock In {\em Proceedings of the First Edition of the MCC Workshop on
+  Mobile Cloud Computing}, MCC '12, pages 13--16, New York, NY, USA, 2012. ACM.
 
 \bibitem{LargeScaleOnlineLearning}
 Léon Bottou and Yann LeCun.
@@ -35,6 +55,13 @@ Léon Bottou and Yann LeCun.
 Gail~A. Carpenter and Stephen Grossberg.
 \newblock {\em Adaptive Resonance Theory}, pages 22--35.
 \newblock Springer US, Boston, MA, 2010.
+
+\bibitem{informationCollection}
+C.~T. Chou, R.~Rana, and W.~Hu.
+\newblock Energy efficient information collection in wireless sensor networks
+  using adaptive compressive sensing.
+\newblock In {\em 2009 IEEE 34th Conference on Local Computer Networks}, pages
+  443--450, Oct 2009.
 
 \bibitem{dietterich2002ensemble}
 Thomas~G Dietterich.
@@ -49,6 +76,12 @@ R.~Charles Fawcett University of~Virginia Edward S. Neukrug Old
   Counselors, Social Workers, and Psychologists, 3rd Edition}.
 \newblock Brooks Cole, 3 edition, 2015.
 
+\bibitem{efficientPredictiveAnalytics}
+Alex Guazzelli, Kostantinos Stathatos, and Michael Zeller.
+\newblock Efficient deployment of predictive analytics through open standards
+  and cloud computing.
+\newblock {\em SIGKDD Explor. Newsl.}, 11(1):32--38, November 2009.
+
 \bibitem{mica2}
 Tian He, Sudha Krishnamurthy, John~A. Stankovic, Tarek Abdelzaher, Liqian Luo,
   Radu Stoleru, Ting Yan, Lin Gu, Jonathan Hui, and Bruce Krogh.
@@ -56,6 +89,22 @@ Tian He, Sudha Krishnamurthy, John~A. Stankovic, Tarek Abdelzaher, Liqian Luo,
 \newblock In {\em Proceedings of the 2Nd International Conference on Mobile
   Systems, Applications, and Services}, MobiSys '04, pages 270--283, New York,
   NY, USA, 2004. ACM.
+
+\bibitem{adaptiveProtocols}
+Wendi~Rabiner Heinzelman, Joanna Kulik, and Hari Balakrishnan.
+\newblock Adaptive protocols for information dissemination in wireless sensor
+  networks.
+\newblock In {\em Proceedings of the 5th Annual ACM/IEEE International
+  Conference on Mobile Computing and Networking}, MobiCom '99, pages 174--185,
+  New York, NY, USA, 1999. ACM.
+
+\bibitem{directedDiffusion}
+Chalermek Intanagonwiwat, Ramesh Govindan, and Deborah Estrin.
+\newblock Directed diffusion: A scalable and robust communication paradigm for
+  sensor networks.
+\newblock In {\em Proceedings of the 6th Annual International Conference on
+  Mobile Computing and Networking}, MobiCom '00, pages 56--67, New York, NY,
+  USA, 2000. ACM.
 
 \bibitem{Karp}
 Richard~M. Karp.
@@ -66,11 +115,56 @@ Richard~M. Karp.
   Volume I}, pages 416--429, Amsterdam, The Netherlands, The Netherlands, 1992.
   North-Holland Publishing Co.
 
+\bibitem{kolmogorov1960foundations}
+Andrey~N. Kolmogorov.
+\newblock {\em Foundations of the Theory of Probability}.
+\newblock Chelsea Pub Co, 2 edition, June 1960.
+
+\bibitem{CooperativeDiversity}
+J.~N. Laneman, D.~N.~C. Tse, and G.~W. Wornell.
+\newblock Cooperative diversity in wireless networks: Efficient protocols and
+  outage behavior.
+\newblock {\em IEEE Transactions on Information Theory}, 50(12):3062--3080, Dec
+  2004.
+
+\bibitem{energyEfficientDataManagement}
+Hyunyoung Lee, A.~Klappenecker, Kyoungsook Lee, and Lan Lin.
+\newblock Energy efficient data management for wireless sensor networks with
+  data sink failure.
+\newblock In {\em IEEE International Conference on Mobile Adhoc and Sensor
+  Systems Conference, 2005.}, pages 7 pp.--210, Nov 2005.
+
+\bibitem{EdgePowerConsumptionManufacturing}
+Terje~K. Lien, Seung-Jun Shin, Jungyub Woo, and Sudarsan Rachuri.
+\newblock 21st cirp conference on life cycle engineering predictive analytics
+  model for power consumption in manufacturing.
+\newblock {\em Procedia CIRP}, 15:153 -- 158, 2014.
+
 \bibitem{teen}
 Arati Manjeshwar and Dharma~P. Agrawal.
 \newblock Teen: A routing protocol for enhanced efficiency in wireless sensor
   networks.
 \newblock In {\em in Proc. IPDPS 2001 Workshops}, 2001.
+
+\bibitem{authenticatingQueries}
+HweeHwa Pang and Kian-Lee Tan.
+\newblock Authenticating query results in edge computing.
+\newblock In {\em Proceedings of the 20th International Conference on Data
+  Engineering}, ICDE '04, pages 560--, Washington, DC, USA, 2004. IEEE Computer
+  Society.
+
+\bibitem{SmartSensorWeb}
+J.~L. Paul.
+\newblock Smart sensor web: Web-based exploitation of sensor fusion for
+  visualization of the tactical battlefield.
+\newblock {\em IEEE Aerospace and Electronic Systems Magazine}, 16(5):29--36,
+  May 2001.
+
+\bibitem{replicatingInternetApplications}
+Michael Rabinovich, Zhen Xiao, and Amit Aggarwal.
+\newblock {\em Computing on the Edge: A Platform for Replicating Internet
+  Applications}, pages 57--77.
+\newblock Springer Netherlands, Dordrecht, 2004.
 
 \bibitem{Richter2005}
 Andreas Richter, John~P. Burrows, Hendrik Nusz, Claire Granier, and Ulrike
@@ -79,12 +173,30 @@ Andreas Richter, John~P. Burrows, Hendrik Nusz, Claire Granier, and Ulrike
   space.
 \newblock {\em Nature}, 437(7055):129--132, Sep 2005.
 
+\bibitem{energyAwareRouting}
+R.~C. Shah and J.~M. Rabaey.
+\newblock Energy aware routing for low energy ad hoc sensor networks.
+\newblock In {\em Wireless Communications and Networking Conference, 2002.
+  WCNC2002. 2002 IEEE}, volume~1, pages 350--355 vol.1, Mar 2002.
+
+\bibitem{surveyMilitary}
+M.~P. Đurišić, Z.~Tafa, G.~Dimić, and V.~Milutinović.
+\newblock A survey of military applications of wireless sensor networks.
+\newblock In {\em 2012 Mediterranean Conference on Embedded Computing (MECO)},
+  pages 196--199, June 2012.
+
 \bibitem{distributedEnergyDistribution}
 Yu~Wang, Shiwen Mao, and R.~M. Nelms.
 \newblock A distributed online algorithm for optimal real-time energy
   distribution in smart grid.
 \newblock In {\em 2013 {IEEE} Global Communications Conference, {GLOBECOM}
   2013, Atlanta, GA, USA, December 9-13, 2013}, pages 1644--1649, 2013.
+
+\bibitem{meanvariance}
+B.~P. Welford.
+\newblock Note on a method for calculating corrected sums of squares and
+  products.
+\newblock {\em Technometrics}, 4(3):419--420, 1962.
 
 \bibitem{air-quality-inference-meets-big-data}
 Hsun-Ping~Hsieh Yu~Zheng, Furui~Liu.

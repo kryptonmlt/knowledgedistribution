@@ -97,8 +97,8 @@ public class ConcentratorImpl implements Concentrator {
                         Double e = null;
                         Double used = null;
                         if (useError) {
-                            e = peers.get(peerId).getClusters()[j].getErrorsNormalized(totalError).get(i);
-                            used = peers.get(peerId).getClusters()[j].getUsedNormalized(totalUsed).get(i);
+                            e = peers.get(peerId).getClusters()[j].getErrorsNormalized(null).get(i);
+                            used = peers.get(peerId).getClusters()[j].getUsedNormalized(null).get(i);
                         }
                         nd.add(new NodeDistanceError(peerId, d, e, used));
                     }
@@ -126,9 +126,6 @@ public class ConcentratorImpl implements Concentrator {
                 result += predictions[i];
             }
             LOGGER.debug("Received Query: {}, KNN={}, Result: {}", Arrays.toString(x), k, result);
-            if (("" + result).equals("NaN")) {
-                System.out.println("AAAA");
-            }
             kResults[j] = result;
         }
         return kResults;
