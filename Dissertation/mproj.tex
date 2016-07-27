@@ -225,34 +225,44 @@ KNN \cite{knn} is a straightforward classification technique, in which given an 
 
 \chapter{Literature Review}
 \section{Introduction}
-In this chapter we describe the studies and research works that have been carried out in the field of energy efficient sensor networks. Additionally we shall delve into other areas such as ensemble learning and edge computing. We then evaluate the other works whilst comparing them with our approach.
+In this chapter we describe the studies and research works that have been carried out in the field of energy efficient sensor networks. Additionally we shall delve into other areas such as predictive analytics and edge computing. We then evaluate the other works whilst comparing them with our approach.
 
-\section{Wireless Networks}
-\cite{teen}
-\cite{adaptiveProtocols}
-\cite{timeOptimizedContextual}
-\cite{CooperativeDiversity}
+\section{Wireless Sensor Networks}
+A.Manjeshwar et al. \cite{teen} describes how WSNs are usually unattended and need to be fault-tolerant so the need for maintenance is minimized. This is desirable as in most cases these sensors are deployed in inhospitable terrain and are inaccessible. They developed a network model called TEEN to tackle the power availability , and network routing issues so as to increase fault tolerance. Figure \ref{fig:teen} shows an example of their network made up of several clusters. Nodes inside the cluster send data only to their cluster-head, which saves energy. Data is sent only if certain thresholds are met. Cluster-heads are changed so as to not drain the energy of one node, which requires additional cost to re-calculate thresholds and dissemination of new meta-data. The biggest disadvantage is the dependency on the thresholds, since if they are not met data is never sent.
+
+\begin{figure}[H]
+\caption{Hierarchical Clustering \cite{teen}}
+\label{fig:teen}
+\centerline{\includegraphics[scale=0.5]{teen}}
+\end{figure}
+
+Another protocol called SPIN \cite{adaptiveProtocols} deals with information dissemination in wireless sensor networks. It is short for Sensor Protocols for Information via Negotiation. It uses application knowledge about the data to construct meta-data and then transmit this meta-data instead. The main constraint of this approach is that the meta-data has to be shorter than the actual data so as to achieve network efficiency. The disadvantage is that this approach is very application specific and might achieve the same efficiency for all use cases. In fact there is no formal definition of what the meta-data consists of. The interesting part of this approach is that it uses 3 types of messages to communicate between nodes with the intent of sharing knowledge and make informed decisions on resource management.
+
+Similar to our work is Adaptive Data Forwarding (ADF)\cite{adaptiveDataForwarding} developed by C. Anagnostopoulos. It considers devices with limited computing resources capable of building local models which then decide whether message transmission is required or not. The main objective of this approach is to achieve a balance between energy consumption and error propagation. We shall go a step further by extending this model and study the analytics perspective. The model in \cite{timeOptimizedContextual} deals with mobile context-aware systems. Their purpose is to disseminate information about the surrounding environment between each other. They assume that the information is delay tolerant and use the Optimal Stopping Theory (OST) to decide whether messages should be sent or not. Delaying the transmission of a message incurs an error penalty and OST allows for the system to approach the maximum allowed error penalty without ever surpassing it. In our system we will allow for a fixed error and won't delay messages as we are interested in comparing the error allowance with the query accuracy at the concentrator level.
+
+R.Shah develop an Energy Aware Routing protocol \cite{energyAwareRouting} for sensor networks with network longevity in mind. This is similar to what we are trying to achieve, which is an efficient network that does not waste resources. They approach the problem from a different perspective as they are interested from where data is routed between nodes. They argue that if data is always routed through the path which consumes the least energy, then these nodes will deplete their battery first. Their protocol uses different paths so as to maximise the survivability of the network. The Directed Diffusion \cite{directedDiffusion} system proposed by C.Intanagonwiwat uses a similar concept to exploit empirically good paths and achieve energy efficiency. Our approach tries to increase network efficiency by decreasing the actual amount of messages sent.
+
+C. Tung Chou \cite{informationCollection} approaches this problem by using adaptive sensing. This model assumes synchronization between nodes and is very computationally complex. The computational calculations are not considered in the model evaluation, although it affects the results. Moreover, the model makes assumptions on the sensed data. In our model we do not make these assumptions as we do not know the distribution of the sensed data. The authors in \cite{energyEfficientDataManagement} propose an energy efficient data management model which is based on routing and data aggregation. The disadvantage of this model is that it requires training to construct the routing tables. This would incur a substantial amount of computational effort which is not taken into account when evaluating the model. They also make assumption on how the sensor nodes are distributed and the number of sensor nodes that make up the network. In out model we will not be making any assumptions on the structure of the network. R. Arroyo-Valles \cite{optimalSelective} propose an optimal Selective Transmission protocol for energy efficient distribution of knowledge between nodes. Information is transmitted only when the message is statistically important based on the statistical distribution, energy costs and available battery. This computation incurs extra energy cost but is not considered.
+
 \cite{distributedEnergyDistribution}
 \cite{surveyMilitary}
 \cite{SmartSensorWeb}
-\cite{energyAwareRouting}
-\cite{directedDiffusion}
-\cite{energyEfficientDataManagement}
-\cite{informationCollection}
-\cite{optimalSelective}
 
 \section{Edge Computing}
-\cite{authenticatingQueries}
-\cite{fogComputing}
-\cite{replicatingInternetApplications}
+Edge computing extends the cloud computing paradigm to the edge of the network. This enables a new brand of applications and services. Our system will be using this concept to place some computational logic inside the sensors, away from the concentrators. F. Bonomi et.al \cite{fogComputing} describe edge computing as a large number of nodes geographically distributed with mobility support. It must support real-time interactions, wireless access and heterogeneity. Furthermore, on-line analytics are an essential component due to the context awareness edge computing is capable of providing. 
 
-\section{Predictive Analysis}
+M. Rabinovich and Z.Xiao \cite{replicatingInternetApplications} describe an Application content delivery network based on edge computing. They produce a middleware platform for providing scalable access to Web applications. Currently edge computing is being promoted as a strategy to achieve highly available and scalable Web services. \cite{authenticatingQueries} We shall extend this concept to wireless sensor networks and enable the data of each sensor to be accessible from concentrators while at the same time maximising network efficiency.
+
+\iffalse
+\section{Predictive Analytics}
 \cite{EdgePowerConsumptionManufacturing}
 \cite{efficientPredictiveAnalytics}
+\fi
 
 \chapter{Contributions}
 In this chapter we discuss our major contributions with the aim of improving WSNs. More specifically how we can increase network efficiency, which extends the devices' life time. We shall delineate a strategy for creating knowledge from the raw context, by locally learning the context in real-time using on-line stochastic gradient descent. Based on this knowledge, we then decide whether it is worth it to transmit data or not.
 Additionally we look into how we can minimize the error when querying the knowledge found inside the collectors.
+
 \section{Model Description}
 We start by considering an IOT system composed of sensor nodes and a collector depicted in figure \ref{fig:sn}. Sensor nodes are only capable of communicating with collectors. Collectors can then be queried or in turn be considered as sensor nodes and connected to larger tree structure, creating a larger more complex network. Resources are reserved for communication, processing and data sensing. Message transmission consumes much more energy when compared to the processing and data sensing tasks. \cite{teen} Thus, we argue that if we let the nodes continuously sense data and only transmit this information when it is essential, we could create a more energy efficient network. A.Manjeshwar et al. \cite{teen} states that this is possible because sensor networks are "data centric", meaning that data is requested based on certain attributes and not requested for a certain node. The requirements of each WSN change according to the application as some nodes might be static while others mobile. When nodes are adjacent to each other certain similarity might occur, thus, data can be aggregated. A common query in these systems is for example which area has humidity $<$ 10\% rather than what is the humidity of area $X$. We can use this knowledge to our advantage and define a system that can minimize the number of messages transmitted while at the same time still provide accurate results from queries.
 

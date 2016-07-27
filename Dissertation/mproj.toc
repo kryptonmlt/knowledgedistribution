@@ -15,26 +15,25 @@
 \contentsline {section}{\numberline {2.4}K Nearest Neighbours (KNN)}{11}
 \contentsline {chapter}{\numberline {3}Literature Review}{13}
 \contentsline {section}{\numberline {3.1}Introduction}{13}
-\contentsline {section}{\numberline {3.2}Wireless Networks}{13}
-\contentsline {section}{\numberline {3.3}Edge Computing}{13}
-\contentsline {section}{\numberline {3.4}Predictive Analysis}{13}
-\contentsline {chapter}{\numberline {4}Contributions}{14}
-\contentsline {section}{\numberline {4.1}Model Description}{14}
-\contentsline {section}{\numberline {4.2}Network Efficiency}{15}
-\contentsline {section}{\numberline {4.3}Ensemble Learning}{16}
-\contentsline {section}{\numberline {4.4}Adding the \csqQQ {34}Reliability\csqQQ {34} variable}{17}
-\contentsline {chapter}{\numberline {5}Design and Implementation}{20}
-\contentsline {section}{\numberline {5.1}Dataset}{20}
-\contentsline {section}{\numberline {5.2}Network Architecture}{21}
-\contentsline {section}{\numberline {5.3}Query Analytics}{22}
-\contentsline {section}{\numberline {5.4}Statistics Gathering}{24}
-\contentsline {chapter}{\numberline {6}Evaluation and Case Study}{25}
-\contentsline {section}{\numberline {6.1}THETA study}{25}
-\contentsline {subsection}{\numberline {6.1.1}Probability Density Functions}{27}
-\contentsline {section}{\numberline {6.2}Query Accuracy Evaluation}{29}
-\contentsline {section}{\numberline {6.3}Network Efficiency}{33}
-\contentsline {chapter}{\numberline {7}Conclusion}{34}
-\contentsline {section}{\numberline {7.1}Achievements}{34}
-\contentsline {section}{\numberline {7.2}Future Work}{34}
-\contentsline {section}{\numberline {7.3}Final Remarks}{34}
-\contentsline {chapter}{\numberline {A}First appendix}{35}
+\contentsline {section}{\numberline {3.2}Wireless Sensor Networks}{13}
+\contentsline {section}{\numberline {3.3}Edge Computing}{15}
+\contentsline {chapter}{\numberline {4}Contributions}{16}
+\contentsline {section}{\numberline {4.1}Model Description}{16}
+\contentsline {section}{\numberline {4.2}Network Efficiency}{17}
+\contentsline {section}{\numberline {4.3}Ensemble Learning}{18}
+\contentsline {section}{\numberline {4.4}Adding the \csqQQ {34}Reliability\csqQQ {34} variable}{19}
+\contentsline {chapter}{\numberline {5}Design and Implementation}{22}
+\contentsline {section}{\numberline {5.1}Dataset}{22}
+\contentsline {section}{\numberline {5.2}Network Architecture}{23}
+\contentsline {section}{\numberline {5.3}Query Analytics}{24}
+\contentsline {section}{\numberline {5.4}Statistics Gathering}{26}
+\contentsline {chapter}{\numberline {6}Evaluation and Case Study}{27}
+\contentsline {section}{\numberline {6.1}THETA study}{27}
+\contentsline {subsection}{\numberline {6.1.1}Probability Density Functions}{29}
+\contentsline {section}{\numberline {6.2}Query Accuracy Evaluation}{31}
+\contentsline {section}{\numberline {6.3}Network Efficiency}{35}
+\contentsline {chapter}{\numberline {7}Conclusion}{36}
+\contentsline {section}{\numberline {7.1}Achievements}{36}
+\contentsline {section}{\numberline {7.2}Future Work}{36}
+\contentsline {section}{\numberline {7.3}Final Remarks}{36}
+\contentsline {chapter}{\numberline {A}First appendix}{37}
