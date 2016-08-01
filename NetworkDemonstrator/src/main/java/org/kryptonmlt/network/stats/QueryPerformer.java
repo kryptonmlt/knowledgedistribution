@@ -150,6 +150,9 @@ public class QueryPerformer implements Runnable {
             double Y_Mean = 0;
             double Y_Variance = 0;
             List<double[]> weights = new ArrayList<>();
+
+            int[] timesClustersSent = new int[clusterParameter.length];
+
             Map<Long, DevicePeer> peers = centralNode.getPeers();
             for (Long id : peers.keySet()) {
                 totalUpdates += peers.get(id).getTimesWeightsUpdated();
@@ -209,6 +212,10 @@ public class QueryPerformer implements Runnable {
                 localWeightsValuesBW.write(ConversionUtils.cleanDoubleArrayToString(leafNodes.get(id).getLocalModel().getWeights()) + "\n");
                 minMaxValuesBW.write(leafNodes.get(id).getX1().getMin() + "," + leafNodes.get(id).getX1().getMax() + ","
                         + leafNodes.get(id).getX2().getMin() + "," + leafNodes.get(id).getX2().getMax() + "\n");
+                int[] clusterTimesUsed = leafNodes.get(id).getClustersTimesUpdated();
+                for (int i = 0; i < clusterTimesUsed.length; i++) {
+                    timesClustersSent[i] += clusterTimesUsed[i];
+                }
                 peersCount++;
             }
 
@@ -251,6 +258,7 @@ public class QueryPerformer implements Runnable {
             } else {
                 bw.write("Row: " + Arrays.toString(clusterParameter) + "\n");
             }
+            bw.write("Cluster Times Sent: " + Arrays.toString(timesClustersSent) + "\n");
             bw.write("Closest K Used: " + Arrays.toString(closestK) + "\n");
             bw.write("Quantized Error (Distance and Error):\n");
             for (double[] qe : quantizedError) {

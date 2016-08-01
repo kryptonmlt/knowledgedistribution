@@ -153,26 +153,36 @@ public class ConcentratorImpl implements Concentrator {
         return peers;
     }
 
-    public void addKnowledge(long id, double[] weights, Clustering[] clusters) {
+    public void addKnowledge(long id, double[] weights, Clustering[] clusters, int[] clustersUpdated) {
         synchronized (peers) {
             LOGGER.debug("Updating peer {} - {}", id, Arrays.toString(weights));
             DevicePeer peer = this.getPeer(id);
             peer.setWeights(weights);
-            Clustering[] clustersCopy = new Clustering[clusters.length];
-            for (int i = 0; i < clusters.length; i++) {
-                List<double[]> centroidsCopy = new ArrayList<>();
-                for (double[] centroid : clusters[i].getCentroids()) {
-                    centroidsCopy.add(centroid.clone());
+            if (clusters != null) {
+                Clustering[] clustersCopy = new Clustering[clusters.length];
+                for (int i = 0; i < clusters.length; i++) {
+                    List<double[]> centroidsCopy = new ArrayList<>();
+                    for (double[] centroid : clusters[i].getCentroids()) {
+                        centroidsCopy.add(centroid.clone());
+                    }
+                    List<Double> errorsCopy = new ArrayList<>();
+                    List<Integer> usedCopy = new ArrayList<>();
+                    for (int j = 0; j < clusters[i].getErrors().size(); j++) {
+                        errorsCopy.add(clusters[i].getErrors().get(j).doubleValue());
+                        usedCopy.add(clusters[i].getUsed().get(j).intValue());
+                    }
+                    clustersCopy[i] = new DummyClustering(centroidsCopy, errorsCopy, usedCopy);
                 }
-                List<Double> errorsCopy = new ArrayList<>();
-                List<Integer> usedCopy = new ArrayList<>();
-                for (int j = 0; j < clusters[i].getErrors().size(); j++) {
-                    errorsCopy.add(clusters[i].getErrors().get(j).doubleValue());
-                    usedCopy.add(clusters[i].getUsed().get(j).intValue());
+                Clustering[] originalClustering = peer.getClusters();
+                if (originalClustering == null) {
+                    originalClustering = clustersCopy;
+                } else {
+                    for (int i = 0; i < clustersUpdated.length; i++) {
+                        originalClustering[clustersUpdated[i]] = clustersCopy[i];
+                    }
                 }
-                clustersCopy[i] = new DummyClustering(centroidsCopy, errorsCopy, usedCopy);
+                peer.setClusters(originalClustering);
             }
-            peer.setClusters(clustersCopy);
             if (plot != null) {
                 SimpleEntry<Coord3d[], Color[]> plotInfo = VisualizationUtils.getPointsAndColors(peers);
                 plot.setPoints(plotInfo.getKey(), plotInfo.getValue());

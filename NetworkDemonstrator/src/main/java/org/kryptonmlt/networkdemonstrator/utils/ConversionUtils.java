@@ -12,6 +12,14 @@ import java.util.List;
  */
 public class ConversionUtils {
 
+    public static int[] toIntArray(List<Integer> needsUpdate) {
+        int[] arr = new int[needsUpdate.size()];
+        for (int i = 0; i < needsUpdate.size(); i++) {
+            arr[i] = needsUpdate.get(i);
+        }
+        return arr;
+    }
+
     private ConversionUtils() {
 
     }

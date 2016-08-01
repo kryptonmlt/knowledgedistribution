@@ -35,7 +35,9 @@ public class MastersScenario {
 
         double error = Double.parseDouble(args[0]);
         int max_stations = Integer.parseInt(args[1]);  //max=36
-        int[] k = {1, 5, 10, 15, 20, 25};
+        float gamma = Float.parseFloat(args[2]);
+        //float gamma = 0.1f;
+        int[] k = {1, 3, 5, 10, 15, 20, 25};
         //int[] k = {1};
         float[] row = {0.05f}; // ART - only used when k is null
 
@@ -98,7 +100,7 @@ public class MastersScenario {
             final XSSFSheet sheet = workbook.getSheetAt(i);
             final XSSFSheet querySheet = queryWorkbook.getSheet(sheet.getSheetName());
             leafNodes.add(new SensorImpl((ConcentratorImpl) centralNode, delayMillis, dataFileName, i, sheet, querySheet, startFeature,
-                    numberOfFeatures, alpha, clusteringAlpha, learnLimit, type, error, k, row, useStats, use_max_points, samplingRate, knn.length, errorMultiplier));
+                    numberOfFeatures, alpha, clusteringAlpha, learnLimit, type, error, k, row, useStats, use_max_points, samplingRate, knn.length, errorMultiplier, gamma));
         }
         file.close();
         if (!queryFile.exists()) {

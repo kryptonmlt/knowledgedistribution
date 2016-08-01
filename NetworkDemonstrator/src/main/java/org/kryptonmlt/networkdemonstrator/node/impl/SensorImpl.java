@@ -1,7 +1,9 @@
 package org.kryptonmlt.networkdemonstrator.node.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.kryptonmlt.networkdemonstrator.enums.WorthType;
 import org.kryptonmlt.networkdemonstrator.ml_algorithms.impl.ART;
@@ -16,6 +18,7 @@ import org.kryptonmlt.networkdemonstrator.utils.VectorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.kryptonmlt.networkdemonstrator.node.Sensor;
+import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 
 /**
  *
@@ -30,6 +33,7 @@ public class SensorImpl implements Sensor, Runnable {
     private final WorthType worth;
     private final double theta_error;
     private final int errorMultiplier;
+    private final float gamma;
 
     // Statistics
     private final boolean statistics;
@@ -38,6 +42,7 @@ public class SensorImpl implements Sensor, Runnable {
     private double currentAccumulatedError;
     private int timesErrorExceeded = 0;
     private int timesErrorAcceptable = 0;
+    private final int[] clustersTimesUpdated;
     private int p = 0;
     private double[] Y; // difference
     private double[] E_DASH;// local model
@@ -62,6 +67,7 @@ public class SensorImpl implements Sensor, Runnable {
     private final OnlineStochasticGradientDescent centralNodeModel;
     private final OnlineVarianceMean THETA_ERROR_meanVariance;
     private final Clustering[] clustering;
+    private final Clustering[] concentratorClustering;
     private final int maxLearnPoints;
     private int dataCounter = 0;
     private final MinMax X1 = new MinMax();
@@ -69,11 +75,12 @@ public class SensorImpl implements Sensor, Runnable {
 
     private final ConcentratorImpl centralNode;
     private boolean finished;
+    private final boolean sendClustersAfterFirst = true;
 
     public SensorImpl(ConcentratorImpl centralNode, int delayMillis,
             String datafile, int sheetNum, XSSFSheet sheet, XSSFSheet querySheet, int startFeature, int numberOfFeatures,
             float learningRate, float clusteringAlpha, int maxLearnPoints, WorthType worth, double theta_error, int[] k, float[] row,
-            boolean statistics, int max_use_Points, double samplingRate, int closestK, int errorMultiplier) throws IOException {
+            boolean statistics, int max_use_Points, double samplingRate, int closestK, int errorMultiplier, float gamma) throws IOException {
         this.maxLearnPoints = maxLearnPoints;
         this.numberOfFeatures = numberOfFeatures;
         this.centralNode = centralNode;
@@ -102,19 +109,26 @@ public class SensorImpl implements Sensor, Runnable {
         this.sensorManager = new SensorManager(sheet, querySheet, startFeature, numberOfFeatures, datafile, samplingRate);
         if (k != null) {
             clustering = new Clustering[k.length];
+            concentratorClustering = new Clustering[k.length];
+            this.clustersTimesUpdated = new int[k.length];
             for (int i = 0; i < k.length; i++) {
                 this.clustering[i] = new OnlineKmeans(k[i], learningRate, clusteringAlpha);
+                this.concentratorClustering[i] = new OnlineKmeans(k[i], learningRate, clusteringAlpha);
             }
         } else {
             clustering = new Clustering[row.length];
+            concentratorClustering = new Clustering[row.length];
+            this.clustersTimesUpdated = new int[row.length];
             for (int i = 0; i < row.length; i++) {
                 this.clustering[i] = new ART(row[i], learningRate, clusteringAlpha);
+                this.concentratorClustering[i] = new ART(row[i], learningRate, clusteringAlpha);
             }
         }
 
         this.quantizedError = new double[closestK][clustering.length];
         this.quantizedErrorDistanceOnly = new double[closestK][clustering.length];
         this.errorMultiplier = errorMultiplier;
+        this.gamma = gamma;
     }
 
     @Override
@@ -222,7 +236,22 @@ public class SensorImpl implements Sensor, Runnable {
                     if (send) {
                         currentAccumulatedError = 0;
                         total_central_node_error += e_dash;
-                        sendKnowledge();
+                        if (sendClustersAfterFirst) {
+                            List<Integer> needsUpdate = new ArrayList<>();
+                            for (int i = 0; i < clustering.length; i++) {
+                                double tempDistance = 0;
+                                for (int j = 0; j < clustering[i].getCentroids().size(); j++) {
+                                    tempDistance += VectorUtils.distance(clustering[i].getCentroids().get(j), concentratorClustering[i].getCentroids().get(j));
+                                }
+                                if (tempDistance > gamma) {
+                                    needsUpdate.add(i);
+                                    clustersTimesUpdated[i]++;
+                                }
+                            }
+                            sendKnowledge(ConversionUtils.toIntArray(needsUpdate));
+                        } else {
+                            sendKnowledge(new int[0]);
+                        }
                         E_MeanVariance.update(e_dash);
                         Y_MeanVariance.update(e_dash);
                     } else {
@@ -243,7 +272,12 @@ public class SensorImpl implements Sensor, Runnable {
                     }
                 } else if (dataCounter == maxLearnPoints) {
                     LOGGER.info("Device {} finished learning stage now sending knowledge.. ", id);
-                    sendKnowledge();
+                    int[] needsUpdate = new int[clustering.length];
+                    for (int i = 0; i < clustering.length; i++) {
+                        needsUpdate[i] = i;
+                        clustersTimesUpdated[i]++;
+                    }
+                    sendKnowledge(needsUpdate);
                 }
                 dataCounter++;
             }
@@ -315,9 +349,22 @@ public class SensorImpl implements Sensor, Runnable {
         }
     }
 
-    private void sendKnowledge() throws IOException {
+    private void sendKnowledge(int[] clustersUpdated) throws IOException {
         LOGGER.debug("Device {} sending: {}", id, Arrays.toString(localModel.getWeights()));
-        centralNode.addKnowledge(id, localModel.getWeights(), clustering);
+        Clustering[] toSend = null;
+        if (clustersUpdated.length != 0) {
+            toSend = new Clustering[clustersUpdated.length];
+            for (int i = 0; i < clustersUpdated.length; i++) {
+                toSend[i] = clustering[clustersUpdated[i]];
+
+                List<double[]> centroidsCopy = new ArrayList<>();
+                for (double[] centroid : clustering[clustersUpdated[i]].getCentroids()) {
+                    centroidsCopy.add(centroid.clone());
+                }
+                concentratorClustering[clustersUpdated[i]].setCentroids(centroidsCopy);
+            }
+        }
+        centralNode.addKnowledge(id, localModel.getWeights(), toSend, clustersUpdated);
         centralNodeModel.setWeights(localModel.getWeights());
         LOGGER.debug("Device {} sent data successfully", id);
         timesErrorExceeded++;
@@ -482,4 +529,10 @@ public class SensorImpl implements Sensor, Runnable {
     public MinMax getX2() {
         return X2;
     }
+
+    @Override
+    public int[] getClustersTimesUpdated() {
+        return clustersTimesUpdated;
+    }
+
 }

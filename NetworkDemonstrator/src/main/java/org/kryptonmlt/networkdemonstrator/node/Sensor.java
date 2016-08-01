@@ -73,4 +73,6 @@ public interface Sensor {
     public MinMax getX1();
 
     public MinMax getX2();
+    
+    public int[] getClustersTimesUpdated();
 }
