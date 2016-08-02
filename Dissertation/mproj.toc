@@ -32,8 +32,12 @@
 \contentsline {subsection}{\numberline {6.1.1}Probability Density Functions}{30}
 \contentsline {section}{\numberline {6.2}Query Accuracy Evaluation}{32}
 \contentsline {section}{\numberline {6.3}Network Efficiency}{36}
-\contentsline {chapter}{\numberline {7}Conclusion}{37}
-\contentsline {section}{\numberline {7.1}Achievements}{37}
-\contentsline {section}{\numberline {7.2}Future Work}{37}
-\contentsline {section}{\numberline {7.3}Final Remarks}{37}
-\contentsline {chapter}{\numberline {A}First appendix}{38}
+\contentsline {subsection}{\numberline {6.3.1}Average}{36}
+\contentsline {subsection}{\numberline {6.3.2}Including Reliability}{37}
+\contentsline {chapter}{\numberline {7}Conclusion}{38}
+\contentsline {section}{\numberline {7.1}Achievements}{38}
+\contentsline {section}{\numberline {7.2}Future Work}{38}
+\contentsline {paragraph}{Non-Linear Regression:}{39}
+\contentsline {paragraph}{History of Models:}{39}
+\contentsline {paragraph}{Concentrator teaching:}{39}
+\contentsline {section}{\numberline {7.3}Final Remarks}{39}

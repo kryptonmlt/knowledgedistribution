@@ -29,7 +29,8 @@
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Energy Efficient Knowledge Distribution in Wireless Sensor Networks for Query Analytics}
+\title{Distributed Statistical Learning and Knowledge Diffusion in IoT
+Environments}
 \author{Kurt Portelli}
 \date{\today}
 \maketitle
@@ -62,22 +63,22 @@ Furthermore, I would like to thank my family for all their continuous support in
 
 
 \chapter{Introduction}\label{intro}
-The Internet of Things (IoT) is a rapidly growing area, with it more data is being stored and made accessible which previously has never even been thought possible. IoT is composed of billions of devices that can gather, share information and sometimes even capable of performing operations on this information. IoT devices are physical objects connected with the internet able to share information. This can include anything ranging from smartphones to Radio Frequency Identification (RFID) tags found in everyday products. As more data is made available for anything imaginable that affects our daily lives, opportunities arise for applications that extract this information and make use of it. Y.Wang et al. \cite{distributedEnergyDistribution} state that the smart grid has been recognized as an important form of IoT. It allows a two-way information flow which produces new perspectives in energy management. Making all this information useful is very challenging as it needs to be collected, transferred, stored and made accessible. \cite{intelligentContextualInformation} 
+The Internet of Things (IoT) is a rapidly growing area, with it more data is being stored and made accessible which previously has never even been thought possible. IoT is composed of billions of devices that can gather, share information and sometimes even capable of performing operations on this information. IoT devices are physical objects connected with the internet able to share information. This can include anything ranging from smartphones, military sensors \cite{surveyMilitary}, to Radio Frequency Identification (RFID) tags found in everyday products. As more data is made available for anything imaginable that affects our daily lives, opportunities arise for applications that extract this information and make use of it. Y.Wang et al. \cite{distributedEnergyDistribution} state that the smart grid has been recognized as an important form of IoT. It allows a two-way information flow which produces new perspectives in energy management. Furthermore, there is an interest in the visualization of a tactical battlefield. This can only be achieved through data collected from large arrays of local sensors. \cite{SmartSensorWeb} Making all this information useful is very challenging as it needs to be collected, transferred, stored and made accessible. \cite{intelligentContextualInformation}
 
 Since these IoT devices are generally wireless, compact and have very limited resources they can be considered as making part of WSNs. WSNs are made up of a large number of nodes, which are capable of wireless communication and minimal computation capabilities. \cite{adaptiveDataForwarding} Each sensor node measures the temporal-spatial field of the area around it. These are called the contextual scalar parameters and can be of any form and value, example; humidity, temperature, acidity, etc.. This contextual information is relayed to a central node, which we will be referring to as the concentrator. \cite{adaptiveDataForwarding}
 
-The concentrator would have acces to more computing resources hwn compared to the sensors. In a naive system all these sensors generating massive amounts of data, periodically transmit the data to the concentrator. Then, the concentrator can in turn restructure the data more effectively to transmit it to another node up the hierarchy or just make it available for querying. All this network transfer drains power and as the network size increases this effect is emphasized even more. This has created a need and opportunity for machine and statistical learning algorithms.\cite{LargeScaleOnlineLearning} According to L.Bottou et al.\cite{LargeScaleOnlineLearning} these technological improvements have outrun the exponential evolution of computing power. Thus, we must rely more on on-line learning algorithms to process these large amounts of data with comparatively less computing power.
+The concentrator would have acces to more computing resources hwn compared to the sensors. In a naive system all these sensors generating massive amounts of data, periodically transmit the data to the concentrator. Then, the concentrator can in turn restructure the data more effectively to transmit it to another node up the hierarchy or just make it available for querying. All this network transfer drains power and as the network size increases this effect is emphasized even more. This has created a need and opportunity for machine and statistical learning algorithms. \cite{LargeScaleOnlineLearning} According to L.Bottou et al. \cite{LargeScaleOnlineLearning} these technological improvements have outrun the exponential evolution of computing power. Thus, we must rely more on on-line learning algorithms to process these large amounts of data with comparatively less computing power.
 
 The vision of IoT is to allow any device to be continuously connected sharing its knowledge about the surroundings. Machine learning then uses this stream of data to deduce results, infer new knowledge, reason about contextual events or make assumptions. The possibilities for such systems are endless, taking, for instance, the case of thermometers in rooms next to each other and based on previous information the temperature of various rooms can be predicted.
 
 \section{Problem Synopsis}
-One of the main challenges in IoT systems is the collection of contextual information from sensors in an IoT environment.\cite{intelligentContextualInformation} IoT devices communicate in an ad-hoc manner with the concentrators to transmit the information. The objective of each concentrator is to contain the latest up-to-date information/context. This would allow the IoT system to further process the context and make use of it, example environmental monitoring.
+One of the main challenges in IoT systems is the collection of contextual information from sensors in an IoT environment. \cite{intelligentContextualInformation} IoT devices communicate in an ad-hoc manner with the concentrators to transmit the information. The objective of each concentrator is to contain the latest up-to-date information/context. This would allow the IoT system to further process the context and make use of it, example environmental monitoring.
 
 In this IoT environment the IoT devices are not able to communicate directly together due to limited resources, so instead they communicate with the concentrator. Even if each device has an infinite power supply, a naive system which periodically transmits the context is not feasible especially as the network grows in size. Concentrators would become overloaded with messages from all devices and incur a performance degradation as network size increases. Transmitting wireless messages is very costly and in most cases IoT devices run on limited battery power. These devices need to make intelligent decisions whether to send data or not to conserve battery power and increase their lifetime. In this naive system there is no concept of knowledge, thus withholding data would result in the concentrators having gaps of knowledge.
 
-Once the concentrators have access to the context of the connected devices, they need to make it available for querying. A naive system stores all the data items inside the context for each device. This would result in a very resource hungry concentrator due to the huge amount of processing and storage capabilities it would need to support. C.Anagnostopoulos \cite{intelligentContextualInformation} states that the contextual sensor data exhibits high complexity, dynamism, accuracy, precision and timeliness. This is due to the huge volumes, interdependency relationships between devices and continuous updates performed in real-time. From this statement he then argues that "an IoT system should not concern itself with the individual pieces of contextual sensor data: rather, context should be intelligently collected and interpreted into a higher, domain relevant concept."\cite{intelligentContextualInformation}
+Once the concentrators have access to the context of the connected devices, they need to make it available for querying. A naive system stores all the data items inside the context for each device. This would result in a very resource hungry concentrator due to the huge amount of processing and storage capabilities it would need to support. C.Anagnostopoulos \cite{intelligentContextualInformation} states that the contextual sensor data exhibits high complexity, dynamism, accuracy, precision and timeliness. This is due to the huge volumes, interdependency relationships between devices and continuous updates performed in real-time. From this statement he then argues that "an IoT system should not concern itself with the individual pieces of contextual sensor data: rather, context should be intelligently collected and interpreted into a higher, domain relevant concept." \cite{intelligentContextualInformation}
 
-Using this concept, instead of having access to all the raw data, concentrators can instead store multiple intelligent contexts. This raises the challenge on whether for each query there exists an optimal set of intelligent contexts that increase the accuracy. In other words it opens the opportunity for ensemble learning \cite{dietterich2002ensemble}. This means that we cannot guarantee to find the best hypothesis (intelligent context) that gives the best accuracy from all contexts. Ensemble learning tries to intelligently choose contexts and assign weight depending on their likelihood of providing the best result. Hence, it aims at reducing the bias and variance of the learning algorithms used to construct the context.\cite{dietterich2002ensemble}
+Using this concept, instead of having access to all the raw data, concentrators can instead store multiple intelligent contexts. This raises the challenge on whether for each query there exists an optimal set of intelligent contexts that increase the accuracy. In other words it opens the opportunity for ensemble learning \cite{dietterich2002ensemble}. This means that we cannot guarantee to find the best hypothesis (intelligent context) that gives the best accuracy from all contexts. Ensemble learning tries to intelligently choose contexts and assign weight depending on their likelihood of providing the best result. Hence, it aims at reducing the bias and variance of the learning algorithms used to construct the context. \cite{dietterich2002ensemble}
 
 The research challenge we will be looking at is the building of an energy efficient network which minimises power consumption while simultaneously minimising transmission error. Furthermore, we will investigate the use of ensemble learning on the local contexts to achieve more accurate queries. This system must make use of very little computing resources to maximise its lifetimes while at the same time support scalability and real-time querying for environment monitoring.
 
@@ -260,10 +261,6 @@ Similar to our work is Adaptive Data Forwarding (ADF)\cite{adaptiveDataForwardin
 R.Shah develop an Energy Aware Routing protocol \cite{energyAwareRouting} for sensor networks with network longevity in mind. This is similar to what we are trying to achieve, which is an efficient network that does not waste resources. They approach the problem from a different perspective as they are interested from where data is routed between nodes. They argue that if data is always routed through the path which consumes the least energy, then these nodes will deplete their battery first. Their protocol uses different paths so as to maximise the survivability of the network. The Directed Diffusion \cite{directedDiffusion} system proposed by C.Intanagonwiwat uses a similar concept to exploit empirically good paths and achieve energy efficiency. Our approach tries to increase network efficiency by decreasing the actual amount of messages sent.
 
 C. Tung Chou \cite{informationCollection} approaches this problem by using adaptive sensing. This model assumes synchronization between nodes and is very computationally complex. The computational calculations are not considered in the model evaluation, although it affects the results. Moreover, the model makes assumptions on the sensed data. In our model we do not make these assumptions as we do not know the distribution of the sensed data. The authors in \cite{energyEfficientDataManagement} propose an energy efficient data management model which is based on routing and data aggregation. The disadvantage of this model is that it requires training to construct the routing tables. This would incur a substantial amount of computational effort which is not taken into account when evaluating the model. They also make assumption on how the sensor nodes are distributed and the number of sensor nodes that make up the network. In out model we will not be making any assumptions on the structure of the network. R. Arroyo-Valles \cite{optimalSelective} propose an optimal Selective Transmission protocol for energy efficient distribution of knowledge between nodes. Information is transmitted only when the message is statistically important based on the statistical distribution, energy costs and available battery. This computation incurs extra energy cost but is not considered.
-
-TOADD(\cite{distributedEnergyDistribution}
-\cite{surveyMilitary}
-\cite{SmartSensorWeb})
 
 \section{Edge Computing}
 Edge computing extends the cloud computing paradigm to the edge of the network. This enables a new brand of applications and services. Our system will be using this concept to place some computational logic inside the sensors, away from the concentrators. F. Bonomi et.al \cite{fogComputing} describe edge computing as a large number of nodes geographically distributed with mobility support. It must support real-time interactions, wireless access and heterogeneity. Furthermore, on-line analytics are an essential component due to the context awareness edge computing is capable of providing. 
@@ -598,7 +595,7 @@ A high number of clusters for each device enables the concentrator to know more 
 
 \section{Network Efficiency}
 \label{sec:networkefficiency}
-In this section we examine whether our system achieves efficient knowledge forwarding at the expense of data accuracy. We compare our system against a simple model which forwards all the data. To evaluate the efficiency we adopt the mica2 \cite{mica2} model. Mica2 operates with a pair of AA batteries that approximately supply 2200 mAh with effective average voltage 3V. The energy costs for a single CPU instruction and transmitting/receiving costs are defined in table \ref{table:energy}
+In this section we examine whether our system achieves efficient knowledge forwarding at the expense of data accuracy. We compare our system against a simple model which forwards all the data. To evaluate the efficiency we adopt the mica2 \cite{mica2} model. Mica2 operates with a pair of AA batteries that approximately supply 2200 mAh with effective average voltage 3V. The energy costs for a single CPU instruction and transmitting/receiving costs are defined in table \ref{table:energy}.
 
  \begin{table}[!ht]
  \centering
@@ -617,7 +614,10 @@ In this section we examine whether our system achieves efficient knowledge forwa
  \label{table:energy} 
 \end{table}
 
- \begin{table}[!ht]
+\subsection{Average}
+In addition to the data, the packet header for each message is 24 bytes. Table \ref{table:thetaMessages} shows the percentage of messages sent when compared to the simple model. As $THETA$ increases the number of messages are reduced but this increases the discrepancy in the model between the concentrator and sensors. When querying the concentrator and using the average method the system uses all the models to predict the result. Thus, there is no need to transfer any other knowledge apart from the regression weights. For each message our model makes use of 3 weights, while the simple model uses 3 raw values. This implies that each message is equal in size for both systems, and the only difference in energy consumption is the extra computation needed in the sensors.
+
+\begin{table}[!ht]
  \centering
  \begin{tabular}{||c | c | c||}
  \hline
@@ -640,19 +640,31 @@ In this section we examine whether our system achieves efficient knowledge forwa
  \label{table:thetaMessages} 
 \end{table}
 
+\subsection{Including Reliability}
+To use our reliability algorithm, the clusters, $errors$ and $used$ values need to be transferred along with the regression models. The clusters need not be updated as frequently as the model. Thus, they make use of a separate $GAMMA$ error threshold and are only sent when the total movement of the cluster centroids surpasses this threshold. As an optimization the pairs of $errors$ and $used$ values can be multiplied together to be send as 1 value instead of 2. Using $K=3$ centroids, we would have 6 values (each centroid has $(x,y)$) and 3 other values representing the $errors$ and $used$ counters. The message containing only the regression model consists of only 3 values but when adding the quantized information it adds up to a total of 12 values. This is larger than the simple model message, thus $GAMMA$ should be adjusted so as achieve network efficiency.
 
 \chapter{Conclusion}
-\label{conclusion}
+The primary motivation for undertaking this work was to analyse and investigate algorithms for improving the network efficiency in wireless networks while simultaneously diffuse knowledge among the network. In this final chapter, we discuss the principal contributions of this work and comment on how they coincide with the project aims. Finally, we identify opportunities for future work and describe how one might go about to achieve them.
 
 \section{Achievements}
+In this work, we investigated algorithms on how to promote network efficiency in wireless sensor networks and compared their performance to ideal scenarios with no energy restrictions.Our main contributions are listed below:
+\begin{itemize}
+\item A system capable of simulating a real-life IoT environment. This includes the gathering of statistics from multiple sensors and a concentrator.
+\item Compared our regression model with the simple model and evaluated the network efficiency gain.
+\item Evaluated the extended regression model which quantizes the input with aim of achieving better query accuracy.
+\item A case study of our algorithms based on the Beijing U-Air dataset\cite{air-quality-inference-meets-big-data} and Mica2\cite{adaptiveDataForwarding} sensors.
+\end{itemize}
 
 \section{Future Work}
+Although the contributions of our work are precisely what we set out to achieve, there are several other approaches and extensions which could be explored in greater depth under less strict time constraints.
+
+\paragraph{Non-Linear Regression:}In our work we only considered linear regression as the learning models inside the sensors, but non-linear regression can instead be used to better model the underlying data. 
+\paragraph{History of Models:}In the evaluation chapter we noticed that as we increased $THETA$ we were getting better query performance. Thus, this would suggest that we can store a history of models instead of just one model for each sensor at the concentrator. 
+\paragraph{Concentrator teaching:}In our algorithm we were transmitting the $error$ and $used$ values along with the centroids with the intention of demonstrating which are the most reliable centroids. An alternative approach would be to occasionally transmit raw data to the concentrator. This raw data at the concentrator can be used to teach the concentrator which subset of models to use for various circumstances in the input space.
 
 \section{Final Remarks}
 
-\appendix % first appendix
 
-\chapter{First appendix}
 
 \bibliographystyle{plain}
 \bibliography{mproj}
