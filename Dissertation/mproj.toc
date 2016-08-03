@@ -33,7 +33,10 @@
 \contentsline {section}{\numberline {6.2}Query Accuracy Evaluation}{32}
 \contentsline {section}{\numberline {6.3}Network Efficiency}{36}
 \contentsline {subsection}{\numberline {6.3.1}Average}{36}
+\contentsline {paragraph}{TODO: MICA CALCULATION EXPLAIN EFFECT OF THETA}{37}
 \contentsline {subsection}{\numberline {6.3.2}Including Reliability}{37}
+\contentsline {paragraph}{TODO: 3 GAMMA IMAGES}{37}
+\contentsline {paragraph}{TODO: ENERGY CALCULATION}{37}
 \contentsline {chapter}{\numberline {7}Conclusion}{38}
 \contentsline {section}{\numberline {7.1}Achievements}{38}
 \contentsline {section}{\numberline {7.2}Future Work}{38}
