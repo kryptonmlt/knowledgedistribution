@@ -21,7 +21,7 @@
 \contentsline {section}{\numberline {4.1}Model Description}{17}
 \contentsline {section}{\numberline {4.2}Network Efficiency}{18}
 \contentsline {section}{\numberline {4.3}Ensemble Learning}{19}
-\contentsline {section}{\numberline {4.4}Adding the \csqQQ {34}Reliability\csqQQ {34} variable}{20}
+\contentsline {section}{\numberline {4.4}Adding the \csqQQ {34}Reliability\csqQQ {34} variable}{21}
 \contentsline {section}{\numberline {4.5}Summary}{22}
 \contentsline {chapter}{\numberline {5}Design and Implementation}{23}
 \contentsline {section}{\numberline {5.1}Dataset}{23}
@@ -37,7 +37,7 @@
 \contentsline {section}{\numberline {6.2}Query Accuracy Evaluation}{32}
 \contentsline {section}{\numberline {6.3}Network Efficiency}{36}
 \contentsline {subsection}{\numberline {6.3.1}Average}{36}
-\contentsline {paragraph}{TODO: MICA CALCULATION EXPLAIN EFFECT OF THETA}{37}
+\contentsline {paragraph}{TODO: MICA CALCULATION INCLUDE COMPUTATION}{37}
 \contentsline {subsection}{\numberline {6.3.2}Including Reliability}{37}
 \contentsline {paragraph}{TODO: 3 GAMMA IMAGES}{37}
 \contentsline {paragraph}{TODO: ENERGY CALCULATION}{37}

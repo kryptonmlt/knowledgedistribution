@@ -28,14 +28,16 @@ public class VisualizationUtils {
 
     /**
      * Showing only clusters[0]
+     *
      * @param quantizedNodes
-     * @return 
+     * @return
      */
     public static SimpleEntry<Coord3d[], Color[]> getPointsAndColors(Map<Long, DevicePeer> quantizedNodes) {
+        int knnSelection = 1;
         List<Coord3d> points = new ArrayList<>();
         List<Color> colors = new ArrayList<>();
         for (Long peerId : quantizedNodes.keySet()) {
-            for (double[] centroid : quantizedNodes.get(peerId).getClusters()[0].getCentroids()) {
+            for (double[] centroid : quantizedNodes.get(peerId).getClusters()[knnSelection].getCentroids()) {
                 points.add(new Coord3d(centroid[0], centroid[1], 0.0));
                 colors.add(ColorUtils.getInstance().getLightColor(peerId.intValue()));
             }

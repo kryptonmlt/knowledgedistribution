@@ -56,6 +56,7 @@ public class MastersScenario {
         int use_max_points = 1000;
         double samplingRate = 0.1;
         int[] knn = {1, 5, 10, 25, 50, 80};//knn
+        boolean showVisualization = false;
         //int[] closestK = {3};
 
         int numberOfClusters;
@@ -76,7 +77,7 @@ public class MastersScenario {
             LOGGER.info("Feature Model file {} containing weights not found initializing them to 0", featureModelFileName);
         }
         // Initialize Central Node
-        Concentrator centralNode = new ConcentratorImpl(numberOfFeatures, knn, numberOfClusters, MastersScenario.COLUMN_NAMES, alpha, false);
+        Concentrator centralNode = new ConcentratorImpl(numberOfFeatures, knn, numberOfClusters, MastersScenario.COLUMN_NAMES, alpha, showVisualization);
         centralNode.getFeatureModel().setWeights(weights);
         centralNode.setFeaturesReceived(featuresUsed);
         // Initialize IOT Devices (Sensors)
