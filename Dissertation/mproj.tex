@@ -491,21 +491,21 @@ Before measuring the network efficiency we study the effects of altering $THETA$
 \begin{figure}[H]
 \caption{$THETA$ vs Messages Sent \%}
 \label{fig:ThetaMessages}
-\centerline{\includegraphics[scale=0.3]{ThetaMessages}}
+\centerline{\includegraphics[scale=0.4]{ThetaMessages}}
 \end{figure}
 
 \begin{figure}[H]
 \caption{$THETA$ vs Difference in Error}
 \label{fig:ThetaDE}
-\centerline{\includegraphics[scale=0.3]{ThetaDE}}
+\centerline{\includegraphics[scale=0.4]{ThetaDE}}
 \end{figure}
 
-In figure \ref{fig:MessagesDe} we eliminate $THETA$ and directly study the relationship between \texttt{Messages Sent} and \texttt{Difference in Error}. One notices that there is barely any difference in error when sending 60\% messages instead of sending all messages (100\%). This means that around 40\% of the messages have no useful information to the concentrator. The concentrator is able to predict $y$ with the same error rate as the local model. We are capable of achieving the usefulness of messages due to the introduction of a learning model. In this chapter; section \ref{sec:networkefficiency} we use a real case study in which we exploit our algorithm to evaluate the effect of transmitting less messages on the devices' battery life.
+In figure \ref{fig:MessagesDe} we eliminate $THETA$ and directly study the relationship between \texttt{Messages Sent} and \texttt{Difference in Error}. One notices that there is very minimal difference in error when sending 60\% messages instead of sending all the messages (100\%). This means that around 40\% of the messages have no useful information to the concentrator. The concentrator is able to predict $y$ with the same error rate as the local model. We are capable of measuring the usefulness of messages due to the introduction of a learning model. In this chapter; section \ref{sec:networkefficiency} we use a real case study in which we exploit our algorithm to evaluate the effect of transmitting less messages on the devices' battery life.
 
 \begin{figure}[H]
 \caption{Messages Sent \% vs Difference in Error}
 \label{fig:MessagesDe}
-\centerline{\includegraphics[scale=0.3]{MessagesDe}}
+\centerline{\includegraphics[scale=0.4]{MessagesDe}}
 \end{figure}
 
 Furthermore, we stored the number of times the local model was better than the central model for each $THETA$. This is shown in figure \ref{fig:thetaP}. $P$ is the probability that the local model is better than the central model. It is interesting to note that as $THETA$ increases the probability that the local model is better decreases. We believe that this is because as $THETA$ increases the central model is updated less frequently, thus, encapsulating a certain level of generality. This is interesting as it might open up future work regarding whether it would be worthwhile to predict results from a history of models.
@@ -517,7 +517,7 @@ Furthermore, we stored the number of times the local model was better than the c
 \end{figure}
 
 \subsection{Probability Density Functions}
-Additionally, we measured the mean and variance of the error using an on-line algorithm described in the Preliminaries chapter; section \ref{sec:meanvariance}. The mean and variance allow us to the plot the probability density function which is also described in the Preliminaries chapter. This visually shows the likelihood of a certain random variable taking a given value. In our case the value with the highest likelihood is 0 since we used the standard score normalization.
+Additionally, we measured the mean and variance of the error using an on-line algorithm described in the Preliminaries chapter; section \ref{sec:meanvariance}. The mean and variance allow us to plot the probability density function which is also described in the Preliminaries chapter. This visually shows the likelihood of a certain random variable taking a given value. In our case the value with the highest likelihood is 0 since we used the standard score normalization.
 
 \begin{figure}[H]
   \caption{Local Model PDF (Error $e'$)}
@@ -541,12 +541,12 @@ Figures \ref{fig:thetaedash} and \ref{fig:thetae} show the local and concentrato
 
 \section{Query Accuracy Evaluation}
 
-In the previous section we demonstrated how our system gains network efficiency at the expense of data accuracy. This data accuracy value does not depict the full story. This is due to the fact that IoT systems are queried at a concentrator level rather than at device level. When data from several models (nodes) is aggregated together the error might be reduced as all these models contain distributed knowledge about the environment. Thus, from all the data set we randomly select queries and use them to query the concentrator after it finishes learning. This test simulates the typical usage of an IoT system. It lets us study the effect of transmitting less messages on the query accuracy. Furthermore, in the implementation chapter we included 2 variables which will directly affect the query accuracy. These are; the $K$ number of clusters (centroids) per device, and the number of models chosen at the concentrator for prediction (Defined as $KNN$ in section \ref{sec:queryAnalytics}).
+In the previous section we demonstrated how our system gains network efficiency at the expense of a discrepancy error between local and concentrator models. This error value does not depict the full story due to the fact that IoT systems are queried at a concentrator level rather than at device level. When data from several models (nodes) is aggregated together the error might be reduced as all these models contain distributed knowledge about the environment. Thus, from all the data set we randomly select queries and use them to query the concentrator after it finishes learning. This test simulates the typical usage of an IoT system. It lets us study the effect of transmitting less messages on the query accuracy. Furthermore, in the implementation chapter we included 2 variables which will directly affect the query accuracy. These are; the $K$ number of clusters (centroids) per device, and the number of models chosen at the concentrator for prediction (Defined as $KNN$ in section \ref{sec:queryAnalytics}).
 
 As a result of this, we will be running tests changing these 2 variable and $Theta$. For each test the following algorithms (described in the implementation chapter) are used to predict the result of the query. Algorithms:
 
 \begin{itemize}
-\item Base Line - (most expensive algorithm) All data is transmitted to the concentrator and a single model is built.
+\item Base Line - (Naive model, most expensive algorithm) All data is transmitted to the concentrator and a single model is built.
 \item Ideal - Since this is a test scenario we know from which sensor the query is taken. Only the model for that sensor is used to predict the result.
 \item Average - All the models stored in the concentrator are used to calculate the mean.
 \item Distance - The closest $K$ models are used to calculate the result. (section \ref{sec:ensembleLearning})
@@ -659,7 +659,7 @@ To use our reliability algorithm, the clusters, $errors$ and $used$ values need 
 The primary motivation for undertaking this work was to analyse and investigate algorithms for improving the network efficiency in wireless networks while simultaneously diffuse knowledge among the network. In this final chapter, we discuss the principal contributions of this work and comment on how they coincide with the project aims. Finally, we identify opportunities for future work and describe how one might go about to achieve them.
 
 \section{Achievements}
-In this work, we investigated algorithms on how to promote network efficiency in wireless sensor networks and compared their performance to ideal scenarios with no energy restrictions.Our main contributions are listed below:
+In this work, we investigated algorithms on how to promote network efficiency in wireless sensor networks and reduce query accuracy error at the concentrator. Our main contributions are listed below:
 \begin{itemize}
 \item A system capable of simulating a real-life IoT environment. This includes the gathering of statistics from multiple sensors and a concentrator.
 \item Compared our regression model with the simple model and evaluated the network efficiency gain.
@@ -667,10 +667,10 @@ In this work, we investigated algorithms on how to promote network efficiency in
 \item A case study of our algorithms based on the Beijing U-Air dataset\cite{air-quality-inference-meets-big-data} and Mica2\cite{adaptiveDataForwarding} sensors.
 \end{itemize}
 
-\section{Future Work}q
+\section{Future Work}
 Although the contributions of our work are precisely what we set out to achieve, there are several other approaches and extensions which could be explored in greater depth under less strict time constraints.
 
-\paragraph{Non-Linear Regression:}In our work we only considered linear regression as the learning models inside the sensors, but non-linear regression can instead be used to better model the underlying data. 
+\paragraph{Non-Linear Regression:}In our work we only considered linear regression as the learning model inside the sensors, but non-linear regression can instead be used to better represent the underlying data. 
 \paragraph{History of Models:}In the evaluation chapter we observed better query accuracy as we increased $THETA$. Thus, this would suggest that we can store a history of models instead of just one model for each sensor at the concentrator.
 \paragraph{Concentrator teaching:}In our algorithm we were transmitting the $error$ and $used$ values along with the centroids to indicate which are the most reliable centroids. An alternative approach would be to occasionally transmit raw data to the concentrator. This raw data at the concentrator can be used to quantize the input space and teach the concentrator which subset of models to use in various circumstances.
 

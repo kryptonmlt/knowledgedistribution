@@ -33,7 +33,7 @@
 \contentsline {section}{\numberline {5.4}Statistics Gathering}{27}
 \contentsline {chapter}{\numberline {6}Evaluation and Case Study}{28}
 \contentsline {section}{\numberline {6.1}THETA study}{28}
-\contentsline {subsection}{\numberline {6.1.1}Probability Density Functions}{30}
+\contentsline {subsection}{\numberline {6.1.1}Probability Density Functions}{31}
 \contentsline {section}{\numberline {6.2}Query Accuracy Evaluation}{32}
 \contentsline {section}{\numberline {6.3}Network Efficiency}{36}
 \contentsline {subsection}{\numberline {6.3.1}Average}{36}
