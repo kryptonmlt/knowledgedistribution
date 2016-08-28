@@ -3,13 +3,16 @@ package org.kryptonmlt.networkdemonstrator;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kryptonmlt.network.stats.QueryPerformer;
@@ -32,32 +35,29 @@ public class MastersScenario {
     public static String[] COLUMN_NAMES = {"PM25_AQI", "PM10_AQI", "NO2"};
 
     public static void main(String[] args) throws SocketException, IOException {
-
+        Map<String, String> props = readInputFile(new File("networkdemonstrator.properties"));
+        int max_stations = Integer.parseInt(props.get("max_stations"));  //max=36
         double error = Double.parseDouble(args[0]);
-        int max_stations = Integer.parseInt(args[1]);  //max=36
-        float gamma = Float.parseFloat(args[2]);
-        //float gamma = 0.1f;
-        int[] k = {1, 3, 5, 10, 15, 20, 25};
-        //int[] k = {1};
-        float[] row = {0.05f}; // ART - only used when k is null
+        float gamma = Float.parseFloat(props.get("gamma"));
+        int[] knn = readArray(props.get("knn"));
+        int[] k = readArray(props.get("k"));
+        boolean showVisualization = Boolean.parseBoolean(props.get("showVisualization"));
+        int startFeature = Integer.parseInt(props.get("startFeature"));
+        int numberOfFeatures = Integer.parseInt(props.get("numberOfFeatures"));
+        int learnLimit = Integer.parseInt(props.get("learnLimit"));
+        int delayMillis = Integer.parseInt(props.get("delayMillis"));
+        double samplingRate = Double.parseDouble(props.get("samplingRate"));
+        boolean useStats = Boolean.parseBoolean(props.get("useStats"));
+        int use_max_points = Integer.parseInt(props.get("use_max_points_stats"));
+        String dataFileName = props.get("dataFileName");
+        String queryFileName = props.get("queryFileName");
+        String featureModelFileName = props.get("featureModelFileName");
 
+        float[] row = {0.05f}; // ART - only used when k is null
         int errorMultiplier = 10;
-        int delayMillis = 0;
-        String dataFileName = "NormalizedData.xlsx";
-        String queryFileName = "QueryData.xlsx";
-        String featureModelFileName = "featureModel.txt";
-        int startFeature = 1;
-        int numberOfFeatures = 3;
-        int learnLimit = 1000;
         float alpha = 0.05f;
         float clusteringAlpha = 0.005f;
         WorthType type = WorthType.THETA;
-        boolean useStats = false;
-        int use_max_points = 1000;
-        double samplingRate = 0.1;
-        int[] knn = {1, 5, 10, 25, 50, 80};//knn
-        boolean showVisualization = false;
-        //int[] closestK = {3};
 
         int numberOfClusters;
         if (k == null) {
@@ -122,5 +122,29 @@ public class MastersScenario {
         Thread t = new Thread(new QueryPerformer(centralNode, leafNodes, error, type, k, row, knn));
         t.setName("QueyPerformer Thread");
         t.start();
+    }
+
+    private static Map<String, String> readInputFile(File file) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        Map<String, String> props = new HashMap<>();
+        String temp;
+        while ((temp = br.readLine()) != null) {
+            String[] p = temp.split("=");
+            props.put(p[0].trim(), p[1].trim());
+        }
+        br.close();
+        return props;
+    }
+
+    private static int[] readArray(String line) {
+        if (line == null) {
+            return null;
+        }
+        String[] items = line.split(",");
+        int[] result = new int[items.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = Integer.parseInt(items[i]);
+        }
+        return result;
     }
 }

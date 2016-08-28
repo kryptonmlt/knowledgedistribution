@@ -1,0 +1,30 @@
+System 36 devices (Using THETA at 0.0 error):
+111079 of 111101 = 99.9802% messages sent.
+Difference Error: 0.0005, Local Average Error: 0.1008, Server Average Error: 0.1003
+Times Error Exceeded: 111079
+Times Error Acceptable: 22
+99.9802% Exceeded
+Times Error with update less than without: 111043 of 111101 = 99.9478%
+Average Mean: 0
+Average Variance: 0.8611
+Average E' Mean: 0.1009
+Average E' Variance: 0.4496
+Average E Mean: 0.1004
+Average E Variance: 0.4199
+Average Y Mean: 0.1
+Average Y Variance: 0.4177
+K: [1.0, 3.0, 10.0]
+Cluster Times Sent: [28161, 20138, 10971]
+Closest K Used: [1, 5, 10]
+Quantized Error (Distance and Error):
+[1.3624686568654287, 0.7154443407307342, 1.0697733098634634]
+[0.761831136099455, 0.6318959782702195, 0.7714028921607676]
+[0.7116683409778515, 0.5993573001674748, 0.6805312754851024]
+Quantized Error: (Distance Only):
+[1.3624686568654287, 0.7942859782100734, 0.8754884918040711]
+[0.7625801394088947, 0.7241752555135145, 0.713142592082726]
+[0.7115650331449621, 0.6865764652982156, 0.6871749875693469]
+General Error: 0.6611
+Ideal Error: 0.7971
+BaseLine Error: 0.6041
+Took 27.79 seconds

@@ -40,7 +40,7 @@ Environments}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Systems using Wireless Sensor Networks (WSN) are shaped with the consideration of a great number of factors. These include power consumption, lifetime, network topology, responsiveness and transmission errors. Thus, several research challenges are introduced. We propose a system which lets each network node locally gather knowledge through statistical learning and distribute it efficiently. Based on this knowledge the system calculates the error and decides whether it is worth to send the updated knowledge or not, minimizing power consumption. We investigate the repercussions of increasing the error allowance by executing queries on the system. We acknowledge that the gathered shared knowledge from all the devices might not be equally accurate amongst all the input space, thus making use of quantization techniques, we develop an algorithm which selects the best acquired statistical knowledge for each subset of the input space.
+Systems using Wireless Sensor Networks (WSN) are shaped with the consideration of a great number of factors. These include power consumption, lifetime, network topology, responsiveness and transmission errors. Thus, several research challenges are introduced. We propose a system which permits each sensor to locally gather knowledge through statistical learning and distribute it efficiently. Based on this knowledge the system calculates the error and decides whether it is worth to send the updated knowledge or not, minimizing power consumption. We investigate the repercussions of increasing the error allowance by executing queries on the system. We acknowledge that the gathered shared knowledge from all the devices might not be equally accurate amongst all the input space, thus making use of quantization techniques, we develop an algorithm which selects the best acquired statistical knowledge for each subset of the input space.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -652,14 +652,69 @@ In addition to the data, the packet header for each message is 24 bytes. Table \
  \label{table:thetaMessages} 
 \end{table}
 
-\paragraph{TODO: MICA CALCULATION INCLUDE COMPUTATION}
+As shown in table \ref{table:energy}, the cost for computation is 180 times less. Our algorithm has 1 instruction for each weight, which adds up to 3 instructions. Then it calculates both the local error and concentrator error, adding another 2 instructions. Thus, for the Average algorithm, which doesn't make use of clustering we have a total of 5 instructions.
+
+We will not be considering the message size in this calculation since in both models they are identical. The sensors in the simple model consume a total of 720nJ * 111,101 messages = 79,992,720 nJ. The concentrator consumes 111,101 messages * 110 nJ = 12,221,110 nJ.
+Taking for instance THETA 0.01 the sensors consume 720 nJ * 69,282 messages = 49,883,040 nJ. We include the computation cost which is 4 nJ * 5 instructions * 111,101 messages = 2,222,020 nJ. The concentrator consumes 69,282 messages * 110 nJ = 7,621,020 nJ.
+
+Summing everything up our algorithm uses 59,726,080 nJ while the simple model algorithm uses 92,213,830 nJ, which is 35\% less power consumption. Even though we include the computation costs, transmitting 37.7\% less messages results in an improvement in power efficiency. This is because our algorithm takes advantage of the fact that transmitting messages is 180 times greater than the computation of an instruction. The percentage of messages transmitted can be altered by changing the THETA value according the system's needs.
 
 \subsection{Including Reliability}
-To use our reliability algorithm, the clusters, $errors$ and $used$ values need to be transferred along with the regression models. The clusters need not be updated as frequently as the model. Thus, they should only be transmitted when an error threshold $GAMMA$ is exceeded. As an optimization the pairs of $errors$ and $used$ values can be multiplied together to be sent as 1 value instead of 2. Using $K=3$ centroids, we have 6 values (each centroid has $(x,y)$) and 3 other values representing the $errors$ and $used$ counters. The message that contains only the regression model consists of 3 values but when adding the quantized information it adds up to a total of 12 values. This is larger than the simple model message, thus $GAMMA$ should be adjusted so as to achieve network efficiency. We analyzed the impact of altering $GAMMA$, from transmitting the clusters for each minimal change to only transmitting once after the learning stage.
+To use our reliability algorithm, the clusters, $errors$ and $used$ values need to be transferred along with the regression models. We introduce an error threshold $GAMMA$ to evaluate the frequency of cluster updates on the accuracy. As an optimization the pairs of $errors$ and $used$ values can be multiplied together before transmission and sent as 1 value instead of 2. Using $K=3$ centroids, we have 6 values (each centroid has $(x,y)$) and 3 other values representing the $errors$ and $used$ counters. The message that contains only the regression model consists of 3 values but when adding the quantized information it adds up to a total of 12 values. This is 4 times larger than the simple model message, thus $GAMMA$ should be adjusted so as to achieve network efficiency. We analyzed the impact of altering $GAMMA$ at both ends of the spectrum.
 
-\paragraph{TODO: 3 GAMMA IMAGES}
+\begin{figure}[H]
+\caption{$THETA$ $0.01$, $K=3$, $GAMMA$ Error plot}
+\label{fig:gammak3}
+\centerline{\includegraphics[scale=0.5]{k3gamma}}
+\end{figure}
 
-\paragraph{TODO: ENERGY CALCULATION}
+\begin{table}[!ht]
+ \centering
+ \begin{tabular}{|| c | c | c | c ||}
+ \hline
+ Algorithm & Messages (3 values) & Messages (12 values)\\
+ \hline\hline
+ Simple Model & 111101 & 0 \\ 
+ \hline
+ GAMMA 0 & 0 & 69282 \\
+ \hline
+ GAMMA 0.1 & 52476 & 16806 \\
+ \hline
+ GAMMA 1.0 & 68331 & 951 \\
+ \hline
+\end{tabular}
+\caption{$THETA$ $0.01$, $K=3$, $GAMMA$ Message Distribution}
+ \label{table:thetaGammaMessages} 
+\end{table}
+
+Figure \ref{fig:gammak3} is a plot of each algorithm at the $GAMMA$ 0, 0.1 and 1.0. Increasing $GAMMA$ does not seem to increase the error for the reliability algorithm. Table \ref{table:thetaGammaMessages} lists the number of messages that are sent with and without the clusters.  We shall use $GAMMA$ 1.0 for our energy calculation as there was no performance decrease when compared with $GAMMA$ 0.
+
+The cluster logic is used every time new data is read; to find the closest cluster we use 1 instruction for each K, and lastly 1 instruction to update the cluster. We have a total of 9 instructions after adding these 4 instruction to the previous 5 (learning model). Thus, the computation cost is 4 nJ * 9 instructions * 111101 messages = 3,999,636 nJ. The Transmission cost for the sensors is 720 nJ * 68,331 messages = 49,198,320 nJ. We also include the transmission cost for the cluster messages which is 720 nJ * 4 (due to message size) * 951 messages = 2,738,880 nJ. The last part of the calculation is the concentrator energy costs; 68,331 messages * 110 nJ = 7,516,410 nJ, 951 messages * 110 nJ * 4 (message size)= 418,440 nJ.
+
+Table \ref{table:costbreakdown} shows the costs of each action and total which is 63,871,686 nJ. Compared with the Simple Model which uses 92,213,830 nJ, our algorithm uses 31\% less power and is able to provide better accuracy than the baseline as shown in figure \ref{fig:gammak3}.
+
+\begin{table}[!ht]
+ \centering
+ \begin{tabular}{|| c | c ||}
+ \hline
+ Action & Cost (nJ)\\
+ \hline\hline
+ Computation & 3,999,636 \\ 
+ \hline
+ Transmission (3 values) & 49,198,320 \\
+ \hline
+ Transmission (12 values) & 2,738,880 \\
+ \hline
+ Receiving (3 values) & 7,516,410 \\
+ \hline
+ Receiving (12 values) & 418,440 \\
+ \hline
+ Total & 63,871,686 \\
+ \hline
+\end{tabular}
+\caption{Cost breakdown for $K=3$, $THETA=0.01$, $GAMMA=1.0$}
+ \label{table:costbreakdown} 
+\end{table}
 
 \chapter{Conclusion}
 The primary motivation for undertaking this work was to analyse and investigate algorithms for improving the network efficiency in wireless networks while simultaneously diffuse knowledge among the network. In this final chapter, we discuss the principal contributions of this work and comment on how they coincide with the project aims. Finally, we identify opportunities for future work and describe how one might go about to achieve them.

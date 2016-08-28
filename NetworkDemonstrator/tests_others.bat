@@ -1,1 +1,0 @@
-call java -jar target/NetworkDemonstrator-1.0-SNAPSHOT-jar-with-dependencies.jar 1.0 300 36
