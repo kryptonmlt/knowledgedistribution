@@ -1,4 +1,4 @@
-package org.kryptonmlt.automatedvisualizer;
+package org.kryptonmlt.automatedvisualizer.plots;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

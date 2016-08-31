@@ -1,5 +1,11 @@
 package org.kryptonmlt.automatedvisualizer;
 
+import org.kryptonmlt.automatedvisualizer.utils.ColorUtils;
+import org.kryptonmlt.automatedvisualizer.utils.PDF;
+import org.kryptonmlt.automatedvisualizer.utils.StatsUtil;
+import org.kryptonmlt.automatedvisualizer.plots.ScatterPlot3D;
+import org.kryptonmlt.automatedvisualizer.plots.SurfacePlot3D;
+import org.kryptonmlt.automatedvisualizer.plots.Plot2D;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -178,19 +184,21 @@ public class DisplayErrorStudy {
                 }
             }
         }
-        /*System.out.println("Displaying Statistics Graph");
-        Plot2D plot2D = new Plot2D("Sensor Histogram", "Histogram 1-1000", "Steps", "Error");
-        plot2D.addIncrementalSeries(Y, "Y", java.awt.Color.BLUE);
-        plot2D.addIncrementalSeries(E_DASH, "E'", java.awt.Color.RED);
-        plot2D.addIncrementalSeries(E, "E", java.awt.Color.GREEN);
-        plot2D.display();
-        drawHistogram("E'", E_DASH);
-        drawHistogram("E", E);
-        drawHistogram("Y", Y);*/
 
         drawPDFs("Theta vs E'", E_DASH_thetaMeanVariance, false);
         drawPDFs("Theta vs E", E_thetaMeanVariance, false);
         drawPDFs("Theta vs Y", Y_thetaMeanVariance, false);
+        
+        List<Coord3d> klDiv = new ArrayList<>();
+        for (int i = 0; i < E_DASH_thetaMeanVariance.size(); i++) {
+            Coord3d tempPoint = new Coord3d(E_thetaMeanVariance.get(i).x,
+                    StatsUtil.klDivergence2PDFs(E_DASH_thetaMeanVariance.get(i).y, E_DASH_thetaMeanVariance.get(i).z,
+                            E_thetaMeanVariance.get(i).y, E_thetaMeanVariance.get(i).z), 0.0);
+            klDiv.add(tempPoint);
+        }
+        String[] KLDIV_NAMES = {"THETA", "Kullback Leibler Divergence"};
+        plot2D(klDiv, KLDIV_NAMES, "Concentrator - Local PDF Analysis", "KL Divergance vs THETA", false);
+        
         plot2D("", clusterParameterQuantizedError, clusterParameterQuantizedErrorDistanceOnly, clusterParameterGeneralError, clusterParameterIdealError, showLabels);
         String[] xyzNames = {"Clusters", "KNN", "Error"};
         Set<Integer> knn = clusterParameterQuantizedErrorDistanceOnly.get(clusterParameterQuantizedErrorDistanceOnly.keySet().iterator().next()).keySet();
@@ -248,18 +256,9 @@ public class DisplayErrorStudy {
     }
 
     public static void plot2D(List<Coord3d> points, String[] names, String title, String seriesName, boolean showLabels) {
-        Plot2D pdfPlot = new Plot2D(title, title, names[0], names[1], showLabels);
-        pdfPlot.addSeries(points, seriesName, java.awt.Color.RED, false);
-        pdfPlot.display();
-    }
-
-    public static void drawHistogram(String name, List<Double> data) {
-        double[] temp = new double[data.size()];
-        for (int i = 0; i < data.size(); i++) {
-            temp[i] = data.get(i);
-        }
-        HistogramDisplay hd = new HistogramDisplay(name, temp);
-        hd.display();
+        Plot2D plot = new Plot2D(title, title, names[0], names[1], showLabels);
+        plot.addSeries(points, seriesName, java.awt.Color.RED, false);
+        plot.display();
     }
 
     private static void showErrors(Map<Float, Map<Integer, List<Coord3d>>> clusterParameterQuantizedError,

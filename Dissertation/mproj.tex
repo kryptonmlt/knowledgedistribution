@@ -117,7 +117,7 @@ According to M.Karp \cite{Karp} an on-line algorithm is one which receives a seq
 The K-means algorithm attempts to find K representatives (centroids) of a data set in such a way as to best represent the data. \cite{onlinekmeans} Although it is algorithmically simple, it still manages to be relatively robust and give close to optimal results on a wide range of data sets. Its disadvantage is that one has to predefine K. Furthermore, the initial K centroids chosen have a drastic effect upon the clusters chosen. The first k inputs initialize the codebook vectors (centroids) $m_j,j=1,...,k$. The rest of the inputs $x^t \in X$ are used for the update function.
 \begin{equation}
 \label{eq:chooseCluster}
-i \longleftarrow arg min_j \parallel x^t - m_j \parallel
+i \longleftarrow \arg\min _j \parallel x^t - m_j \parallel
 \end{equation}
 \begin{equation}
 \label{eq:updateCluster}
@@ -169,7 +169,7 @@ Naturally, we would like to choose a $\theta$ which minimizes the error. One suc
 \begin{algorithm}[H]
 Repeat until convergence\;
     \ForEach{$j$}{
-$theta_j := \theta_j - \alpha\sum_{i=1}^{m}(y^{(i)}-h_\theta(x^{(i)}))x_j^{(i)}$
+$\theta_j := \theta_j - \alpha\sum_{i=1}^{m}(y^{(i)}-h_\theta(x^{(i)}))x_j^{(i)}$
 }
 \caption{Gradient Descent}
 \label{alg:gd}
@@ -300,16 +300,16 @@ Once a sensor $i$ has sent its local model $F[i](x)$ to the concentrator, then f
 
 \begin{equation}
 \label{eq:differenceError}
-De = |e* - e\#|
+\delta = |e* - e\#|
 \end{equation}
 
-Using Equation \ref{eq:differenceError} we are able to get the discrepancy in error between the 2 models. We then use the condition $De > THETA$ to determine whether it is worth it to update the obsolete model or not. A $THETA=0$ would mean that the local and concentrator model would be synchronized at all times. On the other hand, when we increase $THETA$ we transmit fewer messages, thus, increase network efficiency. This would also mean we are now susceptible to an increase in error between the 2 models. Figure \ref{fig:nea} shows a simplified flowchart of the algorithm just described in this section.
+Using Equation \ref{eq:differenceError} we are able to get the discrepancy in error between the 2 models. We then use the condition $\delta > THETA$ to determine whether it is worth it to update the obsolete model or not. A $THETA=0$ would mean that the local and concentrator model would be synchronized at all times. On the other hand, when we increase $THETA$ we transmit fewer messages, thus, increase network efficiency. This would also mean we are now susceptible to an increase in error between the 2 models. Figure \ref{fig:nea} shows a simplified flowchart of the algorithm just described in this section.
 
 
 \begin{figure}[H]
 \caption{Sensor Node Flowchart}
 \label{fig:nea}
-\centerline{\includegraphics[scale=0.5]{NetworkEfficiencyAlgorithm}}
+\centerline{\includegraphics[scale=0.7]{NetworkEfficiencyAlgorithm}}
 \end{figure}
 
 \section{Ensemble Learning}
@@ -378,7 +378,7 @@ We normalize the data using the standard score as explained in the Preliminaries
 \centerline{\includegraphics[scale=0.6]{dataset}}
 \end{figure}
 
-\section{Network Architecture}
+\section{Decentralized Learning with Reliability}
 We first started by creating a list of requirements of the system and then designed the system's components around it. We needed to simulate multiple sensors reading information at unpredictable times. This information had to be made accessible through a concentrator for querying. Additionally, we needed to gather statistics so as to be able to analyze the performance and compare different simulations. We decided to us Java to implement the simulator as it felt very intuitive to read the data into multiple threads, add our contributions and analyze them.
 
 A \texttt{SensorManager} class was created that handles the reading of new information from the dataset for each sensor. A \texttt{Sensor} thread is then initiated for each sensor. Each sensor reads data from the \texttt{SensorManager} and stores a local model $f'(x)$ and a copy of the concentrator model $f(x)$. When a new data item is read, $f'(x)$ is updated and the closest cluster determined. After the local and concentrator errors are calculated, an error is associated with the closest cluster so as to have the notion of a reliability factor as explained in the contributions chapter. Lastly, the algorithm checks the discrepancy between local and concentrator errors, and if it is larger than $THETA$ is transmits the local knowledge to the concentrator. This procedure is formally described in algorithm \ref{alg:talg}. Algorithm \ref{alg:talg} is the full implementation of all the contributions described in the previous chapter. 
@@ -537,12 +537,12 @@ Additionally, we measured the mean and variance of the error using an on-line al
 \centerline{\includegraphics[scale=0.3]{ThetaE}}
 \end{figure}
 
-Figures \ref{fig:thetaedash} and \ref{fig:thetae} show the local and concentrator probability density functions respectively as we increase $THETA$. One notices that the mean of the concentrator shifts to the right (increases from 0) as we increase $THETA$ meaning that the error increases. Figure \ref{fig:thetay} shows the PDF of the difference between Concentrator and Local model.
+Figures \ref{fig:thetaedash} and \ref{fig:thetae} show the local and concentrator probability density functions respectively as we increase $THETA$. One notices that the mean of the concentrator shifts to the right (increases from 0) as we increase $THETA$ meaning that the error increases. Figure \ref{fig:kldiv} shows the Kullback-Leibler Divergence which is a measure of the difference between the 2 probability distribution functions. In fact as $THETA$ increases the difference increases. The reason there is a slight difference at $THETA=0$, even though they should be identical, is because the system does not update the concentrator model with a worse local model.
 
 \begin{figure}[H]
-\caption{$Concentrator - Local$ Model PDF}
-\label{fig:thetay}
-\centerline{\includegraphics[scale=0.3]{ThetaY}}
+\caption{$Concentrator - Local$ Model KL-Divergence}
+\label{fig:kldiv}
+\centerline{\includegraphics[scale=0.4]{kldivergence}}
 \end{figure}
 
 \section{Query Accuracy Evaluation}

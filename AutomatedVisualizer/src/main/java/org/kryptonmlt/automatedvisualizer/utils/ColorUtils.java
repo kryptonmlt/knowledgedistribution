@@ -1,4 +1,4 @@
-package org.kryptonmlt.automatedvisualizer;
+package org.kryptonmlt.automatedvisualizer.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
