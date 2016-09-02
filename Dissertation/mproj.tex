@@ -643,8 +643,6 @@ In addition to the data, the packet header for each message is 24 bytes. Table \
  \hline
  THETA 0.1 & 29704 & 26.7\%\\
  \hline
- THETA 0.5 & 8960 & 8.1\%\\
- \hline
  THETA 1.0 & 4126 & 3.7\%\\
  \hline
 \end{tabular}
@@ -657,16 +655,16 @@ As shown in table \ref{table:energy}, the cost for computation is 180 times less
 We will not be considering the message size in this calculation since in both models they are identical. The sensors in the simple model consume a total of 720nJ * 111,101 messages = 79,992,720 nJ. The concentrator consumes 111,101 messages * 110 nJ = 12,221,110 nJ.
 Taking for instance THETA 0.01 the sensors consume 720 nJ * 69,282 messages = 49,883,040 nJ. We include the computation cost which is 4 nJ * 5 instructions * 111,101 messages = 2,222,020 nJ. The concentrator consumes 69,282 messages * 110 nJ = 7,621,020 nJ.
 
-Summing everything up our algorithm uses 59,726,080 nJ while the simple model algorithm uses 92,213,830 nJ, which is 35\% less power consumption. Even though we include the computation costs, transmitting 37.7\% less messages results in an improvement in power efficiency. This is because our algorithm takes advantage of the fact that transmitting messages is 180 times greater than the computation of an instruction. The percentage of messages transmitted can be altered by changing the THETA value according the system's needs.
-
-\subsection{Including Reliability}
-To use our reliability algorithm, the clusters, $errors$ and $used$ values need to be transferred along with the regression models. We introduce an error threshold $GAMMA$ to evaluate the frequency of cluster updates on the accuracy. As an optimization the pairs of $errors$ and $used$ values can be multiplied together before transmission and sent as 1 value instead of 2. Using $K=3$ centroids, we have 6 values (each centroid has $(x,y)$) and 3 other values representing the $errors$ and $used$ counters. The message that contains only the regression model consists of 3 values but when adding the quantized information it adds up to a total of 12 values. This is 4 times larger than the simple model message, thus $GAMMA$ should be adjusted so as to achieve network efficiency. We analyzed the impact of altering $GAMMA$ at both ends of the spectrum.
+Summing everything up our algorithm uses 59,726,080 nJ while the simple model algorithm uses 92,213,830 nJ, which is 35\% less power consumption. Even though we include the computation costs, transmitting 37.7\% less messages results in an improvement of 35\% power efficiency. This is because our algorithm takes advantage of the fact that transmitting messages is 180 times greater than the energy cost of an instruction. The percentage of messages transmitted can be altered by changing the THETA value according the system's needs. Using the same procedure to calculate the cost for each $THETA$ we get figure \ref{fig:updateModelJoules} which shows the network overhead as the discrepancy error increases.
 
 \begin{figure}[H]
-\caption{$THETA$ $0.01$, $K=3$, $GAMMA$ Error plot}
-\label{fig:gammak3}
-\centerline{\includegraphics[scale=0.5]{k3gamma}}
+\caption{Network Update Model vs Baseline}
+\label{fig:updateModelJoules}
+\centerline{\includegraphics[scale=0.45]{updateModelJoules}}
 \end{figure}
+
+\subsection{Including Reliability}
+To use our reliability algorithm, the clusters, $errors$ and $used$ values need to be transferred along with the regression models. We introduce an error threshold $GAMMA$ to evaluate the frequency of cluster updates on the accuracy. As an optimization the pairs of $errors$ and $used$ values can be multiplied together before transmission and sent as 1 value instead of 2. Using $K=3$ centroids, we have 6 values (each centroid has $(x,y)$) and 3 other values representing the $errors$ and $used$ counters. The message that contains only the regression model consists of 3 values but when adding the quantized information it adds up to a total of 12 values. This is 4 times larger than the simple model message, thus $GAMMA$ should be adjusted so as to achieve network efficiency.
 
 \begin{table}[!ht]
  \centering
@@ -687,34 +685,23 @@ To use our reliability algorithm, the clusters, $errors$ and $used$ values need 
  \label{table:thetaGammaMessages} 
 \end{table}
 
-Figure \ref{fig:gammak3} is a plot of each algorithm at the $GAMMA$ 0, 0.1 and 1.0. Increasing $GAMMA$ does not seem to increase the error for the reliability algorithm. Table \ref{table:thetaGammaMessages} lists the number of messages that are sent with and without the clusters.  We shall use $GAMMA$ 1.0 for our energy calculation as there was no performance decrease when compared with $GAMMA$ 0.
+Table \ref{table:thetaGammaMessages} lists the number of messages that are sent with and without the clusters for $THETA$ $0.01$. $GAMMA$ 1.0 drastically reduces the number of time clusters are sent. Figure \ref{fig:gammak3} is a plot of each algorithm using $THETA$ $0.01$ at $GAMMA$ 0, 0.1 and 1.0. Increasing $GAMMA$ does not seem to increase the error for the reliability algorithm, which means the same information can be transferred with less energy. 
 
-The cluster logic is used every time new data is read; to find the closest cluster we use 1 instruction for each K, and lastly 1 instruction to update the cluster. We have a total of 9 instructions after adding these 4 instruction to the previous 5 (learning model). Thus, the computation cost is 4 nJ * 9 instructions * 111101 messages = 3,999,636 nJ. The Transmission cost for the sensors is 720 nJ * 68,331 messages = 49,198,320 nJ. We also include the transmission cost for the cluster messages which is 720 nJ * 4 (due to message size) * 951 messages = 2,738,880 nJ. The last part of the calculation is the concentrator energy costs; 68,331 messages * 110 nJ = 7,516,410 nJ, 951 messages * 110 nJ * 4 (message size)= 418,440 nJ.
+\begin{figure}[H]
+\caption{$THETA$ $0.01$, $K=3$, $GAMMA$ Error plot}
+\label{fig:gammak3}
+\centerline{\includegraphics[scale=0.5]{k3gamma}}
+\end{figure}
 
-Table \ref{table:costbreakdown} shows the costs of each action and total which is 63,871,686 nJ. Compared with the Simple Model which uses 92,213,830 nJ, our algorithm uses 31\% less power and is able to provide better accuracy than the baseline as shown in figure \ref{fig:gammak3}.
+Using the information of all $THETA$ figure \ref{fig:ensembleModelJoules} is generated. It represents the trade-off in accuracy vs the network overhead due to ensemble learning (reliability algorithm). The energy calculations used previously for the Average algorithm were tweaked to include the larger messages and extra computations. Using this algorithm an extra 4 instructions are needed (1 to find the closest cluster, 1 update for each K). Adding the previous 5 instructions from the learning model we get a total of 9 instructions. 
 
-\begin{table}[!ht]
- \centering
- \begin{tabular}{|| c | c ||}
- \hline
- Action & Cost (nJ)\\
- \hline\hline
- Computation & 3,999,636 \\ 
- \hline
- Transmission (3 values) & 49,198,320 \\
- \hline
- Transmission (12 values) & 2,738,880 \\
- \hline
- Receiving (3 values) & 7,516,410 \\
- \hline
- Receiving (12 values) & 418,440 \\
- \hline
- Total & 63,871,686 \\
- \hline
-\end{tabular}
-\caption{Cost breakdown for $K=3$, $THETA=0.01$, $GAMMA=1.0$}
- \label{table:costbreakdown} 
-\end{table}
+\begin{figure}[H]
+\caption{Ensemble Model (K=3, KNN=10) vs Baseline}
+\label{fig:ensembleModelJoules}
+\centerline{\includegraphics[scale=0.45]{ensembleModelJoules}}
+\end{figure}
+
+The green overlay on figure \ref{fig:ensembleModelJoules} shows the configurations which result in better accuracy and more power efficiency than the baseline.
 
 \chapter{Conclusion}
 The primary motivation for undertaking this work was to analyse and investigate algorithms for improving the network efficiency in wireless networks while simultaneously diffuse knowledge among the network. In this final chapter, we discuss the principal contributions of this work and comment on how they coincide with the project aims. Finally, we identify opportunities for future work and describe how one might go about to achieve them.

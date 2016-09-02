@@ -64,7 +64,7 @@ public class Plot2D extends ApplicationFrame {
         counter++;
     }
 
-    public void addSeries(List<Coord3d> xy, String name, Color c, boolean increaseSize) {
+    public void addSeries(List<Coord3d> xy, String name, Color c, boolean increaseSize, boolean shapes) {
         final XYSeries series = new XYSeries(name);
         for (int i = 0; i < xy.size(); i++) {
             series.add(xy.get(i).x, xy.get(i).y);
@@ -75,7 +75,8 @@ public class Plot2D extends ApplicationFrame {
         } else {
             renderer.setSeriesStroke(counter, new BasicStroke(this.STROKE_SIZE));
         }
-        renderer.setSeriesShapesVisible(counter, false);
+        renderer.setSeriesShapesVisible(counter, shapes);
+        renderer.setSeriesLinesVisible(counter, !shapes);
         dataset.addSeries(series);
         names.add(name);
         renderer.setSeriesItemLabelGenerator(counter, new XYItemLabelGenerator() {

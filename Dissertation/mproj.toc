@@ -37,11 +37,11 @@
 \contentsline {section}{\numberline {6.2}Query Accuracy Evaluation}{32}
 \contentsline {section}{\numberline {6.3}Network Efficiency}{36}
 \contentsline {subsection}{\numberline {6.3.1}Average}{36}
-\contentsline {subsection}{\numberline {6.3.2}Including Reliability}{37}
-\contentsline {chapter}{\numberline {7}Conclusion}{40}
-\contentsline {section}{\numberline {7.1}Achievements}{40}
-\contentsline {section}{\numberline {7.2}Future Work}{40}
-\contentsline {paragraph}{Non-Linear Regression:}{41}
-\contentsline {paragraph}{History of Models:}{41}
-\contentsline {paragraph}{Concentrator teaching:}{41}
-\contentsline {section}{\numberline {7.3}Final Remarks}{41}
+\contentsline {subsection}{\numberline {6.3.2}Including Reliability}{38}
+\contentsline {chapter}{\numberline {7}Conclusion}{41}
+\contentsline {section}{\numberline {7.1}Achievements}{41}
+\contentsline {section}{\numberline {7.2}Future Work}{41}
+\contentsline {paragraph}{Non-Linear Regression:}{42}
+\contentsline {paragraph}{History of Models:}{42}
+\contentsline {paragraph}{Concentrator teaching:}{42}
+\contentsline {section}{\numberline {7.3}Final Remarks}{42}

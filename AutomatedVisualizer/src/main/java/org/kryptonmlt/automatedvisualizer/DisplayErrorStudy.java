@@ -188,7 +188,7 @@ public class DisplayErrorStudy {
         drawPDFs("Theta vs E'", E_DASH_thetaMeanVariance, false);
         drawPDFs("Theta vs E", E_thetaMeanVariance, false);
         drawPDFs("Theta vs Y", Y_thetaMeanVariance, false);
-        
+
         List<Coord3d> klDiv = new ArrayList<>();
         for (int i = 0; i < E_DASH_thetaMeanVariance.size(); i++) {
             Coord3d tempPoint = new Coord3d(E_thetaMeanVariance.get(i).x,
@@ -198,7 +198,7 @@ public class DisplayErrorStudy {
         }
         String[] KLDIV_NAMES = {"THETA", "Kullback Leibler Divergence"};
         plot2D(klDiv, KLDIV_NAMES, "Concentrator - Local PDF Analysis", "KL Divergance vs THETA", false);
-        
+
         plot2D("", clusterParameterQuantizedError, clusterParameterQuantizedErrorDistanceOnly, clusterParameterGeneralError, clusterParameterIdealError, showLabels);
         String[] xyzNames = {"Clusters", "KNN", "Error"};
         Set<Integer> knn = clusterParameterQuantizedErrorDistanceOnly.get(clusterParameterQuantizedErrorDistanceOnly.keySet().iterator().next()).keySet();
@@ -228,7 +228,7 @@ public class DisplayErrorStudy {
         for (Coord3d thetaPDF : data) {
             PDF pdf = new PDF(thetaPDF.y, thetaPDF.z, DisplayErrorStudy.PDF_MIN, DisplayErrorStudy.PDF_MAX);
             Color tc = ColorUtils.getInstance().getNextDarkColor();
-            pdfPlot.addSeries(pdf.getNextThousand3D(), "" + thetaPDF.x, new java.awt.Color(tc.r, tc.g, tc.b), false);
+            pdfPlot.addSeries(pdf.getNextThousand3D(), "" + thetaPDF.x, new java.awt.Color(tc.r, tc.g, tc.b), false, false);
         }
         pdfPlot.display();
     }
@@ -240,24 +240,24 @@ public class DisplayErrorStudy {
             for (Integer k : series1.get(theta).keySet()) {
                 List<Coord3d> quantizedData = series1.get(theta).get(k);
                 Color tc = ColorUtils.getInstance().getNextDarkColor();
-                pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error (DistanceError)", new java.awt.Color(tc.r, tc.g, tc.b), false);
+                pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error (DistanceError)", new java.awt.Color(tc.r, tc.g, tc.b), false, false);
             }
             for (Integer k : series2.get(theta).keySet()) {
                 List<Coord3d> quantizedData = series2.get(theta).get(k);
                 Color tc = ColorUtils.getInstance().getNextDarkColor();
-                pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error Distance", new java.awt.Color(tc.r, tc.g, tc.b), false);
+                pdfPlot.addSeries(quantizedData, "Theta: " + theta + ",KNN=" + k + " Quantized Error Distance", new java.awt.Color(tc.r, tc.g, tc.b), false, false);
             }
             Color tc = ColorUtils.getInstance().getNextDarkColor();
-            pdfPlot.addSeries(series3.get(theta), "Theta: " + theta + " Average Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
+            pdfPlot.addSeries(series3.get(theta), "Theta: " + theta + " Average Error", new java.awt.Color(tc.r, tc.g, tc.b), true, false);
             tc = ColorUtils.getInstance().getNextDarkColor();
-            pdfPlot.addSeries(series4.get(theta), "Theta: " + theta + " Ideal Error", new java.awt.Color(tc.r, tc.g, tc.b), true);
+            pdfPlot.addSeries(series4.get(theta), "Theta: " + theta + " Ideal Error", new java.awt.Color(tc.r, tc.g, tc.b), true, false);
         }
         pdfPlot.display();
     }
 
     public static void plot2D(List<Coord3d> points, String[] names, String title, String seriesName, boolean showLabels) {
         Plot2D plot = new Plot2D(title, title, names[0], names[1], showLabels);
-        plot.addSeries(points, seriesName, java.awt.Color.RED, false);
+        plot.addSeries(points, seriesName, java.awt.Color.RED, false, false);
         plot.display();
     }
 

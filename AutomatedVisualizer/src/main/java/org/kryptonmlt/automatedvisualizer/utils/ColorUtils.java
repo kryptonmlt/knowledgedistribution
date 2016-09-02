@@ -97,4 +97,9 @@ public class ColorUtils {
     public Color lightenColor(Color c) {
         return new Color(c.r * LIGHT_FACTOR, c.g * LIGHT_FACTOR, c.b * LIGHT_FACTOR, LIGHT_ALPHA);
     }
+
+    public static java.awt.Color convertColor(Color c) {
+        java.awt.Color color = new java.awt.Color(c.r, c.g, c.b);
+        return color;
+    }
 }
