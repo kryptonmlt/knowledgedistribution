@@ -86,12 +86,12 @@ public class DisplayExcelFile3D {
         for (int i = startSheet; i < sheets; i++) {
             /*BatchGradientDescent bgd = new BatchGradientDescent(0.07);
             bgd.learn(points);*/
-            VisualizationUtils.drawLine(LearningUtils.computeLine(points.get(i), sgds.get(i)), plot, i - startSheet, ColorUtils.getInstance().getDarkColor(i));
+            //VisualizationUtils.drawLine(LearningUtils.computeLine(points.get(i), sgds.get(i)), plot, i - startSheet, ColorUtils.getInstance().getDarkColor(i));
             System.out.println("Sheet " + i + ": ");
             System.out.println("Weights: " + Arrays.toString(sgds.get(i).getWeights()));
             System.out.println("Mean: " + ovms.get(i).getMean() + ", Variance: " + ovms.get(i).getVariance());
         }
-        //VisualizationUtils.drawLine(LearningUtils.computeLine(points.get(0), general), plot, 0, Color.BLACK);
+        VisualizationUtils.drawLine(LearningUtils.computeLine(points.get(0), general), plot, 0, Color.BLACK);
         System.out.println("Finished ..");
     }
 }
