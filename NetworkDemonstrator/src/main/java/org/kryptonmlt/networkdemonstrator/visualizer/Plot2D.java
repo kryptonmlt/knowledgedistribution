@@ -16,7 +16,7 @@ import org.jfree.ui.RefineryUtilities;
 import org.jzy3d.maths.Coord2d;
 
 /**
- *
+ * Plots in 2D
  * @author Kurt
  */
 public class Plot2D extends ApplicationFrame {

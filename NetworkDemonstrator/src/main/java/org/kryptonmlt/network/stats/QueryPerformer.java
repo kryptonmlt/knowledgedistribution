@@ -20,7 +20,7 @@ import org.kryptonmlt.networkdemonstrator.node.Concentrator;
 import org.kryptonmlt.networkdemonstrator.node.Sensor;
 
 /**
- *
+ * Generates the statistics files and summary of results after a run
  * @author Kurt
  */
 public class QueryPerformer implements Runnable {
@@ -66,6 +66,10 @@ public class QueryPerformer implements Runnable {
         }
     }
 
+    /**
+     * Checks the progress of each sensor.
+     * Once every sensor finishes it generates the automated error study, errors study, sensors files.
+     */
     @Override
     public void run() {
         boolean allfinished = false;

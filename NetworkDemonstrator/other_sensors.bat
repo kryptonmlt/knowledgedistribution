@@ -1,1 +1,1 @@
-call java -jar OtherSensorStudy.jar NormalizedData.xlsx 1 3 100 0 1 13
+call java -jar OtherSensorStudy.jar NormalizedData.xlsx 1 3 100 0 1

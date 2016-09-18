@@ -21,7 +21,9 @@ import org.kryptonmlt.networkdemonstrator.node.Sensor;
 import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 
 /**
- *
+ * Uses the Sensor Manager to read data. Extracts knowledge from the data and 
+ * keeps running until the data finishes. It keeps counters of the different statistics
+ * which are used by the QueryPerformer
  * @author Kurt
  */
 public class SensorImpl implements Sensor, Runnable {

@@ -1,8 +1,10 @@
 package org.kryptonmlt.networkdemonstrator.visualizer;
 
 import java.awt.Color;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -22,6 +26,7 @@ import org.kryptonmlt.networkdemonstrator.utils.ColorUtils;
 import org.kryptonmlt.networkdemonstrator.utils.IOUtils;
 
 /**
+ * endogenous, exogenous, fusion errors study
  *
  * @author Kurt
  */
@@ -131,11 +136,37 @@ public class Display2D {
             System.out.println("Drawing Sheet " + s1 + " vs " + s2);
             Plot2D plotErrors = new Plot2D("Column " + colNums[0] + " vs " + colNums[1], "Sheet " + s1 + " vs " + s2, "Step", "Error");
             plotErrors.addIncrementalSeries(errors.get(0), "e[1] - endogenous AVG=" + df.format(errorsAVG[0]), Color.RED);
+            saveSheet(s1 + "vs" + s2 + "_" + "endogenous_AVG_=" + df.format(errorsAVG[0]), errors.get(0));
             plotErrors.addIncrementalSeries(errors.get(1), "e[2] - exogenous AVG=" + df.format(errorsAVG[1]), Color.BLUE);
+            saveSheet(s1 + "vs" + s2 + "_" + "exogenous_AVG_=" + df.format(errorsAVG[1]), errors.get(1));
             plotErrors.addIncrementalSeries(errors.get(2), "e[3] - fusion AVG=" + df.format(errorsAVG[2]), Color.GREEN);
+            saveSheet(s1 + "vs" + s2 + "_" + "fusion_AVG_=" + df.format(errorsAVG[2]), errors.get(2));
             plotErrors.display();
             System.out.println("Finished Sheet " + s1 + " vs " + s2);
         }
+    }
+
+    public static void saveSheet(String fileName, List<Double> errors) {
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter("OTHER_SENSORS\\"+fileName+".txt"));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < errors.size(); i++) {
+                sb.append("(").append(i).append(",").append(df.format(errors.get(i))).append(")");
+            }
+            bw.write(sb.toString());
+            bw.flush();
+            bw.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
     }
 
     public static void plotSheets(int[] sheets) {

@@ -26,7 +26,10 @@ import org.kryptonmlt.networkdemonstrator.node.Concentrator;
 import org.kryptonmlt.networkdemonstrator.node.Sensor;
 
 /**
- *
+ * Reads the networkdemonstrator.properties file to input the properties.
+ * Also requires 1 argument which specifies the THETA
+ * It starts the simulation of an IoT environment 1 concentrator and x sensors depending on the properties.
+ * It runs QueryPerformer to save the statistics.
  * @author Kurt
  */
 public class MastersScenario {

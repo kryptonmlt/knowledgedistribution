@@ -17,7 +17,8 @@ import org.kryptonmlt.networkdemonstrator.utils.ConversionUtils;
 import org.kryptonmlt.networkdemonstrator.utils.IOUtils;
 
 /**
- *
+ * Reads the Normalized data and generates the weights for the baseline model.
+ * It uses a variable number of epoch to increase the reliability of the weights.
  * @author Kurt
  */
 public class BaseLineModelGenerator {

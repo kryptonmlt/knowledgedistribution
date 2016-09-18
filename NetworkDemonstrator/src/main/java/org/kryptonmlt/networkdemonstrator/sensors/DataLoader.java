@@ -16,7 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Loads data from an excel sheet.
  * @author Kurt
  */
 public class DataLoader {

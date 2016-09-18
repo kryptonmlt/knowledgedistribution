@@ -23,7 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.kryptonmlt.networkdemonstrator.node.Concentrator;
 
 /**
- *
+ * The concentrator receives messages from different sensors.
+ * It also allows one to query the knowledge it contains using various algorithms:
+ * Ideal, Average, Baseline, Distance, Reliability
  * @author Kurt
  */
 public class ConcentratorImpl implements Concentrator {

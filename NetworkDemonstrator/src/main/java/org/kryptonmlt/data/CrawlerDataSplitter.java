@@ -16,6 +16,10 @@ import org.kryptonmlt.data.pojos.StationWriter;
 import org.kryptonmlt.data.utils.DataUtils;
 import org.kryptonmlt.networkdemonstrator.ml_algorithms.OnlineVarianceMean;
 
+/**
+ * Reads the Beijing Air Quality data and then generates the normalized excel file.
+ * @author Kurt
+ */
 public class CrawlerDataSplitter {
 
     public static void main(String args[]) throws IOException, InvalidFormatException, ParseException {
