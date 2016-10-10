@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -149,7 +147,7 @@ public class Display2D {
     public static void saveSheet(String fileName, List<Double> errors) {
         BufferedWriter bw = null;
         try {
-            bw = new BufferedWriter(new FileWriter("OTHER_SENSORS\\"+fileName+".txt"));
+            bw = new BufferedWriter(new FileWriter("OTHER_SENSORS\\" + fileName + ".txt"));
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < errors.size(); i++) {
                 sb.append("(").append(i).append(",").append(df.format(errors.get(i))).append(")");
@@ -169,17 +167,76 @@ public class Display2D {
 
     }
 
+    public static void savePoints(String fileName, List<Coord2d> points) {
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter("OTHER_SENSORS\\" + fileName + ".txt"));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < points.size(); i++) {
+                sb.append("(").append(df.format(points.get(i).x)).append(",").append(df.format(points.get(i).y)).append(")");
+            }
+            bw.write(sb.toString());
+            bw.flush();
+            bw.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+    }
+
     public static void plotSheets(int[] sheets) {
-        Plot2D plot = new Plot2D("Column " + colNums[0] + " vs " + colNums[1], "Sheets: " + Arrays.toString(sheets), "X (Column" + colNums[0] + ")", "Y (Column" + colNums[1] + ")");
-        for (int i : sheets) {
-            List<Coord2d> learntPointsX = new ArrayList<>();
-            for (int j = 0; j < pointsX.get(i).size(); j++) {
-                learntPointsX.add(new Coord2d(pointsX.get(i).get(j).x, sgdX.get(i).predict(pointsX.get(i).get(j).x, 0)));
+        if (sheets.length == 2) {
+            Plot2D plot = new Plot2D("Column " + colNums[0] + " vs " + colNums[1], "Sensor 0", "X (Column" + colNums[0] + ")", "Y (Column" + colNums[1] + ")");
+            List<Coord2d> learntPointsSensor0 = new ArrayList<>();
+            List<Coord2d> learntPointsSensor0Average = new ArrayList<>();
+            for (int j = 0; j < pointsX.get(0).size(); j++) {
+                learntPointsSensor0.add(new Coord2d(pointsX.get(0).get(j).x, sgdX.get(0).predict(pointsX.get(0).get(j).x, 0)));
+                learntPointsSensor0Average.add(new Coord2d(pointsX.get(0).get(j).x, (sgdX.get(0).predict(pointsX.get(0).get(j).x, 0) + sgdX.get(1).predict(pointsX.get(0).get(j).x, 0)) / 2.0));
             }
             org.jzy3d.colors.Color x0 = ColorUtils.getInstance().getNextDarkColor();
-            plot.addSeries(pointsX.get(i), "Sensor " + i + ",Points X", new Color(x0.r, x0.g, x0.b), false, false);
-            plot.addSeries(learntPointsX, "Sensor " + i + ",Learnt Points X", new Color(x0.r, x0.g, x0.b), true, true);
+            org.jzy3d.colors.Color xAverage = ColorUtils.getInstance().getNextDarkColor();
+            plot.addSeries(pointsX.get(0), "Sensor " + 0 + " Raw Data", new Color(x0.r, x0.g, x0.b), false, false);
+            plot.addSeries(learntPointsSensor0, "Sensor " + 0 + " Function", new Color(x0.r, x0.g, x0.b), true, true);
+            plot.addSeries(learntPointsSensor0Average, "Sensor " + 0 + ", Average", new Color(xAverage.r, xAverage.g, xAverage.b), true, true);
+            plot.display();
+            savePoints("Sensor_0_Points", pointsX.get(0));
+            savePoints("Sensor_0_Line", learntPointsSensor0);
+            savePoints("Sensor_0_Average", learntPointsSensor0Average);
+
+            Plot2D plot2 = new Plot2D("Column " + colNums[0] + " vs " + colNums[1], "Sensor 1", "X (Column" + colNums[0] + ")", "Y (Column" + colNums[1] + ")");
+            List<Coord2d> learntPointsSensor1 = new ArrayList<>();
+            List<Coord2d> learntPointsSensor1Average = new ArrayList<>();
+            for (int j = 0; j < pointsX.get(0).size(); j++) {
+                learntPointsSensor1.add(new Coord2d(pointsX.get(1).get(j).x, sgdX.get(1).predict(pointsX.get(1).get(j).x, 0)));
+                learntPointsSensor1Average.add(new Coord2d(pointsX.get(1).get(j).x, (sgdX.get(1).predict(pointsX.get(1).get(j).x, 0) + sgdX.get(0).predict(pointsX.get(1).get(j).x, 0)) / 2.0));
+            }
+            x0 = ColorUtils.getInstance().getNextDarkColor();
+            plot2.addSeries(pointsX.get(1), "Sensor " + 1 + " Raw Data", new Color(x0.r, x0.g, x0.b), false, false);
+            plot2.addSeries(learntPointsSensor1, "Sensor " + 1 + " Function", new Color(x0.r, x0.g, x0.b), true, true);
+            plot2.addSeries(learntPointsSensor1Average, "Sensor " + 1 + " Average", new Color(xAverage.r, xAverage.g, xAverage.b), true, true);
+            plot2.display();
+            savePoints("Sensor_1_Points", pointsX.get(1));
+            savePoints("Sensor_1_Line", learntPointsSensor1);
+            savePoints("Sensor_1_Average", learntPointsSensor1Average);
+
+        } else {
+            Plot2D plot = new Plot2D("Column " + colNums[0] + " vs " + colNums[1], "Sheets: " + Arrays.toString(sheets), "X (Column" + colNums[0] + ")", "Y (Column" + colNums[1] + ")");
+            for (int i : sheets) {
+                List<Coord2d> learntPointsX = new ArrayList<>();
+                for (int j = 0; j < pointsX.get(i).size(); j++) {
+                    learntPointsX.add(new Coord2d(pointsX.get(i).get(j).x, sgdX.get(i).predict(pointsX.get(i).get(j).x, 0)));
+                }
+                org.jzy3d.colors.Color x0 = ColorUtils.getInstance().getNextDarkColor();
+                plot.addSeries(pointsX.get(i), "Sensor " + i + ",Points X", new Color(x0.r, x0.g, x0.b), false, false);
+                plot.addSeries(learntPointsX, "Sensor " + i + ",Learnt Points X", new Color(x0.r, x0.g, x0.b), true, true);
+            }
+            plot.display();
         }
-        plot.display();
     }
 }
